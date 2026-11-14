@@ -531,18 +531,6 @@ export function Workspace({
                   );
                 })()}
             </svg>
-            {!displayModules.some(
-              (module) =>
-                module.x < 440 &&
-                module.x + MODULES[module.type].width > 90 &&
-                module.y < 650 &&
-                module.y + MODULES[module.type].height > 570,
-            ) && (
-              <div className="canvas-note">
-                <span>Room for your next idea.</span>
-                <p>Grab a module. Turn a knob. Follow your ears.</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
