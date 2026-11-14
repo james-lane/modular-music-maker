@@ -12,7 +12,7 @@ Add a `ModuleDefinition` to `MODULES` in `src/domain/modules.ts`:
 
 - Human name, short description, category, accent color, and panel code.
 - Width and height in logical canvas pixels. Leave room for the header, controls, and the 54px socket footer.
-- Unique port IDs with `input`/`output` direction and `audio`/`pitch`/`control` signal types.
+- Unique port IDs with `input`/`output` direction and `audio`/`pitch`/`control`/`trigger` signal types.
 - Numeric control definitions with bounds, step size, default, optional unit, and optional logarithmic response.
 - Non-numeric defaults only when needed. Validate any new string enum in `validation.ts`.
 - Optional maximum instance count.
@@ -40,13 +40,13 @@ function makeGain(context: AudioContext): AudioRuntime {
 }
 ```
 
-Name runtime endpoints exactly like registry port IDs. Control inputs may be AudioParams; audio outputs must be AudioNodes. Pitch ports are musical events, so a new pitch producer/consumer also needs scheduling support in `AudioEngine` (currently sequencer → oscillator only).
+Name runtime endpoints exactly like registry port IDs. Control inputs may be AudioParams; audio outputs must be AudioNodes. Pitch and trigger ports are musical events, so their runtime endpoints do not appear in the AudioNode input/output maps. Sequencers and live keyboards currently target oscillator voices; pad controllers target a drum runtime through its optional `trigger(sound, velocity, time)` method. A new event producer/consumer needs explicit routing support in `AudioEngine` and a `LiveControls` command if it is played directly.
 
 Start source nodes once, retain ownership, and stop/disconnect them in `dispose()`. Disconnect every internal feedback connection. Prefer smoothed parameter changes. Avoid fetching resources inside a synchronous factory; define a loading lifecycle first if adding samples or AudioWorklets.
 
 ## 4. Add specialized controls only if needed
 
-`ModuleCard` renders ordinary numeric knobs automatically. Waveform buttons, sequencer steps, and output analysis currently have explicit branches. If a new module needs substantial custom controls, move those controls into a named component instead of letting `ModuleCard` grow indefinitely.
+`ModuleCard` renders ordinary numeric knobs automatically. Waveform buttons, sequencer steps, and output analysis have explicit branches. The keyboard, pad controller, and drum machine use dedicated panel components and `components/instruments.css`; follow that pattern for substantial new controls. If a new module needs substantial custom controls, move those controls into a named component instead of letting `ModuleCard` grow indefinitely.
 
 Use the existing panel/screw/knob/socket styles and registry accent color. Keep controls keyboard accessible and logical coordinates aligned to the cable geometry. Numeric values should have clear labels and units. Unit `%` currently represents a normalized `0…1` value.
 
@@ -61,10 +61,13 @@ Use the existing panel/screw/knob/socket styles and registry accent color. Keep 
 
 ## Current signal contracts
 
-| Signal    | Meaning                                         | Current examples                       |
-| --------- | ----------------------------------------------- | -------------------------------------- |
-| `audio`   | Audible sample stream                           | Oscillator → Filter → Delay → Output   |
-| `pitch`   | Scheduled scale-degree notes and gate           | Step sequencer → Oscillator            |
-| `control` | Audio-rate modulation, measured in target units | LFO depth in Hz → Filter MOD/frequency |
+| Signal    | Meaning                                             | Current examples                       |
+| --------- | --------------------------------------------------- | -------------------------------------- |
+| `audio`   | Audible sample stream                               | Oscillator → Filter → Delay → Output   |
+| `pitch`   | Scheduled or live pitch and gate                    | Step sequencer / Keyboard → Oscillator |
+| `control` | Audio-rate modulation, measured in target units     | LFO depth in Hz → Filter MOD/frequency |
+| `trigger` | Sound identity, velocity and scheduled trigger time | Pad controller → Drum machine          |
+
+Drum patterns are an optional additive v1 field, validated as four named lanes of sixteen booleans. Drum voice identities and shortcut mappings live in `domain/instruments.ts`; synthesis recipes live in `audio/drums.ts`. New sounds need corresponding recipes and explicit validation for any persisted data. Never persist held notes or one-shot trigger events.
 
 Feedback between modules is intentionally rejected. The Delay factory contains its own bounded feedback loop. A future general feedback system needs explicit delay and stability semantics rather than removing cycle validation.

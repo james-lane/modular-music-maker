@@ -12,6 +12,8 @@ export const CONFIG = {
     parameterRampSeconds: 0.025,
     maxRecordingSeconds: 600,
     defaultMasterVolume: 0.65,
+    liveTailMs: 3000,
+    maxDrumHits: 96,
   },
   tempo: { min: 40, max: 240, default: 108 },
   maxModules: 40,

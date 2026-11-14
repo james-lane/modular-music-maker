@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { CONFIG, ROOT_NOTES } from '../config';
 import { MODULES } from './modules';
+import { DRUM_LANES, DRUM_STEP_COUNT } from './instruments';
 import { connectionError } from './project';
 import type { ModuleType, Project } from './types';
 
@@ -31,6 +32,9 @@ export const projectSchema = z
               z.union([z.number(), z.string().max(32), z.boolean()]),
             ),
             steps: z.array(z.number().int().min(-1).max(13)).length(8).optional(),
+            drumPattern: z
+              .record(z.string(), z.array(z.boolean()).length(DRUM_STEP_COUNT))
+              .optional(),
           })
           .strict(),
       )
@@ -87,6 +91,16 @@ export const projectSchema = z
       )
         issue('Unknown filter mode.');
       if (module.type === 'sequencer' && !module.steps) issue('A sequencer needs eight steps.');
+      if (module.type === 'drum-machine') {
+        if (typeof module.parameters.enabled !== 'boolean')
+          issue('Drum sequencer enabled must be a boolean.');
+        if (
+          !module.drumPattern ||
+          Object.keys(module.drumPattern).length !== DRUM_LANES.length ||
+          DRUM_LANES.some((id) => !module.drumPattern?.[id])
+        )
+          issue('A drum machine needs four named lanes of sixteen steps.');
+      } else if (module.drumPattern) issue('Only drum machines can store a drum pattern.');
     }
     // Validate in order against an accumulating graph to also catch duplicates and cycles.
     const graph = { ...project, cables: [] } as Project;

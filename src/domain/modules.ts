@@ -5,6 +5,58 @@ import type { ModuleDefinition, ModuleType } from './types';
  * Ordinary numeric controls render automatically; only special interfaces need a component.
  */
 export const MODULES: Record<ModuleType, ModuleDefinition> = {
+  'drum-machine': {
+    type: 'drum-machine',
+    name: 'Drum machine',
+    subtitle: 'Find a pocket. Stay a while.',
+    description: 'Four lanes. Sixteen steps. Your groove.',
+    category: 'Sources',
+    color: '#ca7b50',
+    code: 'DRM–01',
+    width: 452,
+    height: 432,
+    ports: [
+      { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
+      { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
+    ],
+    controls: [
+      { id: 'level', label: 'Level', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
+      { id: 'tone', label: 'Tone', min: -12, max: 12, step: 1, default: 0, unit: 'st' },
+      { id: 'decay', label: 'Decay', min: 0.3, max: 1.5, step: 0.01, default: 0.8, unit: '×' },
+    ],
+    defaults: { enabled: true },
+  },
+  keyboard: {
+    type: 'keyboard',
+    name: 'Keyboard',
+    subtitle: 'Put a melody under your fingers',
+    description: 'Two octaves of hands-on melody.',
+    category: 'Modulation',
+    color: '#8c9a78',
+    code: 'KEY–01',
+    width: 428,
+    height: 360,
+    ports: [{ id: 'pitch', label: 'PITCH / GATE', direction: 'output', signal: 'pitch' }],
+    controls: [
+      { id: 'octave', label: 'Octave', min: -2, max: 2, step: 1, default: 0 },
+      { id: 'velocity', label: 'Velocity', min: 0.1, max: 1, step: 0.01, default: 0.8, unit: '%' },
+    ],
+  },
+  'pad-controller': {
+    type: 'pad-controller',
+    name: 'Pad controller',
+    subtitle: 'A rhythm at your fingertips',
+    description: 'Sixteen pads. A whole kit to play.',
+    category: 'Modulation',
+    color: '#a18cb4',
+    code: 'PAD–01',
+    width: 300,
+    height: 492,
+    ports: [{ id: 'trigger', label: 'TRIGGER OUT', direction: 'output', signal: 'trigger' }],
+    controls: [
+      { id: 'velocity', label: 'Velocity', min: 0.1, max: 1, step: 0.01, default: 0.85, unit: '%' },
+    ],
+  },
   sequencer: {
     type: 'sequencer',
     name: 'Step sequencer',

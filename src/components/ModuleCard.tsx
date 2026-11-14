@@ -7,16 +7,25 @@ import type { Endpoint, PatchModule, Project } from '../domain/types';
 import { Knob } from './Knob';
 import { LevelMeter, Scope } from './Scope';
 import { Waveform } from './Waveform';
+import type { LiveControls } from '../audio/live';
+import type { DrumSound } from '../domain/instruments';
+import { DrumMachinePanel } from './DrumMachinePanel';
+import { KeyboardPanel } from './KeyboardPanel';
+import { PadControllerPanel } from './PadControllerPanel';
 
 interface Props {
   module: PatchModule;
   project: Project;
   selected: boolean;
   step: number;
+  drumStep: number;
+  live: LiveControls;
+  audioActive: boolean;
   engine: AudioEngine;
   playing: boolean;
   pending: Endpoint | null;
-  onParameter: (id: string, value: number | string) => void;
+  onParameter: (id: string, value: number | string | boolean) => void;
+  onDrumStep: (sound: DrumSound, step: number) => void;
   onStep: (index: number, rest: boolean) => void;
   onPort: (endpoint: Endpoint) => void;
   onRemove: () => void;
@@ -29,10 +38,14 @@ export function ModuleCard({
   project,
   selected,
   step,
+  drumStep,
+  live,
+  audioActive,
   engine,
   playing,
   pending,
   onParameter,
+  onDrumStep,
   onStep,
   onPort,
   onRemove,
@@ -79,6 +92,18 @@ export function ModuleCard({
         <span className="module-code">{definition.code}</span>
       </header>
       <div className="module-content">
+        {module.type === 'drum-machine' && (
+          <DrumMachinePanel
+            module={module}
+            live={live}
+            playing={playing}
+            step={drumStep}
+            onToggle={onDrumStep}
+            onEnabled={() => onParameter('enabled', !module.parameters.enabled)}
+          />
+        )}
+        {module.type === 'keyboard' && <KeyboardPanel module={module} live={live} />}
+        {module.type === 'pad-controller' && <PadControllerPanel module={module} live={live} />}
         {module.type === 'sequencer' && (
           <>
             <div className="instrument-caption">
@@ -173,8 +198,8 @@ export function ModuleCard({
         )}
         {module.type === 'output' && (
           <>
-            <Scope engine={engine} playing={playing} />
-            <LevelMeter engine={engine} playing={playing} />
+            <Scope engine={engine} playing={audioActive} />
+            <LevelMeter engine={engine} playing={audioActive} />
           </>
         )}
         {module.type === 'delay' && (

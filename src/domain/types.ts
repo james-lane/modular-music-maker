@@ -1,7 +1,18 @@
 /** Serializable domain data only. Audio nodes and UI state never enter a saved patch. */
 export type ModuleType =
-  'sequencer' | 'oscillator' | 'noise' | 'lfo' | 'filter' | 'delay' | 'reverb' | 'mixer' | 'output';
-export type SignalType = 'audio' | 'pitch' | 'control';
+  | 'sequencer'
+  | 'oscillator'
+  | 'noise'
+  | 'lfo'
+  | 'filter'
+  | 'delay'
+  | 'reverb'
+  | 'mixer'
+  | 'output'
+  | 'drum-machine'
+  | 'keyboard'
+  | 'pad-controller';
+export type SignalType = 'audio' | 'pitch' | 'control' | 'trigger';
 export type Category = 'Sources' | 'Modulation' | 'Effects' | 'Utility';
 export type Parameters = Record<string, number | string | boolean>;
 
@@ -47,6 +58,8 @@ export interface PatchModule {
   parameters: Parameters;
   /** Scale degrees; -1 is a rest. Kept explicit so the sequencer is easy to extend. */
   steps?: number[];
+  /** Optional additive v1 field: only drum machines persist a per-voice step pattern. */
+  drumPattern?: Record<string, boolean[]>;
 }
 
 export interface Endpoint {

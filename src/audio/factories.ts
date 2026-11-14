@@ -1,5 +1,7 @@
 import { CONFIG } from '../config';
 import type { ModuleType, Parameters } from '../domain/types';
+import type { DrumSound } from '../domain/instruments';
+import { createDrumRuntime } from './drums';
 
 export interface AudioRuntime {
   inputs: Record<string, AudioNode | AudioParam>;
@@ -8,6 +10,8 @@ export interface AudioRuntime {
   dispose: () => void;
   /** Only pitched voices expose an envelope and frequency for the note scheduler. */
   voice?: { frequency: AudioParam; envelope: AudioParam };
+  trigger?: (sound: DrumSound, velocity: number, time: number) => void;
+  silence?: () => void;
 }
 
 type Factory = (context: AudioContext, masterBus: AudioNode) => AudioRuntime;
@@ -20,6 +24,9 @@ const smooth = (parameter: AudioParam, target: number, context: AudioContext) =>
  * Every owned source/node must be released in dispose(), including feedback connections.
  */
 export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
+  'drum-machine': createDrumRuntime,
+  keyboard: () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),
+  'pad-controller': () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),
   sequencer: () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),
 
   oscillator(context) {

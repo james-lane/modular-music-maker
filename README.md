@@ -24,15 +24,27 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 
 ## What works
 
-- A searchable module library with nine working modules: step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, and output.
+- A searchable module library with twelve working modules: drum machine, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, and output.
 - Drag modules from the library, or add them using the **+** buttons. Move panels by dragging their headers.
-- Click an output socket, then a matching input socket to connect them. Audio, pitch, and modulation are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
+- Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, and trigger are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
 - Hardware-style knobs respond to vertical dragging, arrow keys, Home/End, and double-click reset. Hold Shift for finer dragging.
 - Eight editable sequencer steps. Click to advance the scale degree, right-click to insert a rest.
 - Tempo, root note, scale, time signature, master volume, mute, live waveform, and level meters. The **More → Composition settings** panel keeps all settings available on narrow screens.
 - Zoom, pan, fit-to-view, undo, redo, and a responsive module drawer on small screens.
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
 - Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.
+
+## Play drums and keys
+
+Use **More → Load rhythm & keys patch** for the connected _Pocket rhythm_ example. Your current patch stays in My patches. The three new instruments are also available separately in the module library.
+
+- **Drum machine:** a 16-step, four-lane sequencer for kick, snare, clap, and closed hat. Click switches to edit the rhythm; click a voice name to audition it. **Pattern on/off** mutes the sequencer without disabling live pad hits. Level, tone, and decay are configurable. Press Play to start the pattern at the composition tempo.
+- **Keyboard:** 25 chromatic piano keys with octave and velocity controls. Wire **PITCH / GATE → Oscillator PITCH**, then route the oscillator's audio to an output (directly or through effects/mixer). Hold keys with the pointer/touch, or focus the keys and use **A W S E D F T G Y H U J K O L P ;**. Enter/Space on a focused key plays a short note. Oscillator voices are monophonic: the last held note wins and releasing it returns to the previous held note. Keyboard notes are chromatic, independently of the sequencer's scale.
+- **Pad controller:** sixteen rubber-style pads mapped to kick, snare, clap, hats, toms, rim shot, shaker, crash, ride, cowbell, tambourine, claves, and congas. Wire **TRIGGER OUT → Drum machine TRIGGER IN**, then route the drum machine's **AUDIO OUT**. Focus the pads to use **1 2 3 4 / Q W E R / A S D F / Z X C V**.
+
+Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
+
+Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns retain their eight eighth-notes. Both repeat independently of the time-signature display. No physical MIDI device support is included yet.
 
 ## Saving and privacy
 

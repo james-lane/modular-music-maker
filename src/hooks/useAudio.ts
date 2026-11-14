@@ -4,6 +4,8 @@ import { preferredRecordingType, saveRecording, type Recording } from '../audio/
 import { CONFIG } from '../config';
 import { downloadFile, fileSlug } from '../domain/storage';
 import type { Project } from '../domain/types';
+import { controllerTargets, type DrumSound } from '../domain/instruments';
+import type { LiveControls } from '../audio/live';
 
 export function useAudio(project: Project, notify: (message: string) => void) {
   const [engine] = useState(() => new AudioEngine());
@@ -11,6 +13,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const [starting, setStarting] = useState(false);
   const [step, setStep] = useState(-1);
   const [beat, setBeat] = useState(0);
+  const [drumStep, setDrumStep] = useState(-1);
+  const [liveActive, setLiveActive] = useState(false);
   const [recording, setRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingVersion, setRecordingVersion] = useState(0);
@@ -20,17 +24,27 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   latest.current = project;
   const notifyRef = useRef(notify);
   notifyRef.current = notify;
+  const heldKeys = useRef(new Set<string>());
+  const liveGeneration = useRef(0);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     engine.update(project);
   }, [engine, project]);
   useEffect(() => {
-    engine.onStep = (nextStep, nextBeat) => {
+    // Effect setup can follow Fast Refresh cleanup while React preserves hook state.
+    setPlaying(engine.isPlaying);
+    setLiveActive(engine.isActive);
+    setRecording(recorder.current?.state === 'recording');
+    engine.onStep = (nextStep, nextBeat, nextDrumStep) => {
       setStep(nextStep);
       setBeat(nextBeat);
+      setDrumStep(nextDrumStep);
     };
     return () => {
       recorder.current?.state === 'recording' && recorder.current.stop();
+      clearTimeout(idleTimer.current);
+      liveGeneration.current++;
       void engine.dispose();
     };
   }, [engine]);
@@ -53,10 +67,108 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   }, []);
 
   const stop = useCallback(async () => {
+    liveGeneration.current++;
+    heldKeys.current.clear();
+    clearTimeout(idleTimer.current);
     stopRecording();
     await engine.stop();
     setPlaying(false);
+    setLiveActive(false);
   }, [engine, stopRecording]);
+
+  const scheduleIdle = useCallback(() => {
+    clearTimeout(idleTimer.current);
+    if (heldKeys.current.size || engine.isPlaying) return;
+    idleTimer.current = setTimeout(() => {
+      if (!heldKeys.current.size && !engine.isPlaying) {
+        void engine.stop();
+        setLiveActive(false);
+      }
+    }, CONFIG.audio.liveTailMs);
+  }, [engine]);
+
+  const activateLive = useCallback(
+    async (action: () => void) => {
+      const generation = liveGeneration.current;
+      clearTimeout(idleTimer.current);
+      try {
+        await engine.activate(latest.current);
+        if (generation !== liveGeneration.current) {
+          if (!engine.isPlaying && !heldKeys.current.size) await engine.stop();
+          return;
+        }
+        setLiveActive(true);
+        action();
+        scheduleIdle();
+      } catch (error) {
+        notifyRef.current(
+          error instanceof Error ? error.message : 'Unable to play this instrument.',
+        );
+      }
+    },
+    [engine, scheduleIdle],
+  );
+
+  const noteOn = useCallback(
+    (moduleId: string, note: number) => {
+      if (!controllerTargets(latest.current, moduleId, 'pitch').length) {
+        notifyRef.current('Connect Keyboard PITCH / GATE to an Oscillator PITCH input.');
+        return;
+      }
+      const token = `${moduleId}:${note}`;
+      heldKeys.current.add(token);
+      void activateLive(() => {
+        // A quick release may arrive while the audio device is still waking up.
+        if (heldKeys.current.has(token)) {
+          const module = latest.current.modules.find((item) => item.id === moduleId);
+          if (module) engine.noteOn(moduleId, note, Number(module.parameters.velocity));
+        }
+      });
+    },
+    [activateLive, engine],
+  );
+
+  const noteOff = useCallback(
+    (moduleId: string, note: number) => {
+      heldKeys.current.delete(`${moduleId}:${note}`);
+      engine.noteOff(moduleId, note);
+      scheduleIdle();
+    },
+    [engine, scheduleIdle],
+  );
+
+  const releaseKeyboard = useCallback(
+    (moduleId: string) => {
+      for (const token of heldKeys.current)
+        if (token.startsWith(`${moduleId}:`)) heldKeys.current.delete(token);
+      engine.releaseKeyboard(moduleId);
+      scheduleIdle();
+    },
+    [engine, scheduleIdle],
+  );
+
+  const drumHit = useCallback(
+    (moduleId: string, sound: DrumSound) => {
+      void activateLive(() => engine.hitDrum(moduleId, sound, 0.9));
+    },
+    [activateLive, engine],
+  );
+
+  const padHit = useCallback(
+    (moduleId: string, sound: DrumSound) => {
+      if (!controllerTargets(latest.current, moduleId, 'trigger').length) {
+        notifyRef.current('Connect Pad controller TRIGGER OUT to Drum machine TRIGGER IN.');
+        return;
+      }
+      void activateLive(() => {
+        const module = latest.current.modules.find((item) => item.id === moduleId);
+        if (module) engine.hitPad(moduleId, sound, Number(module.parameters.velocity));
+      });
+    },
+    [activateLive, engine],
+  );
+
+  const live: LiveControls = { noteOn, noteOff, releaseKeyboard, drumHit, padHit };
 
   const toggleRecord = useCallback(async () => {
     if (recorder.current?.state === 'recording') {
@@ -120,11 +232,14 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   return {
     engine,
     playing,
+    active: playing || liveActive,
+    live,
     starting,
     play,
     stop,
     step,
     beat,
+    drumStep,
     recording,
     recordingSeconds,
     toggleRecord,

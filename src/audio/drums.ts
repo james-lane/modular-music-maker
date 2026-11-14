@@ -1,0 +1,190 @@
+import { CONFIG } from '../config';
+import type { DrumSound } from '../domain/instruments';
+import type { Parameters } from '../domain/types';
+import type { AudioRuntime } from './factories';
+
+interface Tone {
+  frequency: number;
+  endFrequency?: number;
+  duration: number;
+  level: number;
+  wave?: OscillatorType;
+}
+interface DrumRecipe {
+  tones?: Tone[];
+  noise?: {
+    frequency: number;
+    duration: number;
+    level: number;
+    filter: BiquadFilterType;
+    bursts?: number;
+  };
+}
+
+/** Small editable synthesis recipes. No audio files, microphones, or downloads are needed. */
+export const DRUM_RECIPES: Record<DrumSound, DrumRecipe> = {
+  kick: { tones: [{ frequency: 150, endFrequency: 42, duration: 0.48, level: 0.9 }] },
+  snare: {
+    tones: [{ frequency: 185, endFrequency: 120, duration: 0.16, level: 0.3 }],
+    noise: { frequency: 1800, duration: 0.22, level: 0.65, filter: 'highpass' },
+  },
+  clap: { noise: { frequency: 1400, duration: 0.22, level: 0.8, filter: 'bandpass', bursts: 3 } },
+  'closed-hat': { noise: { frequency: 7500, duration: 0.07, level: 0.38, filter: 'highpass' } },
+  'open-hat': { noise: { frequency: 6500, duration: 0.5, level: 0.33, filter: 'highpass' } },
+  'low-tom': { tones: [{ frequency: 160, endFrequency: 75, duration: 0.45, level: 0.7 }] },
+  'high-tom': { tones: [{ frequency: 270, endFrequency: 145, duration: 0.32, level: 0.65 }] },
+  rim: {
+    tones: [
+      { frequency: 780, duration: 0.035, level: 0.35, wave: 'triangle' },
+      { frequency: 1800, duration: 0.025, level: 0.2, wave: 'square' },
+    ],
+  },
+  shaker: { noise: { frequency: 5000, duration: 0.11, level: 0.4, filter: 'bandpass' } },
+  crash: {
+    tones: [{ frequency: 4020, duration: 0.3, level: 0.035, wave: 'square' }],
+    noise: { frequency: 5500, duration: 1.6, level: 0.4, filter: 'highpass' },
+  },
+  ride: {
+    tones: [
+      { frequency: 4200, duration: 0.75, level: 0.12, wave: 'square' },
+      { frequency: 6300, duration: 0.6, level: 0.08, wave: 'triangle' },
+    ],
+    noise: { frequency: 8000, duration: 0.25, level: 0.12, filter: 'highpass' },
+  },
+  cowbell: {
+    tones: [
+      { frequency: 540, duration: 0.2, level: 0.25, wave: 'square' },
+      { frequency: 800, duration: 0.16, level: 0.2, wave: 'square' },
+    ],
+  },
+  tambourine: {
+    tones: [{ frequency: 7200, duration: 0.18, level: 0.05, wave: 'square' }],
+    noise: { frequency: 7000, duration: 0.26, level: 0.36, filter: 'highpass', bursts: 2 },
+  },
+  claves: { tones: [{ frequency: 2400, duration: 0.06, level: 0.4 }] },
+  'low-conga': { tones: [{ frequency: 230, endFrequency: 170, duration: 0.3, level: 0.65 }] },
+  'high-conga': { tones: [{ frequency: 370, endFrequency: 260, duration: 0.22, level: 0.6 }] },
+};
+
+interface ActiveHit {
+  sound: DrumSound;
+  sources: AudioScheduledSourceNode[];
+  nodes: AudioNode[];
+}
+
+export function createDrumRuntime(context: AudioContext): AudioRuntime {
+  const output = context.createGain();
+  const noiseBuffer = context.createBuffer(
+    1,
+    Math.ceil(context.sampleRate * 2.5),
+    context.sampleRate,
+  );
+  const samples = noiseBuffer.getChannelData(0);
+  for (let index = 0; index < samples.length; index++) samples[index] = Math.random() * 2 - 1;
+  const active = new Set<ActiveHit>();
+  let parameters: Parameters = { tone: 0, decay: 0.8, level: 0.7 };
+
+  const clean = (hit: ActiveHit) => {
+    hit.nodes.forEach((node) => node.disconnect());
+    active.delete(hit);
+  };
+  const stopHit = (hit: ActiveHit) => {
+    hit.sources.forEach((source) => source.stop());
+    clean(hit);
+  };
+
+  return {
+    inputs: {},
+    outputs: { out: output },
+    update(next) {
+      parameters = next;
+      output.gain.setTargetAtTime(
+        Number(next.level),
+        context.currentTime,
+        CONFIG.audio.parameterRampSeconds,
+      );
+    },
+    trigger(sound, velocity, when) {
+      const recipe = DRUM_RECIPES[sound];
+      if (!recipe) return;
+      // Like a real kit, a closed hat cuts the open hat short. Bound overlap under rapid playing.
+      if (sound === 'closed-hat')
+        [...active].filter((hit) => hit.sound === 'open-hat').forEach(stopHit);
+      if (active.size >= CONFIG.audio.maxDrumHits) stopHit(active.values().next().value!);
+      const start = Math.max(context.currentTime, when);
+      const decay = Number(parameters.decay);
+      const pitch = 2 ** (Number(parameters.tone) / 12);
+      const strength = Math.max(0.01, Math.min(1, velocity));
+      const hit: ActiveHit = { sound, sources: [], nodes: [] };
+      active.add(hit);
+
+      const envelope = (duration: number, level: number, bursts = 1) => {
+        const gain = context.createGain();
+        const end = start + duration * decay;
+        gain.gain.setValueAtTime(0.0001, start);
+        for (let burst = 0; burst < bursts; burst++) {
+          const at = start + burst * 0.012;
+          gain.gain.setValueAtTime(0.0001, at);
+          gain.gain.linearRampToValueAtTime(level * strength, at + 0.002);
+        }
+        gain.gain.exponentialRampToValueAtTime(
+          0.0001,
+          Math.max(end, start + bursts * 0.012 + 0.01),
+        );
+        gain.connect(output);
+        hit.nodes.push(gain);
+        return { gain, end: Math.max(end, start + bursts * 0.012 + 0.01) };
+      };
+
+      for (const tone of recipe.tones ?? []) {
+        const oscillator = context.createOscillator();
+        const { gain, end } = envelope(tone.duration, tone.level);
+        oscillator.type = tone.wave ?? 'sine';
+        oscillator.frequency.setValueAtTime(tone.frequency * pitch, start);
+        if (tone.endFrequency)
+          oscillator.frequency.exponentialRampToValueAtTime(tone.endFrequency * pitch, end);
+        oscillator.connect(gain);
+        hit.sources.push(oscillator);
+        hit.nodes.push(oscillator);
+        oscillator.start(start);
+        oscillator.stop(end + 0.01);
+      }
+      if (recipe.noise) {
+        const noise = context.createBufferSource();
+        const filter = context.createBiquadFilter();
+        const { gain, end } = envelope(
+          recipe.noise.duration,
+          recipe.noise.level,
+          recipe.noise.bursts,
+        );
+        noise.buffer = noiseBuffer;
+        filter.type = recipe.noise.filter;
+        filter.frequency.value = Math.min(
+          context.sampleRate / 2 - 100,
+          recipe.noise.frequency * pitch,
+        );
+        filter.Q.value = 0.8;
+        noise.connect(filter);
+        filter.connect(gain);
+        hit.sources.push(noise);
+        hit.nodes.push(noise, filter);
+        noise.start(start);
+        noise.stop(end + 0.01);
+      }
+      // Each hit owns all its nodes until its final source finishes, including scheduled hits.
+      let remaining = hit.sources.length;
+      hit.sources.forEach((source) => {
+        source.onended = () => {
+          if (--remaining === 0) clean(hit);
+        };
+      });
+    },
+    silence() {
+      [...active].forEach(stopHit);
+    },
+    dispose() {
+      [...active].forEach(stopHit);
+      output.disconnect();
+    },
+  };
+}

@@ -354,7 +354,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '02',
             'Follow the cables',
-            'Click an output socket, then a matching input. Audio connects to audio, pitch to pitch, and modulation to MOD. Click a connected input or double-click a cable to unplug it.',
+            'Click an output socket, then a matching input. Match audio, pitch, modulation, or trigger sockets. Keyboard pitch goes to an Oscillator; pad triggers go to a Drum machine. Click a connected input or double-click a cable to unplug it.',
           ],
           [
             '03',

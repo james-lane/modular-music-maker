@@ -1,5 +1,6 @@
 import { CONFIG, ROOT_NOTES, SCALES } from '../config';
 import { MODULES, defaultParameters } from './modules';
+import { createDrumPattern } from './instruments';
 import type { Cable, Endpoint, ModuleType, PatchModule, Project } from './types';
 
 export function createModule(type: ModuleType, x: number, y: number): PatchModule {
@@ -10,6 +11,7 @@ export function createModule(type: ModuleType, x: number, y: number): PatchModul
     y,
     parameters: defaultParameters(type),
     ...(type === 'sequencer' ? { steps: [0, 2, 4, 2, 0, 2, 6, 4] } : {}),
+    ...(type === 'drum-machine' ? { drumPattern: createDrumPattern() } : {}),
   };
 }
 
@@ -49,6 +51,39 @@ export function createProject(empty = false): Project {
   };
 }
 
+/** A separate preset leaves existing saved patches and the original starter untouched. */
+export function createPerformanceProject(): Project {
+  const drums = createModule('drum-machine', 48, 60);
+  const pads = createModule('pad-controller', 560, 60);
+  const keyboard = createModule('keyboard', 48, 550);
+  const oscillator = createModule('oscillator', 560, 610);
+  oscillator.parameters.waveform = 'triangle';
+  const mixer = createModule('mixer', 990, 60);
+  const output = createModule('output', 990, 470);
+  const connect = (
+    from: PatchModule,
+    fromPort: string,
+    to: PatchModule,
+    toPort: string,
+  ): Cable => ({
+    id: crypto.randomUUID(),
+    from: { moduleId: from.id, portId: fromPort },
+    to: { moduleId: to.id, portId: toPort },
+  });
+  return {
+    ...createProject(true),
+    name: 'Pocket rhythm',
+    modules: [drums, pads, keyboard, oscillator, mixer, output],
+    cables: [
+      connect(pads, 'trigger', drums, 'trigger'),
+      connect(keyboard, 'pitch', oscillator, 'pitch'),
+      connect(drums, 'out', mixer, 'a'),
+      connect(oscillator, 'out', mixer, 'b'),
+      connect(mixer, 'out', output, 'in'),
+    ],
+  };
+}
+
 export function getPort(project: Project, endpoint: Endpoint) {
   const module = project.modules.find((item) => item.id === endpoint.moduleId);
   return module && MODULES[module.type].ports.find((port) => port.id === endpoint.portId);
@@ -61,7 +96,8 @@ export function connectionError(project: Project, from: Endpoint, to: Endpoint):
   if (!output || !input) return 'That socket no longer exists.';
   if (output.direction !== 'output' || input.direction !== 'input')
     return 'Connect an output socket to an input socket.';
-  if (output.signal !== input.signal) return 'Match socket types: audio, pitch, or modulation.';
+  if (output.signal !== input.signal)
+    return 'Match socket types: audio, pitch, modulation, or trigger.';
   if (from.moduleId === to.moduleId) return 'Connect two different modules.';
   if (
     project.cables.some(

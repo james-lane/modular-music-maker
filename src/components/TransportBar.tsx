@@ -27,6 +27,7 @@ interface Props {
   onNew: () => void;
   onImport: () => void;
   onStarter: () => void;
+  onPerformance: () => void;
   onSettings: () => void;
 }
 
@@ -41,6 +42,7 @@ export function TransportBar({
   onNew,
   onImport,
   onStarter,
+  onPerformance,
   onSettings,
 }: Props) {
   const [tempoDraft, setTempoDraft] = useState(String(project.tempo));
@@ -53,17 +55,17 @@ export function TransportBar({
     <section className="transport-bar" aria-label="Composition and playback controls">
       <div className="transport-buttons">
         <button
-          className={`play-button ${audio.playing ? 'playing' : ''}`}
+          className={`play-button ${audio.active ? 'playing' : ''}`}
           disabled={audio.starting}
-          onClick={() => void (audio.playing ? audio.stop() : audio.play())}
-          aria-label={audio.playing ? 'Stop playback' : 'Play patch'}
+          onClick={() => void (audio.active ? audio.stop() : audio.play())}
+          aria-label={audio.active ? 'Stop playback' : 'Play patch'}
         >
-          {audio.playing ? (
+          {audio.active ? (
             <Square size={15} fill="currentColor" />
           ) : (
             <Play size={16} fill="currentColor" />
           )}
-          <span>{audio.starting ? 'Starting' : audio.playing ? 'Stop' : 'Play'}</span>
+          <span>{audio.starting ? 'Starting' : audio.active ? 'Stop' : 'Play'}</span>
         </button>
         <button
           className={`record-button ${audio.recording ? 'recording' : ''}`}
@@ -281,6 +283,14 @@ export function TransportBar({
                 }}
               >
                 <AudioLines size={15} /> Load starter patch
+              </button>
+              <button
+                onClick={() => {
+                  onPerformance();
+                  setMoreOpen(false);
+                }}
+              >
+                <AudioLines size={15} /> Load rhythm & keys patch
               </button>
             </div>
           </>

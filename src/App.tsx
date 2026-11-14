@@ -14,7 +14,7 @@ import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
 import { TransportBar } from './components/TransportBar';
 import { MODULES } from './domain/modules';
-import { createModule, createProject } from './domain/project';
+import { createModule, createProject, createPerformanceProject } from './domain/project';
 import { saveLocally, saveToServer } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
@@ -67,7 +67,9 @@ export default function App() {
       const editing =
         event.target instanceof HTMLElement &&
         Boolean(
-          event.target.closest('input, select, textarea, [contenteditable], [role="slider"]'),
+          event.target.closest(
+            'input, select, textarea, [contenteditable], [role="slider"], .piano-keybed, .performance-pads',
+          ),
         );
       const modifier = event.metaKey || event.ctrlKey;
       if (modifier && event.key.toLowerCase() === 's') {
@@ -77,8 +79,10 @@ export default function App() {
       }
       if (editing || dialog) return;
       if (event.code === 'Space') {
+        // A focused button keeps its native Space activation (for example drum audition).
+        if (event.target instanceof HTMLElement && event.target.closest('button')) return;
         event.preventDefault();
-        if (!event.repeat) void (audio.playing ? audio.stop() : audio.play());
+        if (!event.repeat) void (audio.active ? audio.stop() : audio.play());
       }
       if (modifier && event.key.toLowerCase() === 'z') {
         event.preventDefault();
@@ -178,6 +182,7 @@ export default function App() {
         onNew={newProject}
         onImport={() => importInput.current?.click()}
         onStarter={() => void openProject(createProject())}
+        onPerformance={() => void openProject(createPerformanceProject())}
         onSettings={() => setDialog('settings')}
       />
       <div className="studio-body">
@@ -193,6 +198,9 @@ export default function App() {
           engine={audio.engine}
           playing={audio.playing}
           step={audio.step}
+          drumStep={audio.drumStep}
+          live={audio.live}
+          audioActive={audio.active}
         />
         <button className="mobile-library-toggle button" onClick={() => setLibraryOpen(true)}>
           <Menu size={16} /> Add modules
@@ -200,11 +208,11 @@ export default function App() {
       </div>
       <footer className="status-bar">
         <div>
-          <span className={`status-led ${audio.playing ? 'playing' : ''}`} />
+          <span className={`status-led ${audio.active ? 'playing' : ''}`} />
           <span>
             {audio.recording
               ? 'Recording your next happy accident'
-              : audio.playing
+              : audio.active
                 ? 'Sound is flowing'
                 : 'Ready when you are'}
           </span>

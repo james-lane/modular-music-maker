@@ -10,13 +10,21 @@ import {
   RotateCw,
   X,
 } from 'lucide-react';
-import { useRef, useState, type CSSProperties, type DragEvent, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type DragEvent,
+  type PointerEvent,
+} from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
 import { MODULES } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import { ModuleCard } from './ModuleCard';
+import type { LiveControls } from '../audio/live';
 
 interface Props {
   project: Project;
@@ -25,6 +33,9 @@ interface Props {
   engine: AudioEngine;
   playing: boolean;
   step: number;
+  drumStep: number;
+  live: LiveControls;
+  audioActive: boolean;
   canUndo: boolean;
   canRedo: boolean;
   undo: () => void;
@@ -49,6 +60,9 @@ export function Workspace({
   engine,
   playing,
   step,
+  drumStep,
+  live,
+  audioActive,
   canUndo,
   canRedo,
   undo,
@@ -65,6 +79,26 @@ export function Workspace({
         ),
   );
   const [selected, setSelected] = useState<string | null>(null);
+  const previousIds = useRef(new Set(project.modules.map((module) => module.id)));
+  useEffect(() => {
+    const added = project.modules.filter((module) => !previousIds.current.has(module.id));
+    previousIds.current = new Set(project.modules.map((module) => module.id));
+    if (added.length === 1 && viewport.current) {
+      const module = added[0];
+      const definition = MODULES[module.type];
+      setSelected(module.id);
+      viewport.current.scrollTo({
+        left: Math.max(
+          0,
+          (module.x + definition.width / 2) * zoom - viewport.current.clientWidth / 2,
+        ),
+        top: Math.max(
+          0,
+          (module.y + definition.height / 2) * zoom - viewport.current.clientHeight / 2,
+        ),
+      });
+    } else if (added.length > 1) viewport.current?.scrollTo(0, 0);
+  }, [project.modules, zoom]);
   const [pending, setPending] = useState<Endpoint | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [dragPreview, setDragPreview] = useState<{ id: string; x: number; y: number } | null>(null);
@@ -333,6 +367,9 @@ export function Workspace({
                 project={project}
                 selected={module.id === selected}
                 step={step}
+                drumStep={drumStep}
+                live={live}
+                audioActive={audioActive}
                 engine={engine}
                 playing={playing}
                 pending={pending}
@@ -381,6 +418,24 @@ export function Workspace({
                   }))
                 }
                 onPort={portClick}
+                onDrumStep={(sound, index) =>
+                  commit((current) => ({
+                    ...current,
+                    modules: current.modules.map((item) =>
+                      item.id === module.id && item.drumPattern
+                        ? {
+                            ...item,
+                            drumPattern: {
+                              ...item.drumPattern,
+                              [sound]: item.drumPattern[sound].map((enabled, position) =>
+                                position === index ? !enabled : enabled,
+                              ),
+                            },
+                          }
+                        : item,
+                    ),
+                  }))
+                }
                 onRemove={() => {
                   commit((current) => ({
                     ...current,
@@ -431,7 +486,9 @@ export function Workspace({
                             ? '#c89a52'
                             : signal === 'control'
                               ? '#9385b7'
-                              : MODULES[fromModule.type].color,
+                              : signal === 'trigger'
+                                ? '#b9788f'
+                                : MODULES[fromModule.type].color,
                       } as CSSProperties
                     }
                   >
@@ -474,10 +531,18 @@ export function Workspace({
                   );
                 })()}
             </svg>
-            <div className="canvas-note">
-              <span>Room for your next idea.</span>
-              <p>Grab a module. Turn a knob. Follow your ears.</p>
-            </div>
+            {!displayModules.some(
+              (module) =>
+                module.x < 440 &&
+                module.x + MODULES[module.type].width > 90 &&
+                module.y < 650 &&
+                module.y + MODULES[module.type].height > 570,
+            ) && (
+              <div className="canvas-note">
+                <span>Room for your next idea.</span>
+                <p>Grab a module. Turn a knob. Follow your ears.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
