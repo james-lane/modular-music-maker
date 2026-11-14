@@ -25,6 +25,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 ## What works
 
 - A searchable module library with twelve working modules: drum machine, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, and output.
+- Five contrasting example patches in **Examples** (also available under **More → Example patches**). The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Drag modules from the library, or add them using the **+** buttons. Move panels by dragging their headers.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, and trigger are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
@@ -36,9 +37,23 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
 - Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.
 
+## Choose a starting point
+
+Open **Examples**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically.
+
+| Patch           | Sound and approach                                                        |
+| --------------- | ------------------------------------------------------------------------- |
+| Sunday circuits | Warm C-minor sequenced melody at 108 BPM, with filtering and delay        |
+| Pocket rhythm   | Drum groove at 108 BPM with a live keyboard and sixteen percussion pads   |
+| Warehouse pulse | Driving drums and a clipped F-minor bass line at 128 BPM                  |
+| Coastal static  | Ambient noise, slowly swept by an LFO through a filter and reverb         |
+| Tiny arcade     | Two independent sequencers playing square/triangle voices in G at 152 BPM |
+
+Coastal static is free-running: its LFO Rate controls the wash rather than the composition tempo. The other patches use the transport clock. Choose the same example again for a fresh original; your edited copies remain available in **My patches**. Returning visits restore the active saved patch without reopening the chooser.
+
 ## Play drums and keys
 
-Use **More → Load rhythm & keys patch** for the connected _Pocket rhythm_ example. Your current patch stays in My patches. The three new instruments are also available separately in the module library.
+Use **Examples → Pocket rhythm** for the connected performance example. Your current patch stays in My patches. The three instruments are also available separately in the module library.
 
 - **Drum machine:** a 16-step, four-lane sequencer for kick, snare, clap, and closed hat. Click switches to edit the rhythm; click a voice name to audition it. **Pattern on/off** mutes the sequencer without disabling live pad hits. Level, tone, and decay are configurable. Press Play to start the pattern at the composition tempo.
 - **Keyboard:** 25 chromatic piano keys with octave and velocity controls. Wire **PITCH / GATE → Oscillator PITCH**, then route the oscillator's audio to an output (directly or through effects/mixer). Hold keys with the pointer/touch, or focus the keys and use **A W S E D F T G Y H U J K O L P ;**. Enter/Space on a focused key plays a short note. Oscillator voices are monophonic: the last held note wins and releasing it returns to the previous held note. Keyboard notes are chromatic, independently of the sequencer's scale.
@@ -76,6 +91,7 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 
 - `src/config.ts`: application limits, tempo range, canvas size, autosave, scheduler timing, scales, and root notes.
 - `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors. `src/domain/module-guides.ts` contains the guides and derives compatibility from the catalog sockets.
+- `src/domain/examples.ts`: example patch catalog, sound recipes, artwork colours, and starter tips. Recipes use the ordinary module defaults and override only the settings that define each sound.
 - `src/styles.css`: shared theme tokens, panel mechanics, knobs, and sockets. `src/components/module-finishes.css` defines individual materials, colours, knob finishes, and enclosure details; `instruments.css` defines specialized performance layouts.
 - `server/index.ts`: listener; `PORT` and `PATCHWORK_DATA_DIR` environment variables configure the server. See `.env.example`. Set these in your shell; `.env` is documentation only and is not automatically loaded.
 - `.openai/hosting.json`: reserved private Sites preview configuration; no hosted version has been published. It does not affect local development.

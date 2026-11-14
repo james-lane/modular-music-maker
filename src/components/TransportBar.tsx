@@ -26,8 +26,7 @@ interface Props {
   onExport: () => void;
   onNew: () => void;
   onImport: () => void;
-  onStarter: () => void;
-  onPerformance: () => void;
+  onExamples: () => void;
   onSettings: () => void;
 }
 
@@ -41,8 +40,7 @@ export function TransportBar({
   onExport,
   onNew,
   onImport,
-  onStarter,
-  onPerformance,
+  onExamples,
   onSettings,
 }: Props) {
   const [tempoDraft, setTempoDraft] = useState(String(project.tempo));
@@ -278,19 +276,11 @@ export function TransportBar({
               </button>
               <button
                 onClick={() => {
-                  onStarter();
+                  onExamples();
                   setMoreOpen(false);
                 }}
               >
-                <AudioLines size={15} /> Load starter patch
-              </button>
-              <button
-                onClick={() => {
-                  onPerformance();
-                  setMoreOpen(false);
-                }}
-              >
-                <AudioLines size={15} /> Load rhythm & keys patch
+                <AudioLines size={15} /> Example patches
               </button>
             </div>
           </>

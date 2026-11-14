@@ -10,12 +10,13 @@ import {
 } from './components/Dialogs';
 import { ModuleLibrary } from './components/ModuleLibrary';
 import { ModuleHelpDialog } from './components/ModuleHelpDialog';
+import { ExamplePatchesDialog } from './components/ExamplePatchesDialog';
 import { Workspace } from './components/Workspace';
 import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
 import { TransportBar } from './components/TransportBar';
 import { MODULES } from './domain/modules';
-import { createModule, createProject, createPerformanceProject } from './domain/project';
+import { createModule, createProject } from './domain/project';
 import { saveLocally, saveToServer } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
@@ -34,7 +35,7 @@ export default function App() {
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
   const audio = useAudio(project, notify);
-  const [dialog, setDialog] = useState<StudioDialog>(null);
+  const [dialog, setDialog] = useState<StudioDialog>(studio.isFirstVisit ? 'examples' : null);
   const [guideType, setGuideType] = useState<ModuleType | null>(null);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
@@ -183,8 +184,7 @@ export default function App() {
         onExport={() => setDialog('export')}
         onNew={newProject}
         onImport={() => importInput.current?.click()}
-        onStarter={() => void openProject(createProject())}
-        onPerformance={() => void openProject(createPerformanceProject())}
+        onExamples={() => setDialog('examples')}
         onSettings={() => setDialog('settings')}
       />
       <div className="studio-body">
@@ -249,6 +249,9 @@ export default function App() {
         </div>
       )}
       {dialog === 'help' && <HelpDialog onClose={() => setDialog(null)} />}
+      {dialog === 'examples' && (
+        <ExamplePatchesDialog onOpen={openProject} onClose={() => setDialog(null)} />
+      )}
       {dialog === 'module-help' && guideType && (
         <ModuleHelpDialog initialType={guideType} onClose={() => setDialog(null)} />
       )}

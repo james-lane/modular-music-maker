@@ -8,7 +8,11 @@ type Edit = (project: Project) => Project;
 
 /** Patch history contains serializable snapshots. Drag previews stay in Canvas until released. */
 export function useStudio() {
-  const [project, setProject] = useState(() => loadActiveProject() ?? createProject());
+  const [initial] = useState(() => {
+    const saved = loadActiveProject();
+    return { project: saved ?? createProject(), isFirstVisit: !saved };
+  });
+  const [project, setProject] = useState(initial.project);
   const current = useRef(project);
   const past = useRef<Project[]>([]);
   const future = useRef<Project[]>([]);
@@ -92,6 +96,7 @@ export function useStudio() {
 
   return {
     project,
+    isFirstVisit: initial.isFirstVisit,
     commit,
     undo,
     redo,

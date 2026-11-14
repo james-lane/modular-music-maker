@@ -359,7 +359,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '01',
             'Start with a sound',
-            'Press Play to hear the starter patch. Add modules from the library using +, or drag them onto the dotted workspace.',
+            'Choose one of five starting points in Examples, then press Play. Add modules from the library using +, or drag them onto the dotted workspace.',
           ],
           [
             '02',

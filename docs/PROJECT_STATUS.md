@@ -6,7 +6,13 @@ Last updated: **14 November 2026**.
 
 Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes twelve functioning modules, including a 16-step drum machine, 25-key keyboard, and 16-pad controller, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
 
-The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture. **More → Load rhythm & keys patch** opens _Pocket rhythm_, a separate connected performance example with all three new instruments, an oscillator, mixer, and output.
+The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture.
+
+## Example patches
+
+The **Examples** header button and **More → Example patches** open five contrasting starting points: Sunday circuits (warm sequenced melody), Pocket rhythm (live drums/keys/pads), Warehouse pulse (128 BPM bass/drums), Coastal static (free-running modulated noise/reverb), and Tiny arcade (152 BPM two-voice chiptune). First visits open the chooser automatically; returning visits restore their active saved patch. Each selection opens a fresh editable copy, preserving the previous patch in My patches and stopping playback. Cards explain the sound and suggest a first adjustment.
+
+Browser QA verified first-visit display, all five examples producing a live output signal, stopping playback on example switches, saving/reopening an edited variation, fresh original settings on repeated selection, returning-visit restoration, Escape, header/More entry points, and 390px phone scrolling with no horizontal overflow. The user's original studio patch was retained; audio/persistence checks used a separate local preview origin. No browser errors occurred.
 
 ## Module guides
 
@@ -23,7 +29,7 @@ The user prefers individually designed instruments with different materials, col
 ## Validation
 
 - Strict TypeScript checking and a production Vite build.
-- Twenty-one automated tests covering starter round trips, all registry defaults, musical pitch conversion, routing invariants, untrusted import data, cycles/dangling cables, atomic file persistence, corrupt neighboring files, real HTTP API validation, drum pattern validation/muting, controller event routing, backward-compatible v1 loading, all sixteen drum recipes, source disposal, hat choking, held-note priority/release, octave edits, and rebuilding disposed audio engines during development reload, guide control coverage, signal-specific compatibility guidance, and valid wiring for every guide example.
+- Twenty-three automated tests covering starter round trips, all registry defaults, musical pitch conversion, routing invariants, untrusted import data, cycles/dangling cables, atomic file persistence, corrupt neighboring files, real HTTP API validation, drum pattern validation/muting, controller event routing, backward-compatible v1 loading, all sixteen drum recipes, source disposal, hat choking, held-note priority/release, octave edits, and rebuilding disposed audio engines during development reload, guide control coverage, signal-specific compatibility guidance, valid wiring for every guide example, and distinct/fully connected/non-overlapping example patches with independent copies.
 - Browser verification: live playback/analysis, keyboard knob changes, recording/save/reopen/download, Node saving, library drag-and-drop, module movement, modulation routing, incompatible-socket rejection, undo/redo, composition settings across reload, and desktop/390px phone layouts. The downloaded take was verified as stereo Opus at 48 kHz. New-instrument browser checks also verified live keyboard/pad audio with the drum pattern muted, note release, recording/reopening the live performance, and drum pattern/keyboard-octave persistence through a page reload. No browser errors occurred in the final verification run. See Git history for later validation updates.
 
 ## Known boundaries

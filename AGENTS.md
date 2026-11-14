@@ -22,6 +22,7 @@ Current examples include a cream/charcoal drum computer, walnut-sided dark keybo
 - Keep strict TypeScript enabled. Avoid `any` and unexplained assertions.
 - Keep serialized patch data, UI interaction state, and live audio nodes separate.
 - New modules need a complete field guide in `src/domain/module-guides.ts`, including control descriptions and a valid worked patch example. Derive compatible modules from registry sockets rather than maintaining a second compatibility list. Guide browsing must not mutate the patch or start audio.
+- Starter examples live in `src/domain/examples.ts`. Keep their sound, module combinations, and teaching purpose distinct. Factories must return fresh IDs and independent editable data, with every module contributing to Output and no overlapping panels. Opening an example uses the normal project-switch path to preserve existing work and stop playback; browsing is silent.
 - Module defaults, parameter ranges, sockets, dimensions, and accents belong in the module registry. Shared behavioral values belong in `src/config.ts`; theme values belong in CSS custom properties.
 - Comment **why**, invariants, lifecycle ownership, and extension points. Keep names descriptive. Format code with Prettier; prefer small components to growing one component indefinitely.
 - Validate all imported/stored/request data through `parseProject`. Preserve versioned patch compatibility; add an explicit migration if changing the schema.

@@ -21,37 +21,39 @@ React controls / workspace
 
 ## Source map
 
-| Area                                    | Responsibility                                                      |
-| --------------------------------------- | ------------------------------------------------------------------- |
-| `src/config.ts`                         | Shared product defaults, limits, scale tables                       |
-| `src/domain/types.ts`                   | Serializable model and catalog interfaces                           |
-| `src/domain/module-guides.ts`           | Teaching copy, example wiring, and derived socket compatibility     |
-| `src/components/ModuleHelpDialog.tsx`   | Library field-guide modal with related-guide navigation             |
-| `src/domain/modules.ts`                 | Declarative module registry                                         |
-| `src/domain/project.ts`                 | Starter patch, module creation, connection invariants, pitch math   |
-| `src/domain/validation.ts`              | Shared Zod validation for every data boundary                       |
-| `src/domain/storage.ts`                 | Browser patch library, optional server sync, downloads              |
-| `src/audio/factories.ts`                | Audio node creation, parameter updates, disposal                    |
-| `src/audio/engine.ts`                   | Context lifecycle, graph topology, note scheduling, analysis        |
-| `src/audio/drums.ts`                    | Synthesized kit recipes, scheduled one-shot ownership and cleanup   |
-| `src/audio/live.ts`                     | Ephemeral keyboard/pad gesture contract                             |
-| `src/domain/instruments.ts`             | Drum identities/patterns, shortcuts and chromatic pitch helpers     |
-| `src/components/KeyboardPanel.tsx`      | Piano key gestures, focus and note release                          |
-| `src/components/PadControllerPanel.tsx` | Live pad layout, keyboard shortcuts and feedback                    |
-| `src/components/DrumMachinePanel.tsx`   | Drum pattern switches and voice audition                            |
-| `src/audio/recordings.ts`               | Recording MIME selection and IndexedDB blob storage                 |
-| `src/hooks/useStudio.ts`                | Patch edits, grouped undo/redo, autosave                            |
-| `src/hooks/useAudio.ts`                 | Transport, recording lifecycle, React/audio bridge                  |
-| `src/components/StudioHeader.tsx`       | Studio navigation and dialog entry points                           |
-| `src/components/TransportBar.tsx`       | Playback, composition settings, save/export controls                |
-| `src/components/Workspace.tsx`          | Canvas geometry, drag preview, sockets, SVG cables, zoom/pan        |
-| `src/components/ModuleCard.tsx`         | Registry-driven panel and special instrument controls               |
-| `src/components/MixerPanel.tsx`         | Vertical channel faders using the existing mixer gain parameters    |
-| `src/components/module-finishes.css`    | Individual enclosure palettes, materials, knob finishes, and faders |
-| `src/components/Knob.tsx`               | Logarithmic/linear parameter editing and keyboard controls          |
-| `src/components/Scope.tsx`              | Animation-frame waveform and RMS display                            |
-| `server/app.ts`                         | Local Express API and production static serving                     |
-| `server/repository.ts`                  | Validated atomic filesystem persistence                             |
+| Area                                      | Responsibility                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------- |
+| `src/config.ts`                           | Shared product defaults, limits, scale tables                       |
+| `src/domain/types.ts`                     | Serializable model and catalog interfaces                           |
+| `src/domain/module-guides.ts`             | Teaching copy, example wiring, and derived socket compatibility     |
+| `src/components/ModuleHelpDialog.tsx`     | Library field-guide modal with related-guide navigation             |
+| `src/domain/modules.ts`                   | Declarative module registry                                         |
+| `src/domain/project.ts`                   | Starter patch, module creation, connection invariants, pitch math   |
+| `src/domain/examples.ts`                  | Five example recipes, catalog copy, and independent copy factories  |
+| `src/components/ExamplePatchesDialog.tsx` | First-visit and reusable example patch chooser                      |
+| `src/domain/validation.ts`                | Shared Zod validation for every data boundary                       |
+| `src/domain/storage.ts`                   | Browser patch library, optional server sync, downloads              |
+| `src/audio/factories.ts`                  | Audio node creation, parameter updates, disposal                    |
+| `src/audio/engine.ts`                     | Context lifecycle, graph topology, note scheduling, analysis        |
+| `src/audio/drums.ts`                      | Synthesized kit recipes, scheduled one-shot ownership and cleanup   |
+| `src/audio/live.ts`                       | Ephemeral keyboard/pad gesture contract                             |
+| `src/domain/instruments.ts`               | Drum identities/patterns, shortcuts and chromatic pitch helpers     |
+| `src/components/KeyboardPanel.tsx`        | Piano key gestures, focus and note release                          |
+| `src/components/PadControllerPanel.tsx`   | Live pad layout, keyboard shortcuts and feedback                    |
+| `src/components/DrumMachinePanel.tsx`     | Drum pattern switches and voice audition                            |
+| `src/audio/recordings.ts`                 | Recording MIME selection and IndexedDB blob storage                 |
+| `src/hooks/useStudio.ts`                  | Patch edits, grouped undo/redo, autosave                            |
+| `src/hooks/useAudio.ts`                   | Transport, recording lifecycle, React/audio bridge                  |
+| `src/components/StudioHeader.tsx`         | Studio navigation and dialog entry points                           |
+| `src/components/TransportBar.tsx`         | Playback, composition settings, save/export controls                |
+| `src/components/Workspace.tsx`            | Canvas geometry, drag preview, sockets, SVG cables, zoom/pan        |
+| `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls               |
+| `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters    |
+| `src/components/module-finishes.css`      | Individual enclosure palettes, materials, knob finishes, and faders |
+| `src/components/Knob.tsx`                 | Logarithmic/linear parameter editing and keyboard controls          |
+| `src/components/Scope.tsx`                | Animation-frame waveform and RMS display                            |
+| `server/app.ts`                           | Local Express API and production static serving                     |
+| `server/repository.ts`                    | Validated atomic filesystem persistence                             |
 
 ## Module field guides
 
@@ -89,7 +91,15 @@ Keyboard holds have last-note priority per oscillator. Releasing the last note s
 
 `audio/drums.ts` builds sixteen kit sounds from short oscillators and filtered noise using editable recipes. Each triggered hit owns its nodes until all its sources end. Stop/disposal disconnects and stops outstanding sources, including scheduled hits. A closed hat chokes a ringing open hat; a configurable overlap limit bounds rapid triggering. Drum level/tone/decay affect sequenced and live hits. The four pattern lanes remain editable independently of the sixteen pad sound mappings; disabling Pattern stops scheduled hits but accepts live triggers.
 
-The _Pocket rhythm_ preset connects Keyboard → Oscillator, Pad controller → Drum machine, Drum machine/Oscillator → Mixer → Output. Its separate menu action creates a new saved project and leaves the original starter available.
+The _Pocket rhythm_ example connects Keyboard → Oscillator, Pad controller → Drum machine, Drum machine/Oscillator → Mixer → Output. It is available through the example collection alongside the other starting points.
+
+## Example patches
+
+`domain/examples.ts` owns the five-item catalog, descriptions, starter tips, artwork colours, and sound factories. It reuses the original Sunday circuits and Pocket rhythm factories, and adds Warehouse pulse (drums and sequenced bass), Coastal static (noise/filter/LFO/reverb), and Tiny arcade (two independent sequenced voices). Each factory returns fresh UUIDs and independent parameters/pattern arrays. Examples are ordinary editable v1 projects; no template markers or UI data enter saved files.
+
+`useStudio` records whether initialization found a valid saved active project. App opens `ExamplePatchesDialog` only on a first visit; returning visits restore the saved patch. Examples remain accessible in the header and More menu. Browsing is silent and does not change the project. Selecting one uses the existing project-switch path: stop audio/finish recording, flush the current patch to browser storage, clear undo history, and open the new copy with playback stopped. The chooser guards repeated selection while opening. Dismissal leaves the current patch intact.
+
+`components/examples.css` provides responsive paper cards with CSS/SVG artwork and no external media. Tests verify five distinct routing arrangements, full output connectivity, validation/JSON round trips, non-overlapping in-bounds layouts, fresh IDs, and copy independence after edits. Keep all of these properties when replacing or adding recipes.
 
 ## Recording and persistence
 

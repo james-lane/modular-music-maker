@@ -1,7 +1,7 @@
-import { CircleHelp, FolderOpen, Headphones, LayoutGrid } from 'lucide-react';
+import { AudioLines, CircleHelp, FolderOpen, Headphones, LayoutGrid } from 'lucide-react';
 
 export type StudioDialog =
-  'patches' | 'recordings' | 'help' | 'module-help' | 'export' | 'settings' | null;
+  'examples' | 'patches' | 'recordings' | 'help' | 'module-help' | 'export' | 'settings' | null;
 
 interface Props {
   dialog: StudioDialog;
@@ -26,11 +26,15 @@ export function StudioHeader({ dialog, recordingCount, onDialog }: Props) {
         <span className="brand-tagline">a playground for sound</span>
       </a>
       <nav className="header-navigation" aria-label="Studio navigation">
-        <button
-          className={dialog !== 'patches' && dialog !== 'recordings' ? 'active' : ''}
-          onClick={() => onDialog(null)}
-        >
+        <button className={dialog === null ? 'active' : ''} onClick={() => onDialog(null)}>
           <LayoutGrid size={15} /> Studio
+        </button>
+        <button
+          className={dialog === 'examples' ? 'active' : ''}
+          onClick={() => onDialog('examples')}
+          aria-haspopup="dialog"
+        >
+          <AudioLines size={15} /> Examples
         </button>
         <button
           className={dialog === 'patches' ? 'active' : ''}

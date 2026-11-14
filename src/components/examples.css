@@ -1,0 +1,166 @@
+/* The example collection uses printed-paper cards with a different sound motif on each sleeve. */
+.studio-dialog.examples-dialog {
+  width: 860px;
+  padding: 0;
+}
+.examples-dialog .dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fafbf4;
+  border-bottom: 1px solid #e0e4d7;
+  padding: 24px 60px 17px 26px;
+}
+.examples-dialog .dialog-header h2 {
+  margin-bottom: 0;
+}
+.examples-dialog .dialog-header .icon-button {
+  top: 21px;
+  right: 18px;
+}
+.examples-body {
+  padding: 20px 26px 25px;
+}
+.examples-intro {
+  margin: 0 0 21px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #68745a;
+}
+.example-patches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.example-patch {
+  display: flex;
+  align-items: stretch;
+  gap: 15px;
+  padding: 14px;
+  border: 1px solid #dfe3d4;
+  border-radius: 8px;
+  text-align: left;
+  background: #fdfdf7;
+  box-shadow:
+    0 2px 3px #33402505,
+    inset 0 1px 0 #fff;
+}
+.example-patch:hover:not(:disabled) {
+  border-color: var(--example-color);
+  background: #f4f6eb;
+}
+.example-patch:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+.example-patch:last-child {
+  grid-column: 1 / -1;
+}
+.example-artwork {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 0 0 90px;
+  min-height: 145px;
+  padding: 11px 10px;
+  color: var(--example-color);
+  border: 1px solid color-mix(in srgb, var(--example-color) 24%, #e2e4d8);
+  border-radius: 5px;
+  background:
+    repeating-linear-gradient(0deg, #fff0 0 3px, #fff3 3px 4px),
+    color-mix(in srgb, var(--example-color) 12%, #f5f5e9);
+  box-shadow: inset 0 1px 1px #fff9;
+}
+.example-number {
+  font: 12px monospace;
+  letter-spacing: 1px;
+}
+.example-artwork svg {
+  width: 100%;
+  height: 48px;
+  margin: 8px 0;
+  overflow: visible;
+}
+.example-style {
+  font-size: 8px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1.7;
+  font-weight: 650;
+}
+.example-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.example-name {
+  font-family: Georgia, serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: -0.4px;
+  color: #43513a;
+  margin: 0 0 7px;
+}
+.example-description {
+  font-size: 11px;
+  line-height: 1.7;
+  color: #657357;
+}
+.example-tip {
+  display: block;
+  margin: 10px 0 16px;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #778469;
+  font-style: italic;
+}
+.example-open {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: auto;
+  font-size: 11px;
+  font-weight: 650;
+  color: var(--example-color);
+}
+.examples-footer {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 17px 26px;
+  background: #f0f4e8;
+  border-top: 1px solid #dfe5d5;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #71815f;
+}
+.examples-footer svg {
+  flex-shrink: 0;
+}
+@media (max-width: 680px) {
+  .example-patches {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .examples-body {
+    padding: 20px;
+  }
+  .examples-dialog .dialog-header {
+    padding: 23px 50px 17px 20px;
+  }
+  .examples-footer {
+    padding: 16px 20px;
+  }
+  .example-artwork {
+    min-height: 130px;
+  }
+}
+/* Keep navigation labels readable on compact headers. */
+@media (max-width: 760px) {
+  .header-navigation > button > svg {
+    display: none;
+  }
+  .header-navigation > button {
+    padding-inline: 6px;
+  }
+}
