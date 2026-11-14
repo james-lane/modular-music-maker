@@ -1,0 +1,202 @@
+import { CONFIG } from '../config';
+import type { ModuleType, Parameters } from '../domain/types';
+
+export interface AudioRuntime {
+  inputs: Record<string, AudioNode | AudioParam>;
+  outputs: Record<string, AudioNode>;
+  update: (parameters: Parameters) => void;
+  dispose: () => void;
+  /** Only pitched voices expose an envelope and frequency for the note scheduler. */
+  voice?: { frequency: AudioParam; envelope: AudioParam };
+}
+
+type Factory = (context: AudioContext, masterBus: AudioNode) => AudioRuntime;
+const value = (parameters: Parameters, key: string) => Number(parameters[key]);
+const smooth = (parameter: AudioParam, target: number, context: AudioContext) => {
+  parameter.setTargetAtTime(target, context.currentTime, CONFIG.audio.parameterRampSeconds);
+};
+
+/** Native Web Audio factories have no React or persistence dependencies.
+ * Every owned source/node must be released in dispose(), including feedback connections.
+ */
+export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
+  sequencer: () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),
+
+  oscillator(context) {
+    const oscillator = context.createOscillator();
+    const amplitude = context.createGain();
+    amplitude.gain.value = 0;
+    oscillator.connect(amplitude);
+    oscillator.start();
+    return {
+      inputs: {},
+      outputs: { out: amplitude },
+      voice: { frequency: oscillator.frequency, envelope: amplitude.gain },
+      update(parameters) {
+        oscillator.type = parameters.waveform as OscillatorType;
+        smooth(oscillator.detune, value(parameters, 'detune'), context);
+      },
+      dispose() {
+        oscillator.stop();
+        oscillator.disconnect();
+        amplitude.disconnect();
+      },
+    };
+  },
+
+  noise(context) {
+    const buffer = context.createBuffer(1, context.sampleRate * 2, context.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let index = 0; index < data.length; index++) data[index] = Math.random() * 2 - 1;
+    const source = context.createBufferSource();
+    const gain = context.createGain();
+    source.buffer = buffer;
+    source.loop = true;
+    source.connect(gain);
+    source.start();
+    return {
+      inputs: {},
+      outputs: { out: gain },
+      update(parameters) {
+        smooth(gain.gain, value(parameters, 'level'), context);
+      },
+      dispose() {
+        source.stop();
+        source.disconnect();
+        gain.disconnect();
+      },
+    };
+  },
+
+  lfo(context) {
+    const oscillator = context.createOscillator();
+    const depth = context.createGain();
+    oscillator.type = 'sine';
+    oscillator.connect(depth);
+    oscillator.start();
+    return {
+      inputs: {},
+      outputs: { out: depth },
+      update(parameters) {
+        smooth(oscillator.frequency, value(parameters, 'rate'), context);
+        smooth(depth.gain, value(parameters, 'depth'), context);
+      },
+      dispose() {
+        oscillator.stop();
+        oscillator.disconnect();
+        depth.disconnect();
+      },
+    };
+  },
+
+  filter(context) {
+    const filter = context.createBiquadFilter();
+    return {
+      inputs: { in: filter, cutoff: filter.frequency },
+      outputs: { out: filter },
+      update(parameters) {
+        filter.type = parameters.mode as BiquadFilterType;
+        smooth(filter.frequency, value(parameters, 'cutoff'), context);
+        smooth(filter.Q, value(parameters, 'resonance'), context);
+      },
+      dispose() {
+        filter.disconnect();
+      },
+    };
+  },
+
+  delay(context) {
+    const input = context.createGain();
+    const delay = context.createDelay(2);
+    const feedback = context.createGain();
+    const wet = context.createGain();
+    const dry = context.createGain();
+    const output = context.createGain();
+    input.connect(delay);
+    input.connect(dry);
+    dry.connect(output);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(wet);
+    wet.connect(output);
+    return {
+      inputs: { in: input },
+      outputs: { out: output },
+      update(parameters) {
+        smooth(delay.delayTime, value(parameters, 'time'), context);
+        smooth(feedback.gain, value(parameters, 'feedback'), context);
+        smooth(wet.gain, value(parameters, 'mix'), context);
+        smooth(dry.gain, 1 - value(parameters, 'mix'), context);
+      },
+      dispose() {
+        [input, delay, feedback, wet, dry, output].forEach((node) => node.disconnect());
+      },
+    };
+  },
+
+  reverb(context) {
+    const input = context.createGain();
+    const convolver = context.createConvolver();
+    const wet = context.createGain();
+    const dry = context.createGain();
+    const output = context.createGain();
+    // A decaying stereo impulse is generated locally: no sample downloads or asset licenses.
+    const impulse = context.createBuffer(2, context.sampleRate * 2.5, context.sampleRate);
+    for (let channel = 0; channel < 2; channel++) {
+      const data = impulse.getChannelData(channel);
+      for (let index = 0; index < data.length; index++)
+        data[index] = (Math.random() * 2 - 1) * (1 - index / data.length) ** 3;
+    }
+    convolver.buffer = impulse;
+    input.connect(convolver);
+    convolver.connect(wet);
+    wet.connect(output);
+    input.connect(dry);
+    dry.connect(output);
+    return {
+      inputs: { in: input },
+      outputs: { out: output },
+      update(parameters) {
+        smooth(wet.gain, value(parameters, 'mix'), context);
+        smooth(dry.gain, 1 - value(parameters, 'mix'), context);
+      },
+      dispose() {
+        [input, convolver, wet, dry, output].forEach((node) => node.disconnect());
+      },
+    };
+  },
+
+  mixer(context) {
+    const a = context.createGain();
+    const b = context.createGain();
+    const output = context.createGain();
+    a.connect(output);
+    b.connect(output);
+    return {
+      inputs: { a, b },
+      outputs: { out: output },
+      update(parameters) {
+        smooth(a.gain, value(parameters, 'a'), context);
+        smooth(b.gain, value(parameters, 'b'), context);
+      },
+      dispose() {
+        [a, b, output].forEach((node) => node.disconnect());
+      },
+    };
+  },
+
+  output(context, masterBus) {
+    const gain = context.createGain();
+    gain.connect(masterBus);
+    return {
+      inputs: { in: gain },
+      outputs: {},
+      update(parameters) {
+        smooth(gain.gain, value(parameters, 'level'), context);
+      },
+      dispose() {
+        gain.disconnect();
+      },
+    };
+  },
+};

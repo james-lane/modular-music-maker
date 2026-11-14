@@ -1,0 +1,240 @@
+import { GripVertical, X } from 'lucide-react';
+import type { CSSProperties, PointerEvent } from 'react';
+import type { AudioEngine } from '../audio/engine';
+import { MODULES } from '../domain/modules';
+import { noteLabel } from '../domain/project';
+import type { Endpoint, PatchModule, Project } from '../domain/types';
+import { Knob } from './Knob';
+import { LevelMeter, Scope } from './Scope';
+import { Waveform } from './Waveform';
+
+interface Props {
+  module: PatchModule;
+  project: Project;
+  selected: boolean;
+  step: number;
+  engine: AudioEngine;
+  playing: boolean;
+  pending: Endpoint | null;
+  onParameter: (id: string, value: number | string) => void;
+  onStep: (index: number, rest: boolean) => void;
+  onPort: (endpoint: Endpoint) => void;
+  onRemove: () => void;
+  onDragStart: (event: PointerEvent<HTMLElement>) => void;
+  onSelect: () => void;
+}
+
+export function ModuleCard({
+  module,
+  project,
+  selected,
+  step,
+  engine,
+  playing,
+  pending,
+  onParameter,
+  onStep,
+  onPort,
+  onRemove,
+  onDragStart,
+  onSelect,
+}: Props) {
+  const definition = MODULES[module.type];
+  return (
+    <article
+      className={`module-panel ${selected ? 'selected' : ''} module-${module.type}`}
+      style={
+        {
+          left: module.x,
+          top: module.y,
+          width: definition.width,
+          height: definition.height,
+          '--module-color': definition.color,
+        } as CSSProperties
+      }
+      aria-label={`${definition.name} module`}
+      onPointerDown={onSelect}
+    >
+      <i className="panel-screw top-left" />
+      <i className="panel-screw top-right" />
+      <i className="panel-screw bottom-left" />
+      <i className="panel-screw bottom-right" />
+      <header className="module-header" onPointerDown={onDragStart}>
+        <div className="module-title">
+          <span className="module-indicator" />
+          <h2>{definition.name}</h2>
+        </div>
+        <div className="module-header-actions">
+          <GripVertical size={13} />
+          <button
+            className="module-remove"
+            title={`Remove ${definition.name}`}
+            aria-label={`Remove ${definition.name}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={onRemove}
+          >
+            <X size={12} />
+          </button>
+        </div>
+        <span className="module-code">{definition.code}</span>
+      </header>
+      <div className="module-content">
+        {module.type === 'sequencer' && (
+          <>
+            <div className="instrument-caption">
+              <span>8-STEP NOTE SEQUENCER</span>
+              <span className={`tiny-led ${playing ? 'on' : ''}`} />
+            </div>
+            <div className="sequence-steps">
+              {module.steps?.map((degree, index) => (
+                <button
+                  key={index}
+                  className={`step-button ${index === step && playing ? 'active' : ''} ${degree < 0 ? 'rest' : ''}`}
+                  title={`Step ${index + 1}: ${noteLabel(project, degree)}. Click to change note; right-click for a rest.`}
+                  aria-label={`Step ${index + 1}: ${noteLabel(project, degree)}`}
+                  onClick={() => onStep(index, false)}
+                  onContextMenu={(event) => {
+                    event.preventDefault();
+                    onStep(index, true);
+                  }}
+                >
+                  <i />
+                  <strong>{noteLabel(project, degree)}</strong>
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                </button>
+              ))}
+            </div>
+            <div className="sequencer-lower">
+              <div className="rate-display">
+                <span>STEP RATE</span>
+                <strong>
+                  1/8 <small>♪</small>
+                </strong>
+                <em>SYNC TO TEMPO</em>
+              </div>
+              <Knob
+                control={definition.controls[0]}
+                value={Number(module.parameters.gate)}
+                onChange={(value) => onParameter('gate', value)}
+              />
+            </div>
+          </>
+        )}
+        {module.type === 'oscillator' && (
+          <>
+            <div className="trace-display">
+              <Waveform waveform={String(module.parameters.waveform)} />
+              <span>ANALOG WAVEFORM</span>
+            </div>
+            <div className="waveform-selector">
+              {[
+                ['sine', '∿'],
+                ['triangle', '⋀'],
+                ['sawtooth', '⩘'],
+                ['square', '⊓'],
+              ].map(([value, symbol]) => (
+                <button
+                  key={value}
+                  className={module.parameters.waveform === value ? 'active' : ''}
+                  aria-label={`${value} waveform`}
+                  aria-pressed={module.parameters.waveform === value}
+                  title={value}
+                  onClick={() => onParameter('waveform', value)}
+                >
+                  {symbol}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {module.type === 'filter' && (
+          <>
+            <div className="trace-display filter-trace">
+              <Waveform type="filter" />
+              <span>FREQUENCY RESPONSE</span>
+            </div>
+            <div className="mode-selector">
+              {[
+                ['lowpass', 'LOW PASS'],
+                ['highpass', 'HIGH PASS'],
+                ['bandpass', 'BAND'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  className={module.parameters.mode === value ? 'active' : ''}
+                  aria-pressed={module.parameters.mode === value}
+                  onClick={() => onParameter('mode', value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+        {module.type === 'output' && (
+          <>
+            <Scope engine={engine} playing={playing} />
+            <LevelMeter engine={engine} playing={playing} />
+          </>
+        )}
+        {module.type === 'delay' && (
+          <div className="delay-display">
+            <span>STEREO ECHO</span>
+            <Waveform type="delay" />
+            <strong>
+              {Math.round(Number(module.parameters.time) * 1000)} <small>ms</small>
+            </strong>
+          </div>
+        )}
+        {['noise', 'lfo', 'reverb', 'mixer'].includes(module.type) && (
+          <div className="trace-display">
+            <Waveform type={module.type} />
+            <span>{definition.subtitle.toUpperCase()}</span>
+          </div>
+        )}
+        {module.type !== 'sequencer' && (
+          <div className={`module-knobs ${definition.controls.length === 1 ? 'single-knob' : ''}`}>
+            {definition.controls.map((control) => (
+              <Knob
+                key={control.id}
+                control={control}
+                value={Number(module.parameters[control.id])}
+                onChange={(value) => onParameter(control.id, value)}
+                large={module.type === 'output'}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      <footer className="module-ports">
+        {definition.ports.map((port) => {
+          const connected = project.cables.some((cable) =>
+            [cable.from, cable.to].some(
+              (endpoint) => endpoint.moduleId === module.id && endpoint.portId === port.id,
+            ),
+          );
+          const active = pending?.moduleId === module.id && pending.portId === port.id;
+          return (
+            <button
+              key={port.id}
+              className={`port-button signal-${port.signal} ${connected ? 'connected' : ''} ${active ? 'pending' : ''}`}
+              data-port={`${module.id}:${port.id}`}
+              aria-label={`${definition.name} ${port.label} ${port.direction} socket${connected ? ', connected' : ''}`}
+              title={`${port.label} · ${port.signal} ${port.direction}${connected ? ' · Click input to unplug' : ''}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onPort({ moduleId: module.id, portId: port.id });
+              }}
+            >
+              <span>{port.label}</span>
+              <i className="socket">
+                <b />
+              </i>
+            </button>
+          );
+        })}
+      </footer>
+    </article>
+  );
+}

@@ -1,0 +1,38 @@
+import type { ModuleType } from '../domain/types';
+
+/** Small vector traces are readable at every zoom level and need no image assets. */
+export function Waveform({
+  type = 'oscillator',
+  waveform = 'sine',
+}: {
+  type?: ModuleType;
+  waveform?: string;
+}) {
+  let path =
+    'M0 26 C8 0 16 0 24 26 S40 52 48 26 S64 0 72 26 S88 52 96 26 S112 0 120 26 S136 52 144 26 S160 0 168 26 S184 52 192 26';
+  if (waveform === 'sawtooth')
+    path =
+      'M0 40 L28 10 L28 42 L60 10 L60 42 L92 10 L92 42 L124 10 L124 42 L156 10 L156 42 L188 10 L188 42';
+  if (waveform === 'square')
+    path = 'M0 40 H16 V12 H40 V40 H64 V12 H88 V40 H112 V12 H136 V40 H160 V12 H184 V40 H192';
+  if (waveform === 'triangle') path = 'M0 26 L16 8 L48 44 L80 8 L112 44 L144 8 L176 44 L192 26';
+  if (type === 'noise')
+    path =
+      'M0 26L5 15 10 33 15 5 20 40 25 20 30 35 35 13 40 31 45 5 50 39 55 26 60 15 65 37 70 11 75 31 80 3 85 39 90 25 95 43 100 13 105 33 110 5 115 41 120 16 125 31 130 7 135 38 140 25 145 4 150 43 155 28 160 17 165 35 170 6 175 37 180 19 185 32 192 26';
+  if (type === 'filter')
+    path = 'M0 39 H40 C80 39 93 39 105 16 C111 5 120 7 126 22 C136 42 154 43 192 45';
+  if (type === 'delay')
+    path =
+      'M0 26 Q8 0 16 26 T32 26 M45 26 Q53 7 61 26 T77 26 M90 26 Q98 13 106 26 T122 26 M135 26 Q143 18 151 26 T167 26 M180 26 Q186 22 192 26';
+  return (
+    <svg viewBox="0 0 192 52" fill="none" aria-hidden="true">
+      <path
+        d={path}
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
