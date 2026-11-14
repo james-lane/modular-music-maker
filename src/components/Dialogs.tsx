@@ -259,7 +259,7 @@ function RecordingItem({ recording, onDelete }: { recording: Recording; onDelete
           <Trash2 size={17} />
         </button>
       </div>
-      <audio src={url} controls preload="metadata" />
+      <audio src={url || undefined} controls preload="metadata" />
     </div>
   );
 }

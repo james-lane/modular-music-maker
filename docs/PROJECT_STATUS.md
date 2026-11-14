@@ -16,6 +16,8 @@ The initial connected patch is **Step sequencer → Oscillator → Filter → De
 
 ## Known boundaries
 
+- The complete project is committed locally. A private Sites project was registered, but source synchronization/publication was blocked by automatic approval review because uploading source to that service was not explicitly authorized. No hosted version has been published. Obtain explicit user authorization before retrying source upload.
+
 - Local-first, single-user storage. No accounts or cloud database; static hosted copies use browser storage. The Node server remains local and unauthenticated.
 - Eight-step patterns; time signature controls beat grouping rather than pattern length. 6/8 currently uses three quarter-note groups, not a compound-meter transport.
 - Native MediaRecorder audio files (WebM/Ogg/MP4 depending on browser), not WAV/offline export. Recording takes are capped at 10 minutes.

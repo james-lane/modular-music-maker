@@ -23,6 +23,7 @@ Patchwork is a modular music-making website using **TypeScript on Node.js**. Use
 - Use ramped audio parameter changes to reduce clicks. Bound feedback and volume values. Keep incompatible sockets and feedback cycles out of the graph.
 - Preserve keyboard access, responsive canvas access, and `prefers-reduced-motion` support.
 - Never commit user patch files, recording blobs, dependencies, build output, secrets, or machine-specific state.
+- A private Sites project is registered in `.openai/hosting.json`, but no version is published. Automatic approval review rejected source upload during initial setup. Do not retry that upload without explicit user authorization; local development is unaffected.
 - Do not introduce accounts, paid services, or publicly expose the local unauthenticated Node API without an explicit product requirement.
 
 ## Validation and documentation

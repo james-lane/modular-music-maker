@@ -64,7 +64,7 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 - `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors.
 - `src/styles.css`: theme tokens and tactile instrument styling.
 - `server/index.ts`: listener; `PORT` and `PATCHWORK_DATA_DIR` environment variables configure the server. See `.env.example`. Set these in your shell; `.env` is documentation only and is not automatically loaded.
-- `.openai/hosting.json`: optional private Sites preview configuration; it does not affect local development.
+- `.openai/hosting.json`: reserved private Sites preview configuration; no hosted version has been published. It does not affect local development.
 
 Start with [the architecture](docs/ARCHITECTURE.md), [the module guide](docs/ADDING_MODULES.md), and [the project status](docs/PROJECT_STATUS.md). Future agent sessions should read [AGENTS.md](AGENTS.md) before editing.
 
