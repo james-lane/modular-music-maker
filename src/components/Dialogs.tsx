@@ -12,7 +12,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { ROOT_NOTES } from '../config';
 import { deleteRecording, loadRecordings, type Recording } from '../audio/recordings';
 import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
@@ -98,23 +98,33 @@ export function Modal({
   children,
   onClose,
   wide = false,
+  className = '',
 }: {
   title: string;
   eyebrow: string;
   children: ReactNode;
   onClose: () => void;
   wide?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
+  const titleId = useId();
+  useLayoutEffect(() => {
     const dialog = ref.current!;
+    const opener = document.activeElement;
     dialog.showModal();
-    return () => dialog.close();
+    return () => {
+      // Close before React removes the dialog, then return keyboard focus to its opener.
+      dialog.close();
+      if (opener instanceof HTMLElement && opener.isConnected)
+        opener.focus({ preventScroll: true });
+    };
   }, []);
   return (
     <dialog
       ref={ref}
-      className={`studio-dialog ${wide ? 'wide' : ''}`}
+      className={`studio-dialog ${wide ? 'wide' : ''} ${className}`}
+      aria-labelledby={titleId}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -128,7 +138,7 @@ export function Modal({
         <button className="icon-button" aria-label="Close dialog" onClick={onClose}>
           <X size={20} />
         </button>
-        <h2>{title}</h2>
+        <h2 id={titleId}>{title}</h2>
       </div>
       {children}
     </dialog>

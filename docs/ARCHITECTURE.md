@@ -25,6 +25,8 @@ React controls / workspace
 | --------------------------------------- | ------------------------------------------------------------------- |
 | `src/config.ts`                         | Shared product defaults, limits, scale tables                       |
 | `src/domain/types.ts`                   | Serializable model and catalog interfaces                           |
+| `src/domain/module-guides.ts`           | Teaching copy, example wiring, and derived socket compatibility     |
+| `src/components/ModuleHelpDialog.tsx`   | Library field-guide modal with related-guide navigation             |
 | `src/domain/modules.ts`                 | Declarative module registry                                         |
 | `src/domain/project.ts`                 | Starter patch, module creation, connection invariants, pitch math   |
 | `src/domain/validation.ts`              | Shared Zod validation for every data boundary                       |
@@ -50,6 +52,14 @@ React controls / workspace
 | `src/components/Scope.tsx`              | Animation-frame waveform and RMS display                            |
 | `server/app.ts`                         | Local Express API and production static serving                     |
 | `server/repository.ts`                  | Validated atomic filesystem persistence                             |
+
+## Module field guides
+
+Each library item has an accessible question-mark button alongside Add. `domain/module-guides.ts` stores a required guide for every module type: overview, setup steps, numeric control descriptions, special controls, a tip, and a worked example with actual module/port endpoints. `compatiblePorts()` derives possible partners directly from registry socket directions and signal types, excluding the same module type. These are capability matches; the normal workspace rules still reject occupied inputs and feedback loops.
+
+`ModuleHelpDialog` groups equivalent sockets (such as Mixer IN A/IN B), displays compatible modules, and lets the user explore their guides in the same native dialog with a local Back stack. Reading or navigating help does not edit the patch, add modules, change playback, or enter undo history. The shared Modal uses an accessible title, native focus trapping and Escape/backdrop dismissal. Related-guide navigation resets scroll/focus within the modal, and closing returns focus to the original library button. The mobile library stays open behind the guide so it is available on dismissal.
+
+The guide layout lives in `components/module-help.css`. Instructions and connections are text/semantic HTML rather than an audio preview. Tests validate guide control coverage, signal-specific compatibility, and every worked example against the real patch validator.
 
 ## Patch format and validation
 

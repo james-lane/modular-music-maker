@@ -9,6 +9,7 @@ import {
   SettingsDialog,
 } from './components/Dialogs';
 import { ModuleLibrary } from './components/ModuleLibrary';
+import { ModuleHelpDialog } from './components/ModuleHelpDialog';
 import { Workspace } from './components/Workspace';
 import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
@@ -34,6 +35,7 @@ export default function App() {
   useEffect(() => () => clearTimeout(toastTimer.current), []);
   const audio = useAudio(project, notify);
   const [dialog, setDialog] = useState<StudioDialog>(null);
+  const [guideType, setGuideType] = useState<ModuleType | null>(null);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -189,6 +191,10 @@ export default function App() {
         <ModuleLibrary
           onAdd={addModule}
           onHelp={() => setDialog('help')}
+          onModuleHelp={(type) => {
+            setGuideType(type);
+            setDialog('module-help');
+          }}
           mobileOpen={libraryOpen}
           onClose={() => setLibraryOpen(false)}
         />
@@ -243,6 +249,9 @@ export default function App() {
         </div>
       )}
       {dialog === 'help' && <HelpDialog onClose={() => setDialog(null)} />}
+      {dialog === 'module-help' && guideType && (
+        <ModuleHelpDialog initialType={guideType} onClose={() => setDialog(null)} />
+      )}
       {dialog === 'settings' && (
         <SettingsDialog
           project={project}

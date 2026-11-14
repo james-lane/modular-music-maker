@@ -1,6 +1,7 @@
 import { CircleHelp, FolderOpen, Headphones, LayoutGrid } from 'lucide-react';
 
-export type StudioDialog = 'patches' | 'recordings' | 'help' | 'export' | 'settings' | null;
+export type StudioDialog =
+  'patches' | 'recordings' | 'help' | 'module-help' | 'export' | 'settings' | null;
 
 interface Props {
   dialog: StudioDialog;

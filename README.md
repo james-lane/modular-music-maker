@@ -25,6 +25,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 ## What works
 
 - A searchable module library with twelve working modules: drum machine, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, and output.
+- Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Drag modules from the library, or add them using the **+** buttons. Move panels by dragging their headers.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, and trigger are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
 - Individual hardware finishes: walnut keyboard cheeks, a violet rubber-pad controller, coloured effects enclosures, ivory/chrome knobs, and a compact silver mixer with vertical faders. Module dimensions vary to suit the instrument.
@@ -74,7 +75,7 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 ## Configuration and architecture
 
 - `src/config.ts`: application limits, tempo range, canvas size, autosave, scheduler timing, scales, and root notes.
-- `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors.
+- `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors. `src/domain/module-guides.ts` contains the guides and derives compatibility from the catalog sockets.
 - `src/styles.css`: shared theme tokens, panel mechanics, knobs, and sockets. `src/components/module-finishes.css` defines individual materials, colours, knob finishes, and enclosure details; `instruments.css` defines specialized performance layouts.
 - `server/index.ts`: listener; `PORT` and `PATCHWORK_DATA_DIR` environment variables configure the server. See `.env.example`. Set these in your shell; `.env` is documentation only and is not automatically loaded.
 - `.openai/hosting.json`: reserved private Sites preview configuration; no hosted version has been published. It does not affect local development.

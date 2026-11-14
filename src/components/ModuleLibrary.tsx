@@ -17,11 +17,13 @@ import { Waveform } from './Waveform';
 export function ModuleLibrary({
   onAdd,
   onHelp,
+  onModuleHelp,
   mobileOpen,
   onClose,
 }: {
   onAdd: (type: ModuleType) => void;
   onHelp: () => void;
+  onModuleHelp: (type: ModuleType) => void;
   mobileOpen: boolean;
   onClose: () => void;
 }) {
@@ -111,14 +113,31 @@ export function ModuleLibrary({
               <strong>{module.name}</strong>
               <p>{module.description}</p>
             </div>
-            <button
-              className="add-module-button"
-              aria-label={`Add ${module.name}`}
-              title={`Add ${module.name}`}
-              onClick={() => onAdd(module.type)}
-            >
-              <Plus size={15} />
-            </button>
+            <div className="library-module-actions">
+              <button
+                className="module-help-button"
+                draggable={false}
+                aria-haspopup="dialog"
+                aria-label={`How to use ${module.name}`}
+                title={`How to use ${module.name}`}
+                onPointerDown={(event) => event.stopPropagation()}
+                onDragStart={(event) => event.preventDefault()}
+                onClick={(event) => {
+                  event.currentTarget.focus();
+                  onModuleHelp(module.type);
+                }}
+              >
+                <CircleHelp size={14} />
+              </button>
+              <button
+                className="add-module-button"
+                aria-label={`Add ${module.name}`}
+                title={`Add ${module.name}`}
+                onClick={() => onAdd(module.type)}
+              >
+                <Plus size={15} />
+              </button>
+            </div>
           </div>
         ))}
         {!filtered.length && <p className="empty-search">No modules found. Try another name.</p>}

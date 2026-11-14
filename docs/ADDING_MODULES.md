@@ -19,6 +19,8 @@ Add a `ModuleDefinition` to `MODULES` in `src/domain/modules.ts`:
 
 The library, numeric knobs, initial parameters, socket labels, connection checks, and persistence validation derive from this definition automatically. `defaultParameters()` converts declared control defaults into patch data.
 
+Each module also needs an entry in `MODULE_GUIDES` in `src/domain/module-guides.ts`. Include a plain-language overview, setup steps, explanations keyed by the numeric control IDs, any special controls, a useful tip, and a worked example with explicit module/port endpoints. TypeScript requires a guide for each module type. Tests check that controls remain documented and every example forms a valid patch. Compatible module lists are derived from registry socket directions/signal types; do not maintain a separate hard-coded compatibility list.
+
 ## 3. Build the audio runtime
 
 Implement a factory in `src/audio/factories.ts`. `AUDIO_FACTORIES` is a complete `Record<ModuleType, Factory>`, so TypeScript flags missing implementations.
