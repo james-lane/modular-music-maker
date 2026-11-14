@@ -1,0 +1,647 @@
+/*
+ * A rack of individually designed instruments.
+ * Each palette describes a physical finish. Shared panel mechanics and socket
+ * geometry stay in styles.css; dimensions stay in domain/modules.ts.
+ */
+
+/* Warm enamel and bakelite: a small, older note sequencer. */
+.module-sequencer {
+  --panel-face: #f2ead9;
+  --panel-end: #dfd0b6;
+  --panel-edge: #a89a81;
+  --panel-ink: #514532;
+  --panel-muted: #8a7558;
+  --panel-rule: #c8b798;
+  border-radius: 5px;
+}
+.module-sequencer .step-button {
+  background: linear-gradient(#fff7e8, #e7dac3);
+  border-color: #c9b794;
+  border-bottom-color: #ad9876;
+}
+.module-sequencer .step-button strong {
+  color: #6a5238;
+}
+.module-sequencer .step-button > span {
+  color: #9a8262;
+}
+.module-sequencer .step-button i {
+  background: #b6a386;
+}
+.module-sequencer .step-button.active {
+  background: linear-gradient(#f7d9a2, #dcad66);
+  border-color: #b78646;
+}
+.module-sequencer .step-button.active i {
+  background: #f1aa43;
+  box-shadow: 0 0 7px #df8a2e;
+}
+.module-sequencer .rate-display > strong {
+  color: #8d6542;
+}
+.module-sequencer .rate-display > span,
+.module-sequencer .rate-display > em,
+.module-sequencer .rate-display small {
+  color: var(--panel-muted);
+}
+
+/* Ochre powder coat, dark fluted knobs and a cream waveform window. */
+.module-oscillator {
+  --panel-face: #e9bb65;
+  --panel-end: #ce9c45;
+  --panel-edge: #a77a36;
+  --panel-ink: #49361e;
+  --panel-muted: #72542d;
+  --panel-rule: #b68a43;
+  --inset-face: #e9d2a5;
+  --inset-end: #f6e7c7;
+  --inset-edge: #b28c4e;
+  --trace-ink: #9e5830;
+  border-radius: 6px 6px 9px 9px;
+}
+.module-oscillator .module-knobs,
+.module-filter .module-knobs {
+  align-items: flex-end;
+  margin-top: 6px;
+}
+.module-oscillator .knob-assembly {
+  width: 50px;
+  height: 50px;
+}
+.module-oscillator .knob-control:first-child .knob-assembly {
+  width: 66px;
+  height: 66px;
+}
+.module-oscillator .knob-control:first-child .knob-dial {
+  inset: 10px;
+}
+.module-oscillator .waveform-selector button.active {
+  color: #9c5c2e;
+}
+
+/* A forest-green filter with ivory pointers and an inset frequency display. */
+.module-filter {
+  --panel-face: #5b7461;
+  --panel-end: #3e584a;
+  --panel-edge: #304f41;
+  --panel-ink: #fff1d5;
+  --panel-muted: #d2dbc4;
+  --panel-rule: #80937c;
+  --panel-highlight: #c6dac03b;
+  --legend-shadow: #182f2670;
+  --inset-face: #233f34;
+  --inset-end: #2a4c3c;
+  --inset-edge: #324c3e;
+  --trace-ink: #d2dfa5;
+  border-radius: 3px;
+}
+.module-filter .knob-control:first-child .knob-assembly {
+  width: 66px;
+  height: 66px;
+}
+.module-filter .knob-control:last-child .knob-assembly {
+  width: 50px;
+  height: 50px;
+}
+.module-filter .mode-selector button.active {
+  color: #3d5e49;
+}
+
+/* Blue cast-metal echo box, with chrome caps and a recessed blue display. */
+.module-delay {
+  --panel-face: #8ab8ca;
+  --panel-end: #5896b1;
+  --panel-edge: #3d7895;
+  --panel-ink: #183d4e;
+  --panel-muted: #2c5265;
+  --panel-rule: #5790a7;
+  border-radius: 12px 12px 8px 8px;
+}
+.module-delay .delay-display {
+  height: 60px;
+  color: #d8f1f0;
+  background: linear-gradient(#345867, #416f7f);
+  border: 1px solid #37677c;
+  border-radius: 4px;
+  padding: 9px 8px 0;
+  box-shadow:
+    inset 0 2px 5px #123b5050,
+    0 1px 0 #d3eff580;
+}
+.module-delay .delay-display > span {
+  color: #adcbd0;
+  font-size: 6px;
+}
+.module-delay .delay-display > strong {
+  color: #eef5e5;
+  top: 8px;
+  right: 10px;
+}
+.module-delay .delay-display svg {
+  height: 34px;
+}
+.module-delay .module-knobs {
+  margin-top: 2px;
+}
+.module-delay .knob-assembly {
+  width: 57px;
+  height: 57px;
+}
+
+/* A smaller plum effects pedal with cream knobs and a curved cast enclosure. */
+.module-reverb {
+  --panel-face: #946679;
+  --panel-end: #71495f;
+  --panel-edge: #5b394d;
+  --panel-ink: #fff0d9;
+  --panel-muted: #edced2;
+  --panel-rule: #b08a9a;
+  --panel-highlight: #f8d5e32b;
+  --legend-shadow: #3b1d2b70;
+  --inset-face: #51394d;
+  --inset-end: #604457;
+  --inset-edge: #563248;
+  --trace-ink: #efd5ad;
+  border-radius: 11px 11px 19px 19px;
+}
+
+/* Compact terracotta modulation unit. */
+.module-lfo {
+  --panel-face: #dda18c;
+  --panel-end: #c67964;
+  --panel-edge: #a96551;
+  --panel-ink: #512f28;
+  --panel-muted: #774c3d;
+  --panel-rule: #b9715b;
+  --inset-face: #f1d8b9;
+  --inset-end: #f9e6cc;
+  --inset-edge: #bb8e6f;
+  --trace-ink: #a3624f;
+  border-radius: 4px;
+}
+
+/* Graphite noise generator: perforated steel grille and a machined dial. */
+.module-noise {
+  --panel-face: #454b4e;
+  --panel-end: #2d3538;
+  --panel-edge: #20292d;
+  --panel-ink: #eee9dd;
+  --panel-muted: #c0c6c0;
+  --panel-rule: #697274;
+  --panel-highlight: #e5f1eb24;
+  --legend-shadow: #15212570;
+  --inset-face: #1c272a;
+  --inset-end: #263337;
+  --inset-edge: #19272b;
+  --trace-ink: #b6cba4;
+  border-radius: 3px;
+}
+.module-noise .trace-display::before {
+  background: radial-gradient(#9aaba43b 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+.module-noise .trace-display,
+.module-lfo .trace-display,
+.module-reverb .trace-display {
+  height: 43px;
+}
+.module-noise .trace-display svg,
+.module-lfo .trace-display svg,
+.module-reverb .trace-display svg {
+  height: 35px;
+}
+.module-noise .module-knobs,
+.module-lfo .module-knobs,
+.module-reverb .module-knobs {
+  margin-top: 11px;
+}
+.module-noise .knob-assembly,
+.module-lfo .knob-assembly,
+.module-reverb .knob-assembly {
+  width: 55px;
+  height: 55px;
+}
+
+/* Brushed studio aluminium: a narrow two-channel strip with real faders. */
+.module-mixer {
+  --panel-face: #ebede9;
+  --panel-end: #c7ced0;
+  --panel-edge: #a0acb2;
+  --panel-ink: #39464e;
+  --panel-muted: #617179;
+  --panel-rule: #acb8bd;
+  border-radius: 3px;
+  background:
+    repeating-linear-gradient(0deg, #ffffff16 0 1px, #404b5305 1px 2px),
+    linear-gradient(100deg, #e4e8e6, #f2f2ee 28%, #c7d0d4);
+}
+
+/* Cream bench instrument, CRT screen and a red master dial. */
+.module-output {
+  --panel-face: #f3f0e6;
+  --panel-end: #d9d6c9;
+  --panel-edge: #a8a696;
+  --panel-ink: #4c493e;
+  --panel-muted: #7e7a6c;
+  --panel-rule: #bfbcac;
+  --knob-ridge: #6c332c;
+  --knob-ridge-light: #ac5b49;
+  --knob-highlight: #c57c62;
+  --knob-face: #9c4e3e;
+  --knob-shade: #6b342d;
+  --knob-border: #71392d;
+  --knob-pointer: #fff3d2;
+  border-radius: 3px;
+}
+.module-output .oscilloscope {
+  border: 3px solid #7b8275;
+  border-radius: 7px;
+  box-shadow:
+    inset 0 1px 9px #101d13,
+    0 1px 0 #fff;
+}
+.module-output .level-meter > span {
+  color: var(--panel-muted);
+}
+.module-output .level-meter > div {
+  background: repeating-linear-gradient(90deg, #c2c5b5 0 5px, transparent 5px 7px);
+}
+
+/* Cream drum computer, charcoal switch bed, orange latches and black rubber knobs. */
+.module-drum-machine {
+  --panel-face: #eee8da;
+  --panel-end: #d8cfbb;
+  --panel-edge: #8e8d81;
+  --panel-ink: #373b39;
+  --panel-muted: #786f5e;
+  --panel-rule: #b5ad98;
+  /* Painted side rails do not change the border box used by cable geometry. */
+  background:
+    linear-gradient(
+      90deg,
+      #555850 0 4px,
+      transparent 4px calc(100% - 4px),
+      #555850 calc(100% - 4px)
+    ),
+    repeating-linear-gradient(0deg, #ffffff08 0 1px, #333b2603 1px 2px),
+    linear-gradient(115deg, var(--panel-face), var(--panel-end));
+  border-radius: 8px;
+}
+.module-drum-machine .drum-toolbar > span {
+  color: #84745b;
+}
+.module-drum-machine .drum-toolbar > button {
+  background: #d7d2c2;
+  color: #6e6c5e;
+  border-color: #b0a990;
+}
+.module-drum-machine .drum-toolbar > button.enabled {
+  background: linear-gradient(#eaac66, #d68e47);
+  color: #604126;
+  border-color: #be8a50;
+}
+.module-drum-machine .drum-pattern {
+  background: linear-gradient(#303737, #252b2b);
+  border-color: #555b53;
+  box-shadow:
+    inset 0 2px 5px #111b17a0,
+    0 1px 0 #fff9;
+  padding: 10px 8px;
+}
+.module-drum-machine .drum-step-labels > span,
+.module-drum-machine .drum-step-labels small {
+  color: #a8b3a7;
+}
+.module-drum-machine .drum-voice {
+  color: #d0d5c6;
+}
+.module-drum-machine .drum-step {
+  background: linear-gradient(#626b65, #434d47);
+  border-color: #6e776b;
+  border-bottom-color: #222d25;
+  box-shadow:
+    inset 0 1px 0 #8a94834f,
+    0 1px 2px #101910aa;
+}
+.module-drum-machine .drum-step i {
+  background: #87927e;
+}
+.module-drum-machine .drum-step.on {
+  background: linear-gradient(#e6ad65, #c48943);
+  border-color: #cda266;
+  border-bottom-color: #8d602d;
+}
+.module-drum-machine .drum-step.on i {
+  background: #f6d694;
+}
+.module-drum-machine .drum-step.current i {
+  background: #fff8d4;
+  box-shadow: 0 0 7px #ffe4a3;
+}
+.module-drum-machine .drum-caption {
+  color: #84755f;
+}
+.module-drum-machine .knob-assembly {
+  width: 57px;
+  height: 57px;
+}
+
+/* A dark electric keyboard held between two walnut cheeks. */
+.module-keyboard {
+  --panel-face: #3c3c3a;
+  --panel-end: #292d2c;
+  --panel-edge: #242a28;
+  --panel-ink: #f3e6c9;
+  --panel-muted: #c9c1ae;
+  --panel-rule: #656458;
+  --panel-highlight: #f6e8d324;
+  --legend-shadow: #11191480;
+  border-radius: 6px;
+}
+.module-keyboard::before,
+.module-keyboard::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  bottom: -3px;
+  width: 10px;
+  background:
+    repeating-linear-gradient(87deg, #3c211419 0 1px, #c48d4d24 1px 3px, #45291910 3px 6px),
+    linear-gradient(90deg, #543821, #a17442 35%, #80572f 75%, #50331f);
+  border: 1px solid #51331e;
+  border-radius: 5px;
+  box-shadow:
+    inset 1px 0 1px #e3b77d52,
+    1px 2px 2px #1f1b1c40;
+  pointer-events: none;
+}
+.module-keyboard::before {
+  left: -1px;
+}
+.module-keyboard::after {
+  right: -1px;
+}
+.module-keyboard .keyboard-readout > span {
+  color: #b8b19c;
+}
+.module-keyboard .keyboard-readout > strong {
+  color: #d5e6a9;
+  background: #293b28;
+  border-color: #1c2a1c;
+  box-shadow:
+    inset 0 1px 3px #101c1490,
+    0 1px 0 #79816b70;
+}
+.module-keyboard .piano-keybed {
+  height: 94px;
+  border-color: #1b211d;
+  background: #161b18;
+  box-shadow:
+    inset 0 3px 6px #000b,
+    0 1px 0 #93908490;
+}
+.module-keyboard .module-knobs {
+  margin-top: 5px;
+}
+.module-keyboard .knob-assembly {
+  width: 44px;
+  height: 44px;
+}
+.module-keyboard .white-key {
+  background: linear-gradient(90deg, #ded9c9, #fff9e8 20%, #f5f0df 85%, #ddd7c8);
+  border-color: #929187;
+  border-bottom-color: #c4bda9;
+}
+.module-keyboard .white-key > span {
+  color: #8d8879;
+}
+.module-keyboard .black-key {
+  background: linear-gradient(90deg, #1d211e, #454b43 25%, #30372e 78%, #191e18);
+  border-color: #141b13;
+  border-bottom-color: #0f160f;
+}
+.module-keyboard .white-key.held,
+.module-keyboard .white-key:active {
+  background: linear-gradient(#e5dec8, #e8c690);
+  border-bottom-width: 2px;
+}
+.module-keyboard .black-key.held,
+.module-keyboard .black-key:active {
+  background: #736046;
+  border-bottom-width: 2px;
+}
+
+/* Violet moulded controller housing and soft graphite rubber pads. */
+.module-pad-controller {
+  --panel-face: #413c52;
+  --panel-end: #2b2839;
+  --panel-edge: #242131;
+  --panel-ink: #f0e7ff;
+  --panel-muted: #c7bad9;
+  --panel-rule: #706281;
+  --panel-highlight: #b7a1d235;
+  --legend-shadow: #19132580;
+  border-radius: 15px;
+  background:
+    radial-gradient(#ffffff05 0.6px, transparent 0.6px) 0 0 / 3px 3px,
+    linear-gradient(125deg, #494158, #302b40 75%);
+}
+.module-pad-controller .performance-pads {
+  background: #1e1c28;
+  border: 1px solid #686073;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 2px 8px #09081190,
+    0 1px 0 #9b86b659;
+}
+.module-pad-controller .performance-pad {
+  background: linear-gradient(145deg, #6b6574, #4c4657);
+  border-color: #7c7489;
+  border-bottom-color: #302a3d;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 3px #b6adbf33,
+    0 2px 3px #09061199,
+    0 0 0 1px #151020;
+}
+.module-pad-controller .pad-number {
+  color: #bdb3ca;
+}
+.module-pad-controller .performance-pad strong {
+  color: #ece5f5;
+}
+.module-pad-controller .performance-pad kbd {
+  color: #bfb3ce;
+}
+.module-pad-controller .performance-pad.lit,
+.module-pad-controller .performance-pad:active {
+  background: linear-gradient(145deg, #eae0f3, var(--pad-color));
+  border-bottom-width: 1px;
+  box-shadow:
+    inset 0 1px 4px #ffffff90,
+    0 0 12px color-mix(in srgb, var(--pad-color), transparent 25%);
+}
+.module-pad-controller .performance-pad.lit strong,
+.module-pad-controller .performance-pad:active strong {
+  color: #3d3445;
+}
+
+/* Ivory caps are shared by a few instruments, rather than imposed on the entire rack. */
+.module-filter,
+.module-reverb,
+.module-lfo,
+.module-keyboard {
+  --knob-ridge: #c6b99e;
+  --knob-ridge-light: #f6ecd5;
+  --knob-highlight: #fff9e7;
+  --knob-face: #e8dcc3;
+  --knob-shade: #beaf91;
+  --knob-border: #ad9d7e;
+  --knob-pointer: #4a4132;
+}
+.module-delay,
+.module-noise {
+  --knob-ridge: #89949a;
+  --knob-ridge-light: #e0e5e4;
+  --knob-highlight: #f7faf7;
+  --knob-face: #c4ccce;
+  --knob-shade: #849297;
+  --knob-border: #75858c;
+  --knob-pointer: #344048;
+}
+
+/* Legibility and shared switches follow each enclosure's palette. */
+.module-panel .control-label {
+  color: var(--panel-ink);
+}
+.module-panel .instrument-help {
+  color: var(--panel-muted);
+}
+.module-panel .instrument-help kbd {
+  color: var(--panel-ink);
+}
+.module-panel .module-remove:hover {
+  background: color-mix(in srgb, var(--panel-ink), transparent 88%);
+  color: var(--panel-ink);
+}
+.module-panel .waveform-selector,
+.module-panel .mode-selector {
+  background: var(--inset-face);
+  border-color: var(--inset-edge);
+}
+.module-panel .waveform-selector button,
+.module-panel .mode-selector button {
+  color: var(--panel-muted);
+}
+.module-panel .waveform-selector button.active,
+.module-panel .mode-selector button.active {
+  background: linear-gradient(#fff7df, #e3d7b8);
+  color: #5b4b31;
+}
+.module-panel .trace-display {
+  box-shadow:
+    inset 0 1px 4px #1d26272b,
+    0 1px 0 var(--panel-highlight);
+}
+
+/* Mechanical fader rails. Native range semantics preserve keyboard/screen-reader access. */
+.mixer-channel-strips {
+  display: flex;
+  gap: 14px;
+  padding-top: 2px;
+}
+.mixer-channel {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.mixer-channel > span {
+  font-size: 8px;
+  color: var(--panel-ink);
+  white-space: nowrap;
+}
+.fader-well {
+  position: relative;
+  height: 104px;
+  width: 55px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+.fader-well::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 18px;
+  width: 22px;
+  background: repeating-linear-gradient(to top, #879399 0 1px, transparent 1px 12px);
+  pointer-events: none;
+}
+.fader-scale {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 15px;
+}
+.fader-scale i {
+  font: 6px monospace;
+  color: #7c898e;
+}
+.fader-well input {
+  appearance: none;
+  -webkit-appearance: none;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  width: 28px;
+  height: 104px;
+  background: transparent;
+  margin: 0;
+  cursor: ns-resize;
+  touch-action: none;
+}
+.fader-well input::-webkit-slider-runnable-track {
+  width: 5px;
+  border-radius: 3px;
+  background: #454e53;
+  box-shadow:
+    inset 1px 0 2px #192027b0,
+    1px 0 0 #f5f8f3c0;
+}
+.fader-well input::-webkit-slider-thumb {
+  transform: translateX(-11px);
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px;
+  height: 12px;
+  border: 1px solid #7b868c;
+  border-radius: 2px;
+  background: linear-gradient(#f8faf8, #d4dcde 38%, #4a555b 44%, #6c767b 54%, #e6ebeb 60%, #b4bec3);
+  box-shadow:
+    0 2px 3px #2734394d,
+    inset 0 1px 0 #fff;
+}
+.fader-well input::-moz-range-track {
+  width: 5px;
+  border-radius: 3px;
+  background: #454e53;
+}
+.fader-well input::-moz-range-thumb {
+  width: 28px;
+  height: 12px;
+  border: 1px solid #7b868c;
+  border-radius: 2px;
+  background: linear-gradient(#f8faf8, #b4bec3);
+  box-shadow: 0 2px 3px #2734394d;
+}
+.mixer-channel output {
+  font: 8px monospace;
+  color: var(--panel-muted);
+}

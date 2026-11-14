@@ -948,19 +948,39 @@ svg {
 
 /* Physical instrument panels: rolled edges, brushed faces, engraved labels and screws. */
 .module-panel {
+  /* Shared mechanics; individual hardware palettes live in module-finishes.css. */
+  --panel-face: #f6f2e8;
+  --panel-end: #e3ddcf;
+  --panel-edge: #aaa294;
+  --panel-ink: #454337;
+  --panel-muted: #827c6c;
+  --panel-rule: #c9c1af;
+  --panel-highlight: #ffffff9c;
+  --legend-shadow: #ffffff80;
+  --inset-face: #e1dccf;
+  --inset-end: #ebe6da;
+  --inset-edge: #c4bcaa;
+  --trace-ink: var(--module-color);
+  --knob-ridge: #30332f;
+  --knob-ridge-light: #4b4f46;
+  --knob-highlight: #73786a;
+  --knob-face: #42473d;
+  --knob-shade: #282e25;
+  --knob-border: #3a4033;
+  --knob-pointer: #f5f0df;
   position: absolute;
-  border: 1px solid #b1b3a7;
-  border-bottom-color: #999e8e;
+  border: 1px solid var(--panel-edge);
+  border-bottom-color: color-mix(in srgb, var(--panel-edge), #000 15%);
   border-radius: 7px;
   background:
     repeating-linear-gradient(0deg, #ffffff08 0, #ffffff08 1px, #333b2603 1px, #333b2603 2px),
-    linear-gradient(115deg, #f6f4ed 0%, #ecebe2 60%, #e1e3d7 100%);
+    linear-gradient(115deg, var(--panel-face), var(--panel-end));
   box-shadow:
-    0 1px 0 #ffffffed inset,
-    1px 0 0 #ffffffad inset,
+    0 1px 0 var(--panel-highlight) inset,
+    1px 0 0 var(--panel-highlight) inset,
     -1px 0 0 #9caa8e24 inset,
-    0 -3px 0 #b5bbab66 inset,
-    0 3px 0 #a2a893,
+    0 -3px 0 color-mix(in srgb, var(--panel-edge), transparent 35%) inset,
+    0 3px 0 var(--panel-edge),
     0 5px 0 1px #89937e30,
     0 10px 16px -6px #3c493a45,
     0 2px 3px #52604017;
@@ -1014,8 +1034,8 @@ svg {
 .module-header {
   height: 57px;
   margin: 0 17px;
-  border-bottom: 1px solid #cdd1c2;
-  box-shadow: 0 1px 0 #ffffff85;
+  border-bottom: 1px solid var(--panel-rule);
+  box-shadow: 0 1px 0 var(--panel-highlight);
   cursor: grab;
   touch-action: none;
   display: flex;
@@ -1035,9 +1055,9 @@ svg {
   margin: 0;
   font-size: 15px;
   font-weight: 650;
-  color: #4b5145;
+  color: var(--panel-ink);
   letter-spacing: -0.35px;
-  text-shadow: 0 1px 0 #ffffff;
+  text-shadow: 0 1px 0 var(--legend-shadow);
 }
 .module-indicator {
   width: 5px;
@@ -1053,14 +1073,14 @@ svg {
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 7px;
   letter-spacing: 1px;
-  color: #9da18f;
+  color: var(--panel-muted);
 }
 .module-header-actions {
   display: flex;
   gap: 5px;
   align-items: center;
   margin-left: auto;
-  color: #a9af9c;
+  color: var(--panel-muted);
   padding-left: 5px;
 }
 .module-remove {
@@ -1069,7 +1089,7 @@ svg {
   width: 17px;
   height: 20px;
   padding: 0;
-  color: #a1a795;
+  color: var(--panel-muted);
   border-radius: 3px;
 }
 .module-remove:hover {
@@ -1086,7 +1106,7 @@ svg {
   font-size: 7px;
   font-weight: 600;
   letter-spacing: 1.1px;
-  color: #a4a994;
+  color: var(--panel-muted);
   margin: 0 1px 12px;
 }
 .tiny-led {
@@ -1108,10 +1128,10 @@ svg {
 .trace-display {
   height: 54px;
   position: relative;
-  border: 1px solid #d2d5c7;
+  border: 1px solid var(--inset-edge);
   border-radius: 4px;
-  color: var(--module-color);
-  background: linear-gradient(#dde1d4, #e6e8dc);
+  color: var(--trace-ink);
+  background: linear-gradient(var(--inset-face), var(--inset-end));
   box-shadow:
     inset 0 1px 3px #59644616,
     0 1px 0 #ffffffad;
@@ -1138,7 +1158,7 @@ svg {
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 5px;
   letter-spacing: 1px;
-  color: #a2aa90;
+  color: var(--panel-muted);
 }
 .filter-trace svg {
   height: 47px;
@@ -1219,7 +1239,7 @@ svg {
   border-radius: 50%;
   background: repeating-conic-gradient(
     from 224deg,
-    #9ca68d 0deg 1.8deg,
+    var(--panel-muted) 0deg 1.8deg,
     transparent 1.8deg 26.8deg
   );
   mask: radial-gradient(transparent 0 67%, #000 68%);
@@ -1230,8 +1250,12 @@ svg {
   position: absolute;
   inset: 9px;
   border-radius: 50%;
-  background: repeating-conic-gradient(#353a32 0deg 7deg, #464b40 7deg 13deg, #373c33 13deg 15deg);
-  border: 1px solid #3a4232;
+  background: repeating-conic-gradient(
+    var(--knob-ridge) 0deg 7deg,
+    var(--knob-ridge-light) 7deg 13deg,
+    var(--knob-ridge) 13deg 15deg
+  );
+  border: 1px solid var(--knob-border);
   box-shadow:
     0 3px 3px #2c362a42,
     0 5px 5px #38432e1c,
@@ -1243,8 +1267,13 @@ svg {
   content: '';
   inset: 4px;
   border-radius: 50%;
-  background: radial-gradient(ellipse at 35% 20%, #687060, #444b3c 50%, #353e2d 83%);
-  border: 1px solid #59614d;
+  background: radial-gradient(
+    ellipse at 35% 20%,
+    var(--knob-highlight),
+    var(--knob-face) 50%,
+    var(--knob-shade) 83%
+  );
+  border: 1px solid var(--knob-ridge-light);
   box-shadow:
     inset 0 1px 1px #a6ad924a,
     0 0 1px #111b09a6;
@@ -1264,13 +1293,13 @@ svg {
   top: 0;
   left: calc(50% - 1px);
   border-radius: 1px;
-  background: #edeedc;
+  background: var(--knob-pointer);
   box-shadow: 0 0 2px #00000050;
 }
 .control-label {
   font-size: 9px;
   font-weight: 600;
-  color: #808b72;
+  color: var(--panel-muted);
   margin-top: 4px;
   line-height: 1.2;
   text-align: center;
@@ -1278,7 +1307,7 @@ svg {
 .control-value {
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 8px;
-  color: #899478;
+  color: var(--panel-muted);
   margin-top: 4px;
   line-height: 1.2;
 }
@@ -1360,9 +1389,9 @@ svg {
   left: 12px;
   right: 12px;
   display: flex;
-  border-top: 1px solid #cbd1bd;
+  border-top: 1px solid var(--panel-rule);
   padding-top: 4px;
-  box-shadow: 0 1px 0 #ffffff8c inset;
+  box-shadow: 0 1px 0 var(--panel-highlight) inset;
 }
 .port-button {
   position: relative;
@@ -1373,7 +1402,7 @@ svg {
   gap: 6px;
   height: 48px;
   padding: 0;
-  color: #89957b;
+  color: var(--panel-muted);
 }
 .port-button > span {
   line-height: 10px;
@@ -1386,7 +1415,7 @@ svg {
   height: 23px;
   width: 23px;
   border-radius: 50%;
-  background: conic-gradient(from 20deg, #f9f9eb, #adb99a, #e0e6cf, #939f83, #dbe4ca, #f2f5df);
+  background: conic-gradient(from 20deg, #fafafa, #9aa1a5, #dce0e2, #858c91, #d7dcdf, #fafafa);
   padding: 5px;
   box-shadow:
     0 1px 1px #ffffff,
@@ -1399,9 +1428,9 @@ svg {
   display: block;
   width: 13px;
   height: 13px;
-  border: 2px solid #6b765b;
+  border: 2px solid #606566;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 40%, #222e1b, #4b5940);
+  background: radial-gradient(circle at 40% 40%, #1c2222, #434b4c);
   box-shadow:
     inset 0 1px 2px #000000b0,
     0 1px 0 #f6f8e099;
@@ -1422,7 +1451,7 @@ svg {
   animation: socket-pulse 1s infinite alternate;
 }
 .port-button.connected > span {
-  color: #697959;
+  color: var(--panel-ink);
 }
 .sequence-steps {
   display: grid;

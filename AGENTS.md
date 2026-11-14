@@ -4,6 +4,12 @@
 
 Patchwork is a modular music-making website using **TypeScript on Node.js**. Users add modules to a workspace and wire them together to create sound. They can configure the composition, record output, and save their work. The user explicitly wants **skeuomorphic modules**, clean human-editable code, useful comments, centralized configuration, Git history, and up-to-date documentation.
 
+## Visual direction
+
+The user explicitly wants a collection of different physical instruments. Modules may have different colours, materials, sizes, silhouettes, and control styles. Do not return to one uniform panel with a different accent stripe. Keep the skeuomorphic detail: convincing enclosure depth, material texture, screws, recessed sockets, legible printed labels, and tactile controls.
+
+Current examples include a cream/charcoal drum computer, walnut-sided dark keyboard, violet polymer pad controller, ochre oscillator, forest-green filter, blue echo box, plum reverb, graphite noise generator, and a narrow brushed-metal mixer with faders. Surface palettes and refinements live in `src/components/module-finishes.css`; shared mechanics remain in `src/styles.css`. Keep dimensions in the module registry and preserve socket geometry.
+
 ## Read before changing code
 
 1. `README.md` for setup and user behavior.

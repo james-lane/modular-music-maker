@@ -8,6 +8,10 @@ Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local pe
 
 The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture. **More → Load rhythm & keys patch** opens _Pocket rhythm_, a separate connected performance example with all three new instruments, an oscillator, mixer, and output.
 
+## Hardware appearance
+
+The user prefers individually designed instruments with different materials, colours, sizes, silhouettes, and controls. The current set includes a cream/charcoal drum computer, walnut-sided keyboard, violet pad enclosure, ochre oscillator, green filter, blue delay, plum reverb, terracotta LFO, graphite noise source, and a compact brushed-aluminium mixer with faders. Output has a cream laboratory enclosure and red master dial. Colours and material details are configurable in `components/module-finishes.css`; dimensions remain registry-driven. Selected modules are narrower, preserving previously valid saved positions. Browser QA verified the contrasting finishes across the catalog, control/socket spacing, live playback, and the mixer faders using both dragging and arrow keys; fader values persisted across saving and reload.
+
 ## Validation
 
 - Strict TypeScript checking and a production Vite build.

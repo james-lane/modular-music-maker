@@ -95,7 +95,13 @@ export function ModuleLibrary({
               event.dataTransfer.effectAllowed = 'copy';
             }}
           >
-            <div className="library-module-icon" style={{ color: module.color }}>
+            <div
+              className="library-module-icon"
+              style={{
+                color: module.color,
+                background: `color-mix(in srgb, ${module.color} 13%, #f9f5ed)`,
+              }}
+            >
               <Waveform
                 type={module.type}
                 waveform={module.type === 'oscillator' ? 'sawtooth' : 'sine'}

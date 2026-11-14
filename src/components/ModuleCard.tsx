@@ -12,6 +12,7 @@ import type { DrumSound } from '../domain/instruments';
 import { DrumMachinePanel } from './DrumMachinePanel';
 import { KeyboardPanel } from './KeyboardPanel';
 import { PadControllerPanel } from './PadControllerPanel';
+import { MixerPanel } from './MixerPanel';
 
 interface Props {
   module: PatchModule;
@@ -211,13 +212,14 @@ export function ModuleCard({
             </strong>
           </div>
         )}
-        {['noise', 'lfo', 'reverb', 'mixer'].includes(module.type) && (
+        {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
+        {['noise', 'lfo', 'reverb'].includes(module.type) && (
           <div className="trace-display">
             <Waveform type={module.type} />
             <span>{definition.subtitle.toUpperCase()}</span>
           </div>
         )}
-        {module.type !== 'sequencer' && (
+        {module.type !== 'sequencer' && module.type !== 'mixer' && (
           <div className={`module-knobs ${definition.controls.length === 1 ? 'single-knob' : ''}`}>
             {definition.controls.map((control) => (
               <Knob

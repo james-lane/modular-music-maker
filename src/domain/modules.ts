@@ -101,7 +101,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Sources',
     color: '#bd8b67',
     code: 'NS–01',
-    width: 244,
+    width: 212,
     height: 274,
     ports: [{ id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' }],
     controls: [
@@ -116,7 +116,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Modulation',
     color: '#8a80b2',
     code: 'LFO–01',
-    width: 244,
+    width: 216,
     height: 290,
     ports: [{ id: 'out', label: 'MOD OUT', direction: 'output', signal: 'control' }],
     controls: [
@@ -190,7 +190,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Effects',
     color: '#b58aa4',
     code: 'RVB–01',
-    width: 244,
+    width: 220,
     height: 270,
     ports: [
       { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
@@ -206,7 +206,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Utility',
     color: '#a29373',
     code: 'MIX–01',
-    width: 244,
+    width: 184,
     height: 270,
     ports: [
       { id: 'a', label: 'IN A', direction: 'input', signal: 'audio' },
@@ -226,7 +226,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Utility',
     color: '#b69656',
     code: 'OUT–01',
-    width: 244,
+    width: 228,
     height: 326,
     maxInstances: 1,
     ports: [{ id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' }],
