@@ -1,7 +1,13 @@
 {
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "patchwork-studio",
   "compatibility_date": "2026-11-15",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "patchwork.jameslane.dev", "custom_domain": true }],
+  // Publish only the built studio. The optional local Node API stays on loopback.
   "assets": {
     "directory": "./dist",
+    "not_found_handling": "none",
   },
 }

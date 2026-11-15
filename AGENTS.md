@@ -47,3 +47,5 @@ Current examples include a cream/charcoal drum computer, walnut-sided dark keybo
 ## Handy commands
 
 `npm run dev` starts Vite at `127.0.0.1:5173` and Express at `127.0.0.1:3001`. `npm run build && npm start` serves production at port 3001. Port 5173 is strict; stop an existing dev process before starting another.
+
+`npm run deploy` builds and publishes the static studio to the `patchwork-studio` Cloudflare Worker at `https://patchwork.jameslane.dev`. The custom domain is declared in `wrangler.jsonc`; the Node API stays local. GitHub pushes do not automatically deploy. See `docs/OFFLINE.md` for authentication and deployment checks. Keep Wrangler credentials and `.wrangler/` state out of Git.

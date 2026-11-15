@@ -10,9 +10,13 @@ The initial connected patch is **Step sequencer → Oscillator → Filter → De
 
 ## Offline use and installation
 
-Production builds are installable, offline-capable web apps. Complete releases are cached atomically, including code, styles, examples, guides, and icons. The footer confirms **Offline ready** after checking the cache. **More → Use offline / install** provides iPad/Safari and desktop/Android instructions, retry, update information, and optional persistent-storage protection. Updates wait for all app windows to close and never reload a performance or recording. No new package dependencies were added.
+Production builds are installable, offline-capable web apps. Complete releases are cached atomically, including code, styles, examples, guides, and icons. The footer confirms **Offline ready** after checking the cache. **More → Use offline / install** provides iPad/Safari and desktop/Android instructions, retry, update information, and optional persistent-storage protection. Updates wait for all app windows to close and never reload a performance or recording. The offline runtime adds no package dependency.
 
-Patches and takes remain local, and public installs make no patch API requests. The optional Node adapter stays restricted to a verified loopback server and is skipped when offline. Autosave flushes when a mobile app becomes hidden. Safe-area padding and viewport-bounded minimum height keep installed and short landscape windows usable. Home-screen/maskable PNG icons reuse the waveform mark. `wrangler.jsonc` prepares static-assets-only Cloudflare Workers hosting without server code, a database, or paid services; nothing has been deployed.
+Patches and takes remain local, and public installs make no patch API requests. The optional Node adapter stays restricted to a verified loopback server and is skipped when offline. Autosave flushes when a mobile app becomes hidden. Safe-area padding and viewport-bounded minimum height keep installed and short landscape windows usable. Home-screen/maskable PNG icons reuse the waveform mark.
+
+The production studio is published at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** on the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` declares its Custom Domain and publishes only static assets, without application server code, a database, or a paid service. Cloudflare manages DNS and HTTPS; separate `workers.dev` and preview URLs are disabled. A project-local Wrangler dependency and `npm run deploy` make deployment reproducible. Deployments are manual; GitHub pushes do not automatically publish. Local credentials and deployment state are excluded from Git.
+
+Hosted verification confirmed HTTPS, all ten public files matching the local production build, revalidated HTML, no-cache worker/manifest headers, and 404 responses for the unavailable Node API. Browser checks confirmed an example opening, a nonzero live output meter, recording and saved-take playback, edited tempo and recording persistence after reload, and **Offline ready**, with no browser warnings or errors. The example tempo was restored after checking persistence. Strict types, all 28 tests, production build, formatting, and Wrangler's deployment dry run passed.
 
 Browser QA confirmed a full offline reload, restored patches, live output signal, recording/reopening/playback/download, and patch export/import. Desktop, 1024×768 and 768×1024 tablet, 390×844 phone, and 844×390 landscape layouts kept their footer and dialog accessible without horizontal overflow. No page errors occurred. Checks used a fresh browser profile on a separate preview origin, preserving user work.
 
@@ -56,7 +60,7 @@ The user prefers individually designed instruments with different materials, col
 
 ## Known boundaries
 
-- The complete project is committed locally. A private Sites project was registered, but source synchronization/publication was blocked by automatic approval review because uploading source to that service was not explicitly authorized. No hosted version has been published. Obtain explicit user authorization before retrying source upload.
+- The source and history are hosted on GitHub, and production runs on Cloudflare Workers. A separate private Sites project was registered earlier, but source synchronization/publication to Sites was blocked by automatic approval review because that upload was not explicitly authorized. No Sites version has been published. Obtain explicit user authorization before retrying that separate upload.
 
 - Local-first, single-user storage. No accounts or cloud database; static hosted copies use browser storage. The Node server remains local and unauthenticated.
 - The melodic sequencer has eight steps; drum patterns have sixteen sixteenths. Keyboard voices are monophonic with last-note priority and chromatic pitch. No physical MIDI support.

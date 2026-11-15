@@ -2,6 +2,8 @@
 
 A modular music studio for the browser, built with TypeScript, React, Vite, and a Node.js/Express server. Inspired by a physical modular synthesizer: add instruments, turn knobs, and connect sockets with patch cables.
 
+**Open the studio: [patchwork.jameslane.dev](https://patchwork.jameslane.dev)**. Choose an example and press **Play**. Patches and recordings stay in your browser; wait for **Offline ready** to use the studio without a connection.
+
 ## Run the studio
 
 Requires **Node.js 22.12 or newer** and npm.
@@ -56,7 +58,7 @@ Open **http://127.0.0.1:4173**, wait for readiness, then disconnect and reload. 
 
 Connected visits check for updates. A complete new release waits until every Patchwork window is closed; it never reloads a session during playback or recording. Reopen the app to use the update. Keep the studio in the foreground while performing: mobile operating systems can suspend background audio. Device storage can be cleared or evicted, so keep patch exports and recording downloads as backups. **Use offline / install → Protect device storage** requests additional protection where supported.
 
-See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, device testing, and future Cloudflare hosting.
+See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, device testing, and Cloudflare hosting.
 
 ## Choose a starting point
 
@@ -101,9 +103,21 @@ Browser data belongs to the current origin and browser profile. The local previe
 
 The frontend can also be hosted as static files from `dist/`; it retains browser saving, recording, and offline installation. Public installs make no patch API requests. The optional Node file API is only used on loopback after identifying a running Patchwork server, and is skipped immediately when offline. Static hosting does not run Node. Recording format is selected from the browser's supported WebM/Opus, Ogg/Opus, or MP4 formats. Takes are limited to 10 minutes by a configurable default.
 
-## Future Cloudflare hosting
+## Cloudflare hosting
 
-`wrangler.jsonc` prepares an **assets-only Cloudflare Workers** deployment of `dist/`. The build has no remote fonts, samples, CDN scripts, account service, or cloud storage dependency. Cloudflare currently lists static asset requests as free and unlimited, with no additional asset-storage charge; this design does not invoke a Worker script or need a paid plan. Check [Cloudflare's current limits and pricing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/) before deployment. No deployment has been made. The optional local Node API stays on your computer.
+The production studio runs at **https://patchwork.jameslane.dev** on the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` publishes only the built `dist/` assets and declares the custom domain; Cloudflare manages its DNS record and HTTPS certificate. The build has no remote fonts, samples, CDN scripts, account service, or cloud storage dependency. Cloudflare lists static asset requests as free and unlimited, with no additional asset-storage charge; this design does not invoke a Worker script or need a paid plan. See [Cloudflare's current limits and pricing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/). The optional local Node API stays on your computer.
+
+To publish an update from this checkout:
+
+```sh
+npm ci
+npx wrangler login
+npm run check
+npm run format:check
+npm run deploy
+```
+
+Login is only needed when credentials are missing or expired. `npm run deploy` rebuilds the studio before uploading it; `npx wrangler deploy --dry-run` validates an existing build without publishing. Deployments are manual: pushing to GitHub alone does not publish an update. Credentials stay outside the repository. Existing open sessions retain their cached release until all Patchwork windows close; reopen to use an update.
 
 ## Commands
 
@@ -112,6 +126,7 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 | `npm run dev`          | Frontend and Node server with automatic reload    |
 | `npm run build`        | TypeScript check and production frontend build    |
 | `npm run preview`      | Serve the production/offline app at port 4173     |
+| `npm run deploy`       | Build and publish to patchwork.jameslane.dev      |
 | `npm start`            | Serve `dist/` and the local file API              |
 | `npm test`             | Domain validation and real HTTP/persistence tests |
 | `npm run typecheck`    | Strict TypeScript checking                        |
@@ -126,7 +141,7 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 - `src/domain/examples.ts`: example patch catalog, sound recipes, artwork colours, and starter tips. Recipes use the ordinary module defaults and override only the settings that define each sound.
 - `src/styles.css`: shared theme tokens, panel mechanics, knobs, and sockets. `src/components/module-finishes.css` defines individual materials, colours, knob finishes, and enclosure details; `instruments.css` defines specialized performance layouts.
 - `server/index.ts`: listener; `PORT` and `PATCHWORK_DATA_DIR` environment variables configure the server. See `.env.example`. Set these in your shell; `.env` is documentation only and is not automatically loaded.
-- `.openai/hosting.json`: reserved private Sites preview configuration; no hosted version has been published. It does not affect local development.
+- `.openai/hosting.json`: reserved private Sites preview configuration; no Sites version has been published. It does not affect local development or the Cloudflare deployment.
 
 Start with [the architecture](docs/ARCHITECTURE.md), [the module guide](docs/ADDING_MODULES.md), and [the project status](docs/PROJECT_STATUS.md). Future agent sessions should read [AGENTS.md](AGENTS.md) before editing.
 

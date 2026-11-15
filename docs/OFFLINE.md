@@ -29,11 +29,13 @@ The first worker claims its page when activated. Updates use the normal waiting 
 - Clearing website data removes the saved app, patches, and takes. Storage pressure can cause eviction where protection is unavailable. Export patches and download recordings for durable backups. There is no cross-device synchronization.
 - Offline use does not bypass iPadOS background/screen-lock suspension, browser CPU limits, or hardware audio differences. Keep the app visible while performing. Offline WAV rendering remains separate future work.
 
-## Cloudflare preparation
+## Cloudflare hosting
 
-`wrangler.jsonc` points Workers Static Assets at `dist/`, with no Worker script, bindings, database, paid services, or Node compatibility layer. Default missing-asset handling is retained; unknown API URLs are not rewritten to the app. `public/_headers` supplies update-cache headers. No deployment, account changes, or source upload occurred.
+The production studio is **https://patchwork.jameslane.dev**, served by the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` points Workers Static Assets at `dist/`, with no application Worker script, bindings, database, paid services, or Node compatibility layer. It declares `patchwork.jameslane.dev` as a Custom Domain, allowing Cloudflare to manage its DNS record and HTTPS certificate. Separate `workers.dev` and preview URLs are disabled. Missing assets return 404; unknown API URLs are not rewritten to the app. `public/_headers` supplies update-cache headers.
 
-When deployment is requested, build with `npm run build` and deploy using Workers Static Assets and this configuration. The Node API is excluded from the hosted build. Cloudflare documents free, unlimited static asset requests and no extra asset storage charge; Worker-script execution has separate pricing. Remain on the Free plan and review current terms/limits before publishing: [billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/), [asset configuration](https://developers.cloudflare.com/workers/static-assets/binding/).
+Install dependencies with `npm ci` and authenticate with `npx wrangler login` if necessary. Run `npm run check` and `npm run format:check`, then `npm run deploy` to rebuild and publish. Validate an existing build without publishing using `npx wrangler deploy --dry-run`. GitHub holds the source and history; pushing a commit does not automatically deploy it. Wrangler credentials, `.dev.vars*`, and `.wrangler/` state are excluded from Git. The Node API is excluded from the hosted build, so the public site keeps patch/recording storage on the device.
+
+Cloudflare documents free, unlimited static asset requests and no extra asset storage charge; Worker-script execution has separate pricing. No plan upgrade is needed: [billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/), [asset configuration](https://developers.cloudflare.com/workers/static-assets/binding/), [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 
 ## Verification
 

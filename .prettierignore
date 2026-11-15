@@ -3,5 +3,8 @@ dist
 .data
 .git
 .openai
+.wrangler
+.dev.vars
+.dev.vars.*
 package-lock.json
 artifacts
