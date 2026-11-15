@@ -56,6 +56,8 @@ Give each module a physical identity suited to its role. Different materials, co
 
 Changing a footprint can affect old saved positions. The current visual refresh only reduces selected widths, so all previously valid positions still fit. Plan an explicit position migration before enlarging a module beyond old workspace bounds. Decorative wood cheeks and painted rails should not change the structural border width or the 12px socket-footer inset.
 
+XY Effects demonstrates a control that updates several parameters together. Its panel sends X/Y in one edit through `ModuleCard.onParameters`, preserving coherent undo snapshots. Corner choices use the shared effect catalog and explicit enum validation, while compatibility still comes from registry sockets. New selectable effects need a native audio path, a bounded/crossfaded bus, disposal, and updated guide descriptions; keep tuning values in `CONFIG.audio.xyEffects`.
+
 ## 5. Verify and document
 
 1. Run `npm run check`. The catalog-default test automatically includes new definitions.

@@ -3,6 +3,7 @@ import { CONFIG, ROOT_NOTES } from '../config';
 import { MODULES, SEQUENCER_DEGREES } from './modules';
 import { DRUM_LANES, DRUM_SOUNDS, DRUM_STEP_COUNT } from './instruments';
 import { isValidSamplePcm } from './samples';
+import { XY_CORNERS, XY_EFFECTS } from './xy-effects';
 import { connectionError } from './project';
 import type { ModuleType, Project } from './types';
 
@@ -129,6 +130,12 @@ export const projectSchema = z
             issue('Unknown drum voice source.');
         }
       } else if (module.samples) issue('Only Drum kit modules can store samples.');
+      if (module.type === 'xy-effects') {
+        for (const corner of XY_CORNERS) {
+          if (!XY_EFFECTS.some((effect) => effect.id === module.parameters[corner.id]))
+            issue(`Unknown XY Effects ${corner.label} effect.`);
+        }
+      }
       if (module.type === 'sequencer' && !module.steps) issue('A sequencer needs eight steps.');
       if (module.type === 'drum-machine') {
         if (typeof module.parameters.enabled !== 'boolean')

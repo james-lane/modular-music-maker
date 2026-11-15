@@ -2,6 +2,16 @@
 
 Last updated: **15 November 2026**.
 
+## Touch controls and assignable XY Effects — local changes
+
+App text now suppresses selection and WebKit touch callouts, including labels outside module panels. Patch-name/search inputs retain native editing, caret selection, and paste. Keyboard keys support finger, pen, and mouse swipes across white and raised black keys, independently per pointer. Leaving the bed releases that finger's note; re-entry plays again. Shared held pitches are retained until their final owner releases. Cancellation, lost capture, focus/window loss, hidden documents, and unmount preserve note-off cleanup.
+
+The fifteenth module, **XY Effects**, is a copper console with a recessed four-quadrant pad, ivory Mix dial, Centre button, and accessible X/Y sliders. Corners default to Filter / Echo / Grit / Space and can independently select any of those, Thin (high-pass), or Clean. Movement smoothly blends surrounding corners, increasing the effect towards the edges while keeping the centre dry. The point remains on release. Corner choices, both coordinates, and Mix use validated v1 parameters and normal autosave/export/history. A fixed parallel native audio graph crossfades effect gains without rebuilding when a choice changes; repeated selections sum bounded weights. All nodes and internal feedback have disposal paths. The library guide explains controls and includes a valid drum-machine example.
+
+Validation: all 45 automated tests, strict types, production build, and formatting pass. New tests cover continuous bounded blending, corner isolation, dry centre/Mix-zero, repeated assignments, saved round trips, and invalid/missing settings. Browser checks used separate local preview origins, preserving user work: native pointer swipes and synthetic touch sequences covered white/black transitions, leaving/re-entry, overlapping fingers on one pitch, cancellation, lost capture, and window blur. Real audio renders measured all six effect paths, echo/reverb tails, exact dry-centre/Mix-zero behavior, and silence after disposal; a live take decoded with nonzero audio. Studio checks covered native pad drag, coherent X/Y undo/redo, corner selectors, guide browsing, imported and restored choices, and phone/tablet layouts (390×844 and 1194×834) without document overflow. Selection styles were checked on rendered labels and editable inputs.
+
+With the production preview server shut down after **Offline ready**, the cached studio reloaded with saved choices, accepted a new corner choice, recorded live keys/swipes, and reopened/played the stored take. A further offline reload retained the edit. Live output measured nonzero through XY Effects, zero after removal, and nonzero after Undo restored the graph. Physical iPad/iPhone Safari selection and swipe feel still need device confirmation. These changes are committed locally; the hosted studio has not been redeployed for this update.
+
 ## Combined production release — 15 November 2026
 
 This release combines all completed agent work on `main`: automatic app/footer versioning (`e02faaa`), compact module-library browsing and touch placement (`33df30d`), assignable Drum kit voices with samples/external audio (`22e643f`), and sharing previews (`a5c5b04`), together with the previously published sequencer gestures and workspace/update improvements. The production target is **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** on the existing `patchwork-studio` Worker. No separate local branches or worktrees require merging.
@@ -22,7 +32,7 @@ Production browser checks with JavaScript disabled confirmed unique sharing tags
 
 ## Implemented foundation
 
-Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes fourteen functioning modules, including a 16-step drum machine, 25-key keyboard, 16-pad controller, and four-input audio Merger, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
+Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes fifteen functioning modules, including a 16-step drum machine, 25-key keyboard, 16-pad controller, assignable XY Effects, and four-input audio Merger, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
 
 The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture.
 

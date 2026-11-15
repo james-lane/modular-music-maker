@@ -3,6 +3,7 @@ import type { ModuleType, Parameters, PatchModule } from '../domain/types';
 import type { DrumSound } from '../domain/instruments';
 import { createDrumRuntime } from './drums';
 import { MODULES } from '../domain/modules';
+import { createXYEffects } from './xy-effects';
 
 export interface AudioRuntime {
   inputs: Record<string, AudioNode | AudioParam>;
@@ -26,6 +27,7 @@ const smooth = (parameter: AudioParam, target: number, context: AudioContext) =>
  * Every owned source/node must be released in dispose(), including feedback connections.
  */
 export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
+  'xy-effects': createXYEffects,
   'drum-machine': createDrumRuntime,
   'drum-kit': (context) => {
     // Four independent buses carry external audio. The KIT route assigns their voices;

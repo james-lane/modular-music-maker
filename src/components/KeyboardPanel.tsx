@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import type { LiveControls } from '../audio/live';
 import {
   KEYBOARD_BASE_MIDI,
@@ -11,10 +11,13 @@ import type { PatchModule } from '../domain/types';
 /** Pointer capture, key-up, focus loss and window blur all have explicit note-off paths. */
 export function KeyboardPanel({ module, live }: { module: PatchModule; live: LiveControls }) {
   const held = useRef(new Map<string, number>());
+  // A pointer remains playable after leaving the keybed and sliding back onto a key.
+  const pointers = useRef(new Set<number>());
   const tapTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
   const [notes, setNotes] = useState<number[]>([]);
   const releaseAll = useRef(() => {});
   releaseAll.current = () => {
+    pointers.current.clear();
     held.current.clear();
     setNotes([]);
     live.releaseKeyboard(module.id);
@@ -36,10 +39,17 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
   }, []);
 
   const press = (token: string, note: number) => {
-    if (held.current.has(token)) return;
+    const previous = held.current.get(token);
+    if (previous === note) return;
+    // Reinsert on a swipe so the readout follows the most recently played note too.
+    held.current.delete(token);
     held.current.set(token, note);
     setNotes([...held.current.values()]);
+    // Start the new note before releasing the old one to preserve last-note priority
+    // and avoid a gate-off between adjacent keys. Other fingers may still hold it.
     live.noteOn(module.id, note);
+    if (previous !== undefined && ![...held.current.values()].includes(previous))
+      live.noteOff(module.id, previous);
   };
   const release = (token: string) => {
     const note = held.current.get(token);
@@ -47,6 +57,20 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
     setNotes([...held.current.values()]);
     if (note !== undefined && ![...held.current.values()].includes(note))
       live.noteOff(module.id, note);
+  };
+  const movePointer = (event: PointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.has(event.pointerId)) return;
+    // Capture targets the keybed, so hit-test the visible key rather than event.target.
+    // Viewport coordinates also work after canvas zoom/pan and respect raised black keys.
+    const key = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-note]');
+    const token = `pointer:${event.pointerId}`;
+    if (key && event.currentTarget.contains(key))
+      press(token, Number(key.getAttribute('data-note')));
+    else release(token);
+  };
+  const endPointer = (event: PointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(event.pointerId);
+    release(`pointer:${event.pointerId}`);
   };
   let whitePosition = -1;
   const keys = Array.from({ length: KEYBOARD_NOTE_COUNT }, (_, offset) => {
@@ -77,6 +101,10 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
         role="group"
         aria-label="Keyboard performance keys"
         tabIndex={0}
+        onPointerMove={movePointer}
+        onPointerUp={endPointer}
+        onPointerCancel={endPointer}
+        onLostPointerCapture={endPointer}
         onBlur={(event) => {
           if (!event.currentTarget.contains(event.relatedTarget)) releaseAll.current();
         }}
@@ -99,6 +127,7 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
         {keys.map(({ note, black, position, shortcut }) => (
           <button
             key={note}
+            data-note={note}
             className={`piano-key ${black ? 'black-key' : 'white-key'} ${notes.includes(note) ? 'held' : ''}`}
             style={{ '--key-position': position } as CSSProperties}
             aria-label={`Play ${midiLabel(shifted(note))}${shortcut ? ` (${shortcut.toUpperCase()})` : ''}`}
@@ -108,12 +137,11 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
               event.preventDefault();
               event.stopPropagation();
               event.currentTarget.focus();
-              event.currentTarget.setPointerCapture(event.pointerId);
+              // One stable owner per keyboard lets several fingers cross the same keys.
+              event.currentTarget.parentElement?.setPointerCapture(event.pointerId);
+              pointers.current.add(event.pointerId);
               press(`pointer:${event.pointerId}`, note);
             }}
-            onPointerUp={(event) => release(`pointer:${event.pointerId}`)}
-            onPointerCancel={(event) => release(`pointer:${event.pointerId}`)}
-            onLostPointerCapture={(event) => release(`pointer:${event.pointerId}`)}
             onClick={(event) => {
               if (event.detail === 0) {
                 const token = `tap:${crypto.randomUUID()}`;
@@ -133,7 +161,7 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
         ))}
       </div>
       <p className="instrument-help">
-        Focus the keys, then play <kbd>A W S E D F…</kbd> · Last note takes priority
+        Tap or slide across keys · Focus to play <kbd>A W S E D F…</kbd>
       </p>
     </div>
   );

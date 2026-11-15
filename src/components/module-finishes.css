@@ -22,6 +22,210 @@
   --enclosure-pad-controller: #413c52;
   --enclosure-drum-kit: #ac614c;
   --enclosure-merger: #345b5b;
+  --enclosure-xy-effects: #bd7656;
+}
+
+/* Copper performance console: a recessed smoked-glass pad in a warm cast shell. */
+.module-xy-effects {
+  --panel-face: var(--enclosure-xy-effects);
+  --panel-end: #99553d;
+  --panel-edge: #713f31;
+  --panel-ink: #fff2d9;
+  --panel-muted: #f2d2b5;
+  --panel-rule: #d29974;
+  --panel-highlight: #ffdcad45;
+  --legend-shadow: #5c2d2870;
+  --knob-pointer: #633c2e;
+  --knob-face: #f5e4be;
+  --knob-shade: #bda77c;
+  --knob-ridge: #c1a87e;
+  --knob-ridge-light: #eee0bb;
+  --knob-border: #8c704d;
+  border-radius: 14px 14px 8px 8px;
+}
+.xy-instrument {
+  display: grid;
+  gap: 8px;
+}
+.xy-corner-selectors {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.xy-corner-selectors label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.xy-corner-selectors label > span {
+  color: var(--panel-muted);
+  font: 8px monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.xy-corner-selectors select {
+  min-width: 0;
+  width: 100%;
+  height: 28px;
+  padding: 2px 8px;
+  color: #49392d;
+  background: linear-gradient(#f9edcf, #e0cda7);
+  border: 1px solid #704c37;
+  border-radius: 3px;
+  font-size: 11px;
+  box-shadow:
+    0 1px 1px #f9d6ad70,
+    inset 0 1px 2px #69402c24;
+}
+.xy-pad {
+  height: 244px;
+  position: relative;
+  overflow: hidden;
+  touch-action: none;
+  border: 5px solid #48382f;
+  border-radius: 9px;
+  cursor: crosshair;
+  background:
+    linear-gradient(
+      90deg,
+      transparent calc(50% - 0.5px),
+      #b9c6ac45 50%,
+      transparent calc(50% + 0.5px)
+    ),
+    linear-gradient(
+      0deg,
+      transparent calc(50% - 0.5px),
+      #b9c6ac45 50%,
+      transparent calc(50% + 0.5px)
+    ),
+    repeating-linear-gradient(0deg, transparent 0 23px, #b9c6ac0c 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, #b9c6ac0c 23px 24px),
+    radial-gradient(ellipse at top left, #50756e70, transparent 65%),
+    radial-gradient(ellipse at bottom right, #6e577f70, transparent 65%), #222d2c;
+  box-shadow:
+    inset 0 4px 12px #0009,
+    0 1px 0 #ffe0b085,
+    0 -1px 0 #5f352b;
+}
+.xy-pad:focus-visible {
+  outline: 2px solid #fff1bf;
+  outline-offset: 3px;
+}
+.xy-quadrant {
+  position: absolute;
+  color: #ccdac16b;
+  font: 9px monospace;
+}
+.xy-quadrant.q1 {
+  left: 10px;
+  top: 10px;
+}
+.xy-quadrant.q2 {
+  right: 10px;
+  top: 10px;
+}
+.xy-quadrant.q3 {
+  left: 10px;
+  bottom: 10px;
+}
+.xy-quadrant.q4 {
+  right: 10px;
+  bottom: 10px;
+}
+.xy-centre-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 14px);
+  color: #c1d2bb65;
+  letter-spacing: 2px;
+  font: 7px monospace;
+}
+.xy-crosshair {
+  position: absolute;
+  pointer-events: none;
+  background: #e9cda03b;
+}
+.xy-crosshair.horizontal {
+  height: 1px;
+  width: 100%;
+  top: var(--xy-y);
+}
+.xy-crosshair.vertical {
+  width: 1px;
+  height: 100%;
+  left: var(--xy-x);
+}
+.xy-point {
+  position: absolute;
+  pointer-events: none;
+  left: clamp(12px, var(--xy-x), calc(100% - 12px));
+  top: clamp(12px, var(--xy-y), calc(100% - 12px));
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
+  border: 2px solid #ffe6aa;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff3cc 0 3px, #dfa85e80 4px 6px, #2b3936 7px);
+  box-shadow:
+    0 0 12px #ffcf675c,
+    0 2px 3px #0009;
+}
+.xy-lower {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-top: 4px;
+}
+.xy-position {
+  flex: 1;
+  min-width: 0;
+}
+.xy-axes {
+  display: grid;
+  gap: 4px;
+}
+.xy-axes label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 9px monospace;
+}
+.xy-axes input {
+  flex: 1;
+  min-width: 0;
+  width: 90px;
+  height: 12px;
+  accent-color: #ffdfad;
+}
+.xy-axes output {
+  width: 32px;
+  text-align: right;
+}
+.xy-reset {
+  margin-top: 6px;
+  padding: 4px 12px;
+  border: 1px solid #653e2c;
+  border-radius: 3px;
+  font: 9px monospace;
+  color: #49392d;
+  background: linear-gradient(#f9edcf, #ddc79e);
+  box-shadow: 0 2px 0 #6d4937;
+}
+.xy-position p {
+  margin: 7px 0 0;
+  color: var(--panel-muted);
+  font-size: 7px;
+  line-height: 1.5;
+}
+.module-xy-effects .knob-assembly {
+  width: 54px;
+  height: 54px;
+}
+.module-xy-effects .control-label,
+.module-xy-effects .control-value {
+  color: var(--panel-ink);
 }
 
 /* Warm enamel and bakelite: a small, older note sequencer. */

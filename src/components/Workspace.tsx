@@ -489,6 +489,19 @@ export function Workspace({
                     `${module.id}:${id}`,
                   )
                 }
+                onParameters={(values, group) =>
+                  commit(
+                    (current) => ({
+                      ...current,
+                      modules: current.modules.map((item) =>
+                        item.id === module.id
+                          ? { ...item, parameters: { ...item.parameters, ...values } }
+                          : item,
+                      ),
+                    }),
+                    group ? `${module.id}:${group}` : '',
+                  )
+                }
                 onSample={(lane, sample) => {
                   let accepted = false;
                   commit((current) => {

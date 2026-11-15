@@ -7,6 +7,7 @@ export type ModuleType =
   | 'filter'
   | 'delay'
   | 'reverb'
+  | 'xy-effects'
   | 'mixer'
   | 'merger'
   | 'output'

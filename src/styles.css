@@ -23,6 +23,18 @@
 
 * {
   box-sizing: border-box;
+  /* WebKit needs its prefixed rule to prevent selection/callouts during live playing. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input,
+textarea,
+[contenteditable='true'] {
+  /* Names and search fields must retain native caret, selection and paste behavior. */
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
 }
 body {
   margin: 0;

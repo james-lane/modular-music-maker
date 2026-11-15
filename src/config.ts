@@ -23,6 +23,7 @@ export const CONFIG = {
     pixelsPerDegree: 12,
     finePixelsPerDegree: 48,
   },
+  xyPad: { keyboardStep: 0.05, fineKeyboardStep: 0.01 },
   canvas: {
     width: 1800,
     height: 1200,
@@ -40,6 +41,17 @@ export const CONFIG = {
     defaultMasterVolume: 0.65,
     liveTailMs: 3000,
     maxDrumHits: 96,
+    xyEffects: {
+      filterHz: 700,
+      filterResonance: 1.5,
+      highpassHz: 1400,
+      echoSeconds: 0.3,
+      echoFeedback: 0.38,
+      drive: 5,
+      gritLevel: 0.65,
+      curveSamples: 2048,
+      spaceSeconds: 2,
+    },
   },
   tempo: { min: 40, max: 240, default: 108 },
   samples: {

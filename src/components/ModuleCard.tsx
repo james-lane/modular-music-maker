@@ -3,7 +3,7 @@ import type { CSSProperties, PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { MODULES } from '../domain/modules';
 import { noteLabel } from '../domain/project';
-import type { DrumSample, Endpoint, PatchModule, Project } from '../domain/types';
+import type { DrumSample, Endpoint, Parameters, PatchModule, Project } from '../domain/types';
 import { Knob } from './Knob';
 import { LevelMeter, Scope } from './Scope';
 import { Waveform } from './Waveform';
@@ -16,6 +16,7 @@ import { PadControllerPanel } from './PadControllerPanel';
 import { MixerPanel } from './MixerPanel';
 import { MergerPanel } from './MergerPanel';
 import { SequencerStep, type StepNoteChange } from './SequencerStep';
+import { XYEffectsPanel } from './XYEffectsPanel';
 
 interface Props {
   module: PatchModule;
@@ -29,6 +30,7 @@ interface Props {
   playing: boolean;
   pending: Endpoint | null;
   onParameter: (id: string, value: number | string | boolean) => void;
+  onParameters: (values: Parameters, group?: string) => void;
   onSample: (lane: DrumLane, sample: DrumSample | null) => boolean;
   onDrumStep: (sound: DrumSound, step: number) => void;
   onStep: (index: number, degree: StepNoteChange, group?: string) => void;
@@ -50,6 +52,7 @@ export function ModuleCard({
   playing,
   pending,
   onParameter,
+  onParameters,
   onDrumStep,
   onSample,
   onStep,
@@ -119,6 +122,9 @@ export function ModuleCard({
           />
         )}
         {module.type === 'keyboard' && <KeyboardPanel module={module} live={live} />}
+        {module.type === 'xy-effects' && (
+          <XYEffectsPanel module={module} onParameters={onParameters} />
+        )}
         {module.type === 'pad-controller' && <PadControllerPanel module={module} live={live} />}
         {module.type === 'sequencer' && (
           <>
@@ -228,7 +234,7 @@ export function ModuleCard({
             <span>{definition.subtitle.toUpperCase()}</span>
           </div>
         )}
-        {module.type !== 'sequencer' && module.type !== 'mixer' && (
+        {!['sequencer', 'mixer', 'xy-effects'].includes(module.type) && (
           <div className={`module-knobs ${definition.controls.length === 1 ? 'single-knob' : ''}`}>
             {definition.controls.map((control) => (
               <Knob

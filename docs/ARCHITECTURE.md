@@ -43,6 +43,9 @@ React controls / workspace
 | `src/audio/live.ts`                       | Ephemeral keyboard/pad gesture contract                             |
 | `src/domain/instruments.ts`               | Drum identities/patterns, shortcuts and chromatic pitch helpers     |
 | `src/components/KeyboardPanel.tsx`        | Piano key gestures, focus and note release                          |
+| `src/components/XYEffectsPanel.tsx`       | Assignable corner selectors, XY gestures and accessible axes        |
+| `src/domain/xy-effects.ts`                | Corner/effect identities and bounded continuous blend weights       |
+| `src/audio/xy-effects.ts`                 | Fixed parallel effects graph, crossfaded buses and disposal         |
 | `src/components/PadControllerPanel.tsx`   | Live pad layout, keyboard shortcuts and feedback                    |
 | `src/components/DrumMachinePanel.tsx`     | Drum pattern switches and voice audition                            |
 | `src/audio/recordings.ts`                 | Recording MIME selection and IndexedDB blob storage                 |
@@ -114,6 +117,10 @@ Signal chain: Output module gain → dynamics compressor → master gain → ana
 
 ## Performance instruments
 
+App-wide `user-select` and WebKit's prefixed selection/callout rules prevent touch gestures from selecting printed labels, toolbar text, and guides. Inputs, textareas, and editable fields explicitly retain native text selection and paste. Browser zoom and focus/keyboard access remain available.
+
+Keyboard pointers capture on their stable keybed, independently by pointer ID. Moves hit-test visible keys in viewport coordinates, respecting raised black keys and canvas transforms. A swipe changes its existing token's note, sends the new note-on before the old note-off, and releases the old pitch only when no other token holds it. Leaving the bed releases the note while retaining the pointer for re-entry. Pointer-up, cancellation, lost capture, blur, hidden documents, and unmount clear ownership. Workspace pinch cancellation uses the same path. Held tokens and their readout stay ephemeral.
+
 `LiveControls` sends note-on/off and drum/pad hits without mutating serializable project data. Held keys, lit pads, AudioNodes, and live velocity events never enter undo history or autosave. The hook guards asynchronous audio activation: releasing a key before `resume()` completes cancels the pending note, and Stop invalidates pending live gestures.
 
 Keyboard holds have last-note priority per oscillator. Releasing the last note silences the gain envelope; releasing a newer note restores a previously held one. Pointer cancellation, focus loss, visibility changes, window blur, Stop, topology changes, and unmount provide cleanup paths. The keyboard octave and the oscillator octave add together; oscillator detune still applies. Physical MIDI and polyphonic oscillator voices are not implemented.
@@ -121,6 +128,14 @@ Keyboard holds have last-note priority per oscillator. Releasing the last note s
 `audio/drums.ts` builds sixteen kit sounds from short oscillators and filtered noise using editable recipes. Each triggered hit owns its nodes until all its sources end. Stop/disposal disconnects and stops outstanding sources, including scheduled hits. A closed hat chokes a ringing open hat; a configurable overlap limit bounds rapid triggering. Drum level/tone/decay affect sequenced and live hits. The four pattern lanes remain editable independently of the sixteen pad sound mappings; disabling Pattern stops scheduled hits but accepts live triggers.
 
 The _Pocket rhythm_ example connects Keyboard → Oscillator, Pad controller → Drum machine, Drum kit → Drum machine, Drum machine/Oscillator → Mixer → Output. It is available through the example collection alongside the other starting points.
+
+## XY Effects
+
+XY Effects uses the ordinary v1 parameter map: registry-bounded `x`/`y` (−1…1, positive Y upwards), `mix` (0…1), and four validated effect IDs (`topLeft`, `topRight`, `bottomLeft`, `bottomRight`). Existing patches need no migration. Corner/effect identities and `xyBlend()` live in `domain/xy-effects.ts`; the registry owns dimensions and defaults. Compatibility derives from its audio input/output sockets.
+
+The pad updates both coordinates atomically through the standard patch/history/autosave path, with a per-gesture group. It retains position on release, bounds out-of-pad drags, and cancels on lost capture, focus/window loss, hidden documents, and workspace pinch. Arrow keys, fine Shift arrows, Home/Centre, and labelled native axis sliders provide keyboard and assistive access. Corner selectors are native selects. The field guide never starts sound.
+
+The audio runtime keeps a fixed parallel graph: low-pass Filter, a bounded feedback Echo, oversampled soft-clipping Grit, locally generated stereo Space reverb, high-pass Thin, and Clean. Static effect settings are centralized in `CONFIG.audio.xyEffects`. Bilinear corner weights are multiplied by maximum axis distance from centre and Mix; the remainder is dry. Weights are nonnegative and sum to one. Selecting an effect more than once adds its weights to one bus rather than duplicating nodes. Every bus gain ramps using the shared smoothing time, so movement and reassignment avoid topology changes. Effect inputs run continuously, allowing existing echo/reverb tails to be heard when blending towards them. Disposal disconnects every node and the feedback loop and releases impulse/curve buffers. No downloads, microphone permissions, or additional audio sources are required.
 
 ## Drum kit voice assignment
 

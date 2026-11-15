@@ -103,7 +103,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Connect PITCH / GATE to an Oscillator PITCH input.',
       'Connect the Oscillator AUDIO OUT to an Output AUDIO IN socket.',
-      'Hold a piano key with the pointer or touch. Focus the keys to play A W S E D F T G Y H U J K O L P ; on your computer keyboard.',
+      'Tap or hold a piano key, or slide across the keys with a finger, mouse, or pen. Focus the keys to play A W S E D F T G Y H U J K O L P ; on your computer keyboard.',
     ],
     controls: {
       octave:
@@ -114,7 +114,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Piano keys',
         description:
-          'Release a key to end its note. Enter or Space on a focused piano key plays a short note.',
+          'Each finger can slide independently between white and black keys. Moving outside the keybed releases its note; sliding back plays again. Release to end the note. Enter or Space on a focused piano key plays a short note.',
       },
     ],
     tip: 'Live playing works with the transport stopped. Notes are chromatic, and the last held note takes priority on each oscillator.',
@@ -335,6 +335,42 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
         wire('keyboard', 'pitch', 'oscillator', 'pitch'),
         wire('oscillator', 'out', 'reverb', 'in'),
         wire('reverb', 'out', 'output', 'in'),
+      ],
+    },
+  },
+  'xy-effects': {
+    overview:
+      'A touch effects console that blends four assignable corners. Slide a point around the pad to reshape incoming audio. The centre is clean; moving outward increases the effect up to the Mix setting. Release to leave the point where you put it.',
+    steps: [
+      'Connect an instrument AUDIO OUT to AUDIO IN, then XY Effects AUDIO OUT to Output AUDIO IN.',
+      'Play the source, then tap or slide on the pad. Start near the centre and explore the four corners.',
+      'Choose a sound for each corner using its selector. Any effect can occupy any number of corners. Choices and position save with your patch.',
+    ],
+    controls: {
+      x: 'Horizontal position, from −1 at the left to +1 at the right. The X slider is an accessible alternative to dragging.',
+      y: 'Vertical position, from −1 at the bottom to +1 at the top. The Y slider is an accessible alternative to dragging.',
+      mix: 'Maximum processed amount at the pad edges. Zero is clean everywhere; the centre remains clean at any Mix setting.',
+    },
+    extraControls: [
+      {
+        label: 'Corner effect selectors',
+        description:
+          'Defaults are Filter (top left), Echo (top right), Grit (bottom left), and Space (bottom right). Each corner can choose Filter (warm low-pass), Echo (repeating delay), Grit (soft distortion), Space (reverb), Thin (high-pass), or Clean (unprocessed audio). Effects blend smoothly across quadrant boundaries; they do not switch abruptly.',
+      },
+      {
+        label: 'XY pad / Centre',
+        description:
+          'Tap anywhere or drag the point with a finger, mouse, or pen. Focus the pad and use arrow keys; hold Shift for smaller movements. Home or Centre returns to the clean centre. The point stays after release, and a workspace pinch cancels the drag.',
+      },
+    ],
+    tip: 'Try the Drum machine through the default corners: Filter softens the beat, Grit roughens it, and Echo/Space add tails. Set two corners to the same effect to give it a wider region. The module processes audio; a Keyboard must reach it through an Oscillator.',
+    example: {
+      title: 'A beat you can reshape',
+      description:
+        'Press Play, set Mix to taste, and slide from the clean centre towards each corner. Change a corner to Thin for a lighter beat.',
+      connections: [
+        wire('drum-machine', 'out', 'xy-effects', 'in'),
+        wire('xy-effects', 'out', 'output', 'in'),
       ],
     },
   },

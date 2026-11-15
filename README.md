@@ -26,7 +26,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 
 ## What works
 
-- A searchable module library with fourteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, merger, and output.
+- A searchable module library with fifteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, XY Effects, mixer, merger, and output.
 - Five contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers.
@@ -38,6 +38,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 - Tempo, root note, scale, time signature, master volume, mute, live waveform, and level meters. The **More → Studio settings** panel keeps all settings available on narrow screens.
 - A compact, single-row toolbar and an on-demand module drawer leave the workspace at full width. **More** holds My patches, Recordings, examples, help, and settings. The **Focus on workspace** button beside Undo hides the toolbar/footer; use it again to return.
 - Pinch on the workspace to zoom around your fingers; drag empty workspace with one finger to pan. The zoom buttons, trackpad pinch, Pan tool, fit-to-view, undo, and redo remain available. Pinching the rack leaves the app controls at their normal size. Keys and pads still support multiple fingers.
+- App labels resist text selection and touch callouts, including double taps and long presses on iPad/iPhone. Patch names and search fields retain normal text editing, selection, and paste.
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
 - Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.
 - Install on an iPad/iPhone home screen, Android, or desktop and use the complete studio offline after its first download. **More → Use offline / install** shows readiness and installation steps.
@@ -82,7 +83,7 @@ Coastal static is free-running: its LFO Rate controls the wash rather than the c
 Use **More → Example patches → Pocket rhythm** for the connected performance example. Your current patch stays in My patches. The instruments and Drum kit are also available separately in the module library.
 
 - **Drum machine:** a 16-step, four-voice sequencer defaulting to kick, snare, clap, and closed hat. Connect a Drum kit to assign different sounds; the numbered voice labels follow your choices. Click switches to edit the rhythm; click a voice name to audition it. **Pattern on/off** mutes the sequencer without disabling live pad hits. Level, tone, and decay are configurable. Press Play to start the pattern at the composition tempo.
-- **Keyboard:** 25 chromatic piano keys with octave and velocity controls. Wire **PITCH / GATE → Oscillator PITCH**, then route the oscillator's audio to an output (directly or through effects/mixer). Hold keys with the pointer/touch, or focus the keys and use **A W S E D F T G Y H U J K O L P ;**. Enter/Space on a focused key plays a short note. Oscillator voices are monophonic: the last held note wins and releasing it returns to the previous held note. Keyboard notes are chromatic, independently of the sequencer's scale.
+- **Keyboard:** 25 chromatic piano keys with octave and velocity controls. Wire **PITCH / GATE → Oscillator PITCH**, then route the oscillator's audio to an output (directly or through effects/mixer). Tap/hold keys or slide across them with a finger, mouse, or pen. Each finger follows its own key; moving outside the keybed releases that finger's note and moving back plays again. Focus the keys and use **A W S E D F T G Y H U J K O L P ;**. Enter/Space on a focused key plays a short note. Oscillator voices are monophonic: the last held note wins and releasing it returns to the previous held note. Keyboard notes are chromatic, independently of the sequencer's scale.
 - **Pad controller:** sixteen rubber-style pads mapped to kick, snare, clap, hats, toms, rim shot, shaker, crash, ride, cowbell, tambourine, claves, and congas. Wire **TRIGGER OUT → Drum machine TRIGGER IN**, then route the drum machine's **AUDIO OUT**. Focus the pads to use **1 2 3 4 / Q W E R / A S D F / Z X C V**.
 
 - **Drum kit:** a terracotta sound cartridge, included in fresh Pocket rhythm examples. Connect **KIT OUT → Drum machine KIT IN**. For each of voices **1–4**, choose any built-in percussion sound, **Imported sample**, or **Audio input**. The rhythm stays on the drum machine. Its first four pad triggers follow these assignments; the other twelve pads retain their printed sounds. Unplug KIT IN to restore the internal kit.
@@ -99,6 +100,14 @@ Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patter
 Add **Merger** from **Utility** in the module library. Connect up to four instrument or effect audio outputs to **IN 1–IN 4**, then connect **SUM OUT → Output AUDIO IN** (or another effect). Its **Sum level** knob controls the combined volume and starts at 50%. Empty inputs are silent; the amber indicators show attached cables. The teal metal enclosure and ivory dial give it its own hardware identity.
 
 For more than four sources, connect one Merger's SUM OUT to another Merger input. Adding sources adds their levels, so balance them using their own controls; use the two-channel **Mixer** when you want separate faders. Pitch, modulation, and trigger signals retain their existing socket types: route a Keyboard through an Oscillator, or pads through a Drum machine, before merging their audio. The Merger's **?** guide includes a four-input example with an echo return.
+
+## Blend effects with a touch
+
+Add **XY Effects** from **Effects**. Connect an instrument's AUDIO OUT → XY Effects AUDIO IN, then XY Effects AUDIO OUT → Output AUDIO IN. Tap or drag the point around the four-quadrant pad. The centre is clean; moving towards an edge brings in the surrounding corners, and a corner isolates its effect. Release to keep the position. **Mix** sets the maximum processed amount; **Centre** restores clean audio.
+
+The defaults are **Filter** (top left), **Echo** (top right), **Grit** (bottom left), and **Space** (bottom right). Each corner's selector can choose any of those, **Thin** (high-pass), or **Clean**. Repeated choices are allowed. Filter softens the source, Echo repeats it, Grit adds soft distortion, and Space adds reverb. Corner reassignment and movement crossfade smoothly while playing. All choices, X/Y position, and Mix save/export with the patch and work offline.
+
+Focus the pad and use arrow keys to move; hold Shift for fine adjustments, or press Home to centre. The labelled X and Y sliders offer separate axis controls. Reading its **?** field guide is silent. The copper enclosure and recessed glass pad give it its own hardware identity.
 
 ## Saving and privacy
 

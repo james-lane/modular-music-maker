@@ -53,6 +53,7 @@
 }
 .piano-keybed {
   position: relative;
+  touch-action: none;
   height: 108px;
   border: 4px solid #424a3c;
   border-radius: 5px;

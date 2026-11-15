@@ -233,6 +233,27 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     ],
     controls: [{ id: 'mix', label: 'Mix', min: 0, max: 1, step: 0.01, default: 0.25, unit: '%' }],
   },
+  'xy-effects': {
+    type: 'xy-effects',
+    name: 'XY Effects',
+    subtitle: 'Four corners. Find your own in-between.',
+    description: 'Slide between four effects. Choose what lives in each corner.',
+    category: 'Effects',
+    color: '#cb8d69',
+    code: 'XY–04',
+    width: 340,
+    height: 570,
+    ports: [
+      { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
+      { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
+    ],
+    controls: [
+      { id: 'x', label: 'X position', min: -1, max: 1, step: 0.01, default: 0 },
+      { id: 'y', label: 'Y position', min: -1, max: 1, step: 0.01, default: 0 },
+      { id: 'mix', label: 'Mix', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
+    ],
+    defaults: { topLeft: 'filter', topRight: 'echo', bottomLeft: 'grit', bottomRight: 'space' },
+  },
   mixer: {
     type: 'mixer',
     name: 'Mixer',
