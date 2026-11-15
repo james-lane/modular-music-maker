@@ -59,7 +59,12 @@ export default function App() {
     microphone.cancel();
     await playback.stop();
   };
-  const audio = { ...playback, stop, active: playback.active || microphone.phase !== 'idle' };
+  const audio = {
+    ...playback,
+    stop,
+    active: playback.active || microphone.phase !== 'idle',
+    transportActive: playback.transportActive || microphone.phase !== 'idle',
+  };
   const updateBlockedReason =
     microphone.phase !== 'idle'
       ? 'Finish or cancel microphone capture before refreshing.'
@@ -153,7 +158,7 @@ export default function App() {
         // A focused button keeps its native Space activation (for example drum audition).
         if (event.target instanceof HTMLElement && event.target.closest('button')) return;
         event.preventDefault();
-        if (!event.repeat) void (audio.active ? audio.stop() : audio.play());
+        if (!event.repeat) void (audio.transportActive ? audio.stop() : audio.play());
       }
     };
     window.addEventListener('keydown', shortcuts);

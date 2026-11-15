@@ -77,17 +77,17 @@ export function TransportBar({
     >
       <div className="transport-buttons">
         <button
-          className={`play-button ${audio.active ? 'playing' : ''}`}
+          className={`play-button ${audio.transportActive ? 'playing' : ''}`}
           disabled={audio.starting}
-          onClick={() => void (audio.active ? audio.stop() : audio.play())}
-          aria-label={audio.active ? 'Stop playback' : 'Play patch'}
+          onClick={() => void (audio.transportActive ? audio.stop() : audio.play())}
+          aria-label={audio.transportActive ? 'Stop playback' : 'Play patch'}
         >
-          {audio.active ? (
+          {audio.transportActive ? (
             <Square size={15} fill="currentColor" />
           ) : (
             <Play size={16} fill="currentColor" />
           )}
-          <span>{audio.starting ? 'Starting' : audio.active ? 'Stop' : 'Play'}</span>
+          <span>{audio.starting ? 'Starting' : audio.transportActive ? 'Stop' : 'Play'}</span>
         </button>
         <button
           className={`record-button ${audio.recording ? 'recording' : ''}`}

@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Snippet previews leave the main Play button available — 15 November 2026
+
+Preview-only audio activity is now separate from the studio’s Play/Stop control. Pressing **Play snippet** while stopped keeps the main button’s Play label, icon and styling; clicking it or pressing Space starts the project while the preview continues. A preview during project playback leaves Stop available. Live instrument playing and microphone capture retain their existing Stop behavior. Preview audio still participates in idle suspension, audio-aware rendering and update-refresh guards; routing, recording exclusion and saved patches are unchanged.
+
+Validation: all **107 tests**, strict types, production build, formatting and diff checks pass. Isolated production Chromium verified three repeated audible previews with Play unchanged and no active transport beat, project start by click and Space during preview, preview retriggering during project playback, Stop, automatic idle suspension, live drum audition and microphone capture Stop controls, saved-snippet playback after an offline reload, and 390px layout without overflow. Speaker audio remained nonzero while the studio recording bus stayed silent during dry previews. No browser errors occurred.
+
 ## Mic sampler direct preview — deployed 15 November 2026
 
 **Play snippet** now restarts a direct dry preview on every press, whether studio playback is stopped or running. No cable or Output module is required, and Output level/master mute cannot silence it. The preview uses the saved trim, Speed and sampler Level, bypasses patch effects/master volume, and is excluded from studio recordings. Pad and Drum kit hits keep their normal patch routing. A separate engine-owned sampler runtime prevents duplicate dry/routed hits; Stop, Clear/replacement, module removal, patch switching and disposal clean it up. Outstanding sampler end times protect an already playing long preview from later trim/rate edits shortening its idle allowance. Saved patch format is unchanged.

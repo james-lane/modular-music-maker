@@ -15,6 +15,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const [position] = useState(() => new PlaybackPosition());
   const [beat, setBeat] = useState(0);
   const [liveActive, setLiveActive] = useState(false);
+  const [previewActive, setPreviewActive] = useState(false);
   const [recording, setRecording] = useState(false);
   // Remains true until the last chunk is safely stored, even after Record is stopped.
   const [recordingPending, setRecordingPending] = useState(false);
@@ -37,6 +38,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     // Effect setup can follow Fast Refresh cleanup while React preserves hook state.
     setPlaying(engine.isPlaying);
     setLiveActive(engine.isActive);
+    setPreviewActive(false);
     setRecording(recorder.current?.state === 'recording');
     engine.onTick = (nextTick, nextBeat) => {
       position.publish(nextTick);
@@ -75,6 +77,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     await engine.stop();
     setPlaying(false);
     setLiveActive(false);
+    setPreviewActive(false);
   }, [engine, stopRecording]);
 
   const scheduleIdle = useCallback(() => {
@@ -85,6 +88,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
         if (!heldKeys.current.size && !engine.isPlaying) {
           void engine.stop();
           setLiveActive(false);
+          setPreviewActive(false);
         }
       },
       Math.max(
@@ -95,7 +99,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   }, [engine]);
 
   const activateLive = useCallback(
-    async (action: () => void) => {
+    async (action: () => void, activity: 'live' | 'preview' = 'live') => {
       const generation = liveGeneration.current;
       clearTimeout(idleTimer.current);
       try {
@@ -104,7 +108,9 @@ export function useAudio(project: Project, notify: (message: string) => void) {
           if (!engine.isPlaying && !heldKeys.current.size) await engine.stop();
           return;
         }
-        setLiveActive(true);
+        // A dry audition wakes audio without taking over the studio Play/Stop control.
+        if (activity === 'preview') setPreviewActive(true);
+        else setLiveActive(true);
         action();
         scheduleIdle();
       } catch (error) {
@@ -179,7 +185,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
 
   const sampleHit = useCallback(
     (moduleId: string) => {
-      void activateLive(() => engine.hitSample(moduleId));
+      void activateLive(() => engine.hitSample(moduleId), 'preview');
     },
     [activateLive, engine],
   );
@@ -255,7 +261,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   return {
     engine,
     playing,
-    active: playing || liveActive,
+    active: playing || liveActive || previewActive,
+    transportActive: playing || liveActive,
     live,
     starting,
     play,
