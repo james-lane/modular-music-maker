@@ -17,11 +17,13 @@ import { CONFIG, ROOT_NOTES } from '../config';
 import { deleteRecording, loadRecordings, type Recording } from '../audio/recordings';
 import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
 import type { Project } from '../domain/types';
-import { isCableStyle, type CableStyle } from '../domain/preferences';
+import { isCableStyle, isTheme, type CableStyle, type Theme } from '../domain/preferences';
 
 /** Also exposes composition controls that move out of the compact phone toolbar. */
 export function SettingsDialog({
   project,
+  theme,
+  onThemeChange,
   onChange,
   cableStyle,
   onCableStyleChange,
@@ -30,6 +32,8 @@ export function SettingsDialog({
   onClose,
 }: {
   project: Project;
+  theme: Theme;
+  onThemeChange: (theme: Theme) => void;
   onChange: (changes: Partial<Project>) => void;
   cableStyle: CableStyle;
   onCableStyleChange: (style: CableStyle) => void;
@@ -94,6 +98,24 @@ export function SettingsDialog({
         The eight-step pattern repeats independently of the time signature.
       </p>
       <div className="appearance-settings composition-form">
+        <label>
+          Theme
+          <select
+            value={theme}
+            aria-describedby="theme-description"
+            onChange={(event) => {
+              if (isTheme(event.target.value)) onThemeChange(event.target.value);
+            }}
+          >
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+        <p id="theme-description">
+          System follows your device’s light or dark setting. Module colours stay the same.
+          Remembered in this browser for all patches.
+        </p>
         <label>
           Patch cable style
           <select

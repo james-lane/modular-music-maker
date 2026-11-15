@@ -1,5 +1,30 @@
 import { CONFIG } from '../config';
 
+export type Theme = 'system' | 'light' | 'dark';
+
+export function isTheme(value: unknown): value is Theme {
+  return value === 'system' || value === 'light' || value === 'dark';
+}
+
+export function loadTheme(): Theme {
+  try {
+    const saved = localStorage.getItem(CONFIG.appearance.themeKey);
+    if (isTheme(saved)) return saved;
+  } catch {
+    // Theme selection must also work when browser storage is restricted.
+  }
+  return CONFIG.appearance.defaultTheme;
+}
+
+export function saveTheme(theme: Theme): boolean {
+  try {
+    localStorage.setItem(CONFIG.appearance.themeKey, theme);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Appearance belongs to the browser, so opening/importing a patch keeps the user's choice. */
 export type CableStyle = 'classic' | 'braided';
 

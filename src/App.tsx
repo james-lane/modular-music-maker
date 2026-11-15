@@ -26,6 +26,7 @@ import {
   loadCableStyle,
   saveCableOpacity,
   saveCableStyle,
+  saveTheme,
   type CableStyle,
 } from './domain/preferences';
 import { createModule, createProject } from './domain/project';
@@ -37,10 +38,12 @@ import { useAudio } from './hooks/useAudio';
 import { useMicrophoneSampler } from './hooks/useMicrophoneSampler';
 import { useStudio } from './hooks/useStudio';
 import { useOffline } from './hooks/useOffline';
+import { useTheme } from './hooks/useTheme';
 
 export default function App() {
   const studio = useStudio();
   const offline = useOffline();
+  const { theme, setTheme } = useTheme();
   const { project, commit } = studio;
   const [toast, setToast] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -355,6 +358,12 @@ export default function App() {
       {dialog === 'settings' && (
         <SettingsDialog
           project={project}
+          theme={theme}
+          onThemeChange={(next) => {
+            setTheme(next);
+            if (!saveTheme(next))
+              notify('Theme changed for this visit. Browser storage is unavailable.');
+          }}
           onClose={() => setDialog(null)}
           onChange={(changes) => commit((current) => ({ ...current, ...changes }))}
           cableStyle={cableStyle}

@@ -4,9 +4,38 @@ import { CONFIG } from '../src/config';
 import {
   loadCableOpacity,
   loadCableStyle,
+  loadTheme,
   saveCableOpacity,
   saveCableStyle,
+  saveTheme,
 } from '../src/domain/preferences';
+
+test('theme follows the system by default and remembers overrides independently of patch data', () => {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const entries = new Map<string, string>([[CONFIG.storageKey, 'existing patch data']]);
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem: (key: string) => entries.get(key) ?? null,
+      setItem: (key: string, value: string) => entries.set(key, value),
+    },
+  });
+  try {
+    assert.equal(loadTheme(), 'system');
+    for (const theme of ['dark', 'light', 'system'] as const) {
+      assert.equal(saveTheme(theme), true);
+      assert.equal(loadTheme(), theme);
+      assert.equal(entries.get(CONFIG.storageKey), 'existing patch data');
+    }
+    for (const invalid of ['', 'auto', 'DARK', 'null', '{}']) {
+      entries.set(CONFIG.appearance.themeKey, invalid);
+      assert.equal(loadTheme(), 'system');
+    }
+  } finally {
+    if (original) Object.defineProperty(globalThis, 'localStorage', original);
+    else Reflect.deleteProperty(globalThis, 'localStorage');
+  }
+});
 
 test('cable appearance persists independently of saved patches and rejects unknown styles', () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
@@ -65,7 +94,7 @@ test('cable opacity rejects corrupt, nonnumeric, and out-of-range preferences', 
   }
 });
 
-test('unavailable browser storage keeps cable appearance usable for the current visit', () => {
+test('unavailable browser storage keeps appearance usable for the current visit', () => {
   const original = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
   Object.defineProperty(globalThis, 'localStorage', {
     configurable: true,
@@ -74,6 +103,8 @@ test('unavailable browser storage keeps cable appearance usable for the current 
     },
   });
   try {
+    assert.equal(loadTheme(), 'system');
+    assert.equal(saveTheme('dark'), false);
     assert.equal(loadCableStyle(), 'classic');
     assert.equal(saveCableStyle('braided'), false);
     assert.equal(loadCableOpacity(), 1);

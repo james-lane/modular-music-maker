@@ -13,12 +13,12 @@
   padding: 0;
   border: 1px solid transparent;
   border-radius: 4px;
-  color: #87927a;
+  color: light-dark(#87927a, var(--night-muted));
 }
 .module-help-button:hover {
-  color: #526941;
-  background: #e6e9db;
-  border-color: #d2d8c4;
+  color: light-dark(#526941, var(--night-secondary));
+  background: light-dark(#e6e9db, var(--night-hover));
+  border-color: light-dark(#d2d8c4, var(--night-line));
 }
 .studio-dialog.module-help-dialog {
   width: 760px;
@@ -29,8 +29,8 @@
   position: sticky;
   top: 0;
   padding: 23px 60px 17px 26px;
-  background: #fafbf4;
-  border-bottom: 1px solid #e1e6d6;
+  background: light-dark(#fafbf4, var(--night-raised));
+  border-bottom: 1px solid light-dark(#e1e6d6, var(--night-line));
   z-index: 2;
 }
 .module-help-dialog .dialog-header h2 {
@@ -51,11 +51,11 @@
   align-items: center;
   padding: 0;
   font-size: 11px;
-  color: #778a60;
+  color: light-dark(#778a60, var(--night-secondary));
   margin-bottom: 19px;
 }
 .guide-back:hover {
-  color: #435a31;
+  color: light-dark(#435a31, var(--night-text));
 }
 .guide-summary {
   display: flex;
@@ -70,17 +70,21 @@
   height: 53px;
   flex-shrink: 0;
   border-radius: 9px;
-  color: var(--guide-color);
-  background: color-mix(in srgb, var(--guide-color) 12%, #f7f7ee);
-  border: 1px solid color-mix(in srgb, var(--guide-color) 22%, #e1e4d6);
-  box-shadow: inset 0 1px 0 #fff9;
+  color: light-dark(
+    var(--guide-color),
+    color-mix(in srgb, var(--guide-color) 55%, var(--night-text))
+  );
+  background: color-mix(in srgb, var(--guide-color) 12%, light-dark(#f7f7ee, var(--night-raised)));
+  border: 1px solid
+    color-mix(in srgb, var(--guide-color) 22%, light-dark(#e1e4d6, var(--night-line)));
+  box-shadow: inset 0 1px 0 light-dark(#fff9, var(--night-highlight));
 }
 .guide-module-symbol svg {
   width: 40px;
   height: 32px;
 }
 .guide-category {
-  color: #8c997b;
+  color: light-dark(#8c997b, var(--night-muted));
   font-size: 8px;
   font-weight: 600;
   letter-spacing: 1.2px;
@@ -90,14 +94,14 @@
   font-size: 13px;
   line-height: 1.8;
   margin: 5px 0 0;
-  color: #6f7b61;
+  color: light-dark(#6f7b61, var(--night-secondary));
 }
 .module-guide-body h3 {
   font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.15px;
   margin: 0 0 14px;
-  color: #4b5a3d;
+  color: light-dark(#4b5a3d, var(--night-text));
 }
 .guide-instructions {
   display: grid;
@@ -118,7 +122,7 @@
   padding-left: 30px;
   font-size: 12px;
   line-height: 1.85;
-  color: #67745b;
+  color: light-dark(#67745b, var(--night-secondary));
 }
 .guide-steps li::before {
   content: counter(guide-step, decimal-leading-zero);
@@ -130,9 +134,9 @@
   width: 21px;
   height: 23px;
   font: 9px monospace;
-  color: #829367;
-  background: #eaf0df;
-  border: 1px solid #e0e7d3;
+  color: light-dark(#829367, var(--night-secondary));
+  background: light-dark(#eaf0df, var(--night-raised));
+  border: 1px solid light-dark(#e0e7d3, var(--night-line));
   border-radius: 4px;
 }
 .guide-controls {
@@ -143,13 +147,13 @@
 .guide-controls dt {
   font-size: 12px;
   font-weight: 650;
-  color: #5d6e4c;
+  color: light-dark(#5d6e4c, var(--night-secondary));
   margin-bottom: 3px;
 }
 .guide-controls dd {
   font-size: 12px;
   line-height: 1.8;
-  color: #748065;
+  color: light-dark(#748065, var(--night-secondary));
   margin: 0;
 }
 .guide-tip {
@@ -159,15 +163,15 @@
   margin: 24px 0 29px;
   padding: 12px 14px;
   border-radius: 6px;
-  background: #f1eddf;
-  border: 1px solid #e5dfc9;
-  color: #a38c54;
+  background: light-dark(#f1eddf, var(--night-warm-surface));
+  border: 1px solid light-dark(#e5dfc9, var(--night-line));
+  color: light-dark(#a38c54, var(--night-muted));
 }
 .guide-tip > svg {
   margin-top: 2px;
 }
 .guide-tip p {
-  color: #7c6a47;
+  color: light-dark(#7c6a47, var(--night-secondary));
   font-size: 11px;
   line-height: 1.8;
   margin: 0;
@@ -179,7 +183,7 @@
   margin-bottom: 6px;
 }
 .guide-section-intro {
-  color: #7d896f;
+  color: light-dark(#7d896f, var(--night-secondary));
   font-size: 11px;
   line-height: 1.7;
   margin: 0 0 15px;
@@ -190,9 +194,9 @@
 }
 .guide-socket-group {
   padding: 14px;
-  border: 1px solid #dfe6d3;
+  border: 1px solid light-dark(#dfe6d3, var(--night-line));
   border-radius: 7px;
-  background: #f4f7ed;
+  background: light-dark(#f4f7ed, var(--night-raised));
 }
 .guide-socket-heading {
   display: flex;
@@ -207,28 +211,28 @@
   letter-spacing: 0.5px;
   border-radius: 3px;
   padding: 4px 6px;
-  background: #eadccf;
-  color: #a47750;
+  background: light-dark(#eadccf, var(--night-surface));
+  color: light-dark(#a47750, var(--night-signal-audio));
 }
 .guide-signal.signal-pitch {
-  background: #ede5ca;
-  color: #a28c4a;
+  background: light-dark(#ede5ca, var(--night-surface));
+  color: light-dark(#a28c4a, var(--night-signal-pitch));
 }
 .guide-signal.signal-control {
-  background: #e7dfef;
-  color: #9380ab;
+  background: light-dark(#e7dfef, var(--night-surface));
+  color: light-dark(#9380ab, var(--night-signal-control));
 }
 .guide-signal.signal-trigger {
-  background: #efdee6;
-  color: #aa7b91;
+  background: light-dark(#efdee6, var(--night-surface));
+  color: light-dark(#aa7b91, var(--night-signal-trigger));
 }
 .guide-socket-heading > strong {
   font: 9px monospace;
-  color: #687a55;
+  color: light-dark(#687a55, var(--night-secondary));
 }
 .guide-socket-heading > span:last-child {
   font-size: 9px;
-  color: #95a085;
+  color: light-dark(#95a085, var(--night-muted));
 }
 .guide-compatible-modules {
   display: flex;
@@ -241,13 +245,13 @@
   gap: 8px;
   padding: 8px 9px;
   border-radius: 5px;
-  background: #fdfdf7;
-  border: 1px solid #dce3cf;
+  background: light-dark(#fdfdf7, var(--night-raised));
+  border: 1px solid light-dark(#dce3cf, var(--night-line));
   text-align: left;
 }
 .guide-compatible-modules > button:hover {
-  background: #e9f0dc;
-  border-color: #bdcba9;
+  background: light-dark(#e9f0dc, var(--night-hover));
+  border-color: light-dark(#bdcba9, var(--night-line));
 }
 .guide-compatible-modules > button > i {
   height: 22px;
@@ -258,21 +262,21 @@
 .guide-compatible-modules strong {
   font-size: 11px;
   font-weight: 600;
-  color: #62764d;
+  color: light-dark(#62764d, var(--night-secondary));
   display: block;
 }
 .guide-compatible-modules small {
   font: 8px monospace;
-  color: #7b8b67;
+  color: light-dark(#7b8b67, var(--night-secondary));
   display: block;
   margin-top: 4px;
 }
 .guide-compatible-modules > button > svg {
-  color: #a0af8c;
+  color: light-dark(#a0af8c, var(--night-muted));
   margin-left: 4px;
 }
 .guide-wiring-note {
-  color: #9ba68e;
+  color: light-dark(#9ba68e, var(--night-muted));
   font-size: 9px;
   line-height: 1.8;
   margin: 12px 0 0;
@@ -281,22 +285,22 @@
   margin-top: 28px;
 }
 .guide-example-card {
-  border: 1px solid #dbe3ce;
+  border: 1px solid light-dark(#dbe3ce, var(--night-line));
   border-radius: 8px;
   padding: 17px;
-  background: #eff3e7;
+  background: light-dark(#eff3e7, var(--night-raised));
 }
 .guide-example-card h4 {
   font-size: 12px;
   font-weight: 600;
   margin: 0 0 6px;
-  color: #62764c;
+  color: light-dark(#62764c, var(--night-secondary));
 }
 .guide-example-card > p {
   font-size: 11px;
   line-height: 1.8;
   margin: 0 0 14px;
-  color: #8d9b7e;
+  color: light-dark(#8d9b7e, var(--night-muted));
 }
 .guide-wire-list {
   margin: 0;
@@ -314,26 +318,26 @@
 .guide-wire > span {
   display: block;
   padding: 10px 11px;
-  background: #fafcf4;
-  border: 1px solid #dce5ce;
+  background: light-dark(#fafcf4, var(--night-raised));
+  border: 1px solid light-dark(#dce5ce, var(--night-line));
   border-radius: 5px;
   min-width: 0;
 }
 .guide-wire strong {
   font-size: 11px;
   font-weight: 600;
-  color: #6b7e55;
+  color: light-dark(#6b7e55, var(--night-secondary));
   display: block;
   overflow-wrap: anywhere;
 }
 .guide-wire small {
   display: block;
   font: 8px monospace;
-  color: #7e8f6a;
+  color: light-dark(#7e8f6a, var(--night-secondary));
   margin-top: 5px;
 }
 .guide-wire > svg {
-  color: #9caa88;
+  color: light-dark(#9caa88, var(--night-muted));
 }
 .guide-dialog-footer {
   display: flex;
@@ -341,11 +345,11 @@
   justify-content: space-between;
   gap: 15px;
   padding: 17px 26px;
-  border-top: 1px solid #dfe5d4;
-  background: #f4f7ed;
+  border-top: 1px solid light-dark(#dfe5d4, var(--night-line));
+  background: light-dark(#f4f7ed, var(--night-raised));
 }
 .guide-dialog-footer > span {
-  color: #99a78a;
+  color: light-dark(#99a78a, var(--night-muted));
   font-size: 9px;
   line-height: 1.7;
 }

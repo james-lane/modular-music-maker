@@ -33,7 +33,7 @@ React controls / workspace
 | `src/components/ExamplePatchesDialog.tsx` | First-visit and reusable example patch chooser                       |
 | `src/domain/validation.ts`                | Shared Zod validation for every data boundary                        |
 | `src/domain/storage.ts`                   | Browser patch library, optional server sync, downloads               |
-| `src/domain/preferences.ts`               | Validated browser-only cable appearance preference                   |
+| `src/domain/preferences.ts`               | Validated browser-only theme and cable appearance preferences        |
 | `src/audio/factories.ts`                  | Audio node creation, parameter updates, disposal                     |
 | `src/audio/engine.ts`                     | Context lifecycle, graph topology, note scheduling, analysis         |
 | `src/domain/samples.ts`                   | Portable PCM conversion and validation                               |
@@ -53,6 +53,7 @@ React controls / workspace
 | `src/components/PadControllerPanel.tsx`   | Live pad layout, keyboard shortcuts and feedback                     |
 | `src/components/DrumMachinePanel.tsx`     | Drum pattern switches and voice audition                             |
 | `src/audio/recordings.ts`                 | Recording MIME selection and IndexedDB blob storage                  |
+| `src/hooks/useTheme.ts`                   | Browser theme choice, system changes and theme-colour metadata       |
 | `src/hooks/useStudio.ts`                  | Patch edits, grouped undo/redo, autosave                             |
 | `src/hooks/useOffline.ts`                 | Production worker registration, verified readiness, update status    |
 | `src/offline/worker.ts`                   | Complete release caching and uninterrupted update lifecycle          |
@@ -216,6 +217,10 @@ One finger on empty rack space, the mouse Pan tool, trackpad/wheel deltas, and f
 Module dragging captures a screen-to-world grab offset, snaps positions to the grid, previews locally, and commits once on release. Cancel/Escape discards the preview. An animation-frame loop pans near viewport edges while holding either a module or a library placement; elapsed time bounds the screen-space pan speed independently of zoom. Pure geometry and free-space searches live in `components/workspace-geometry.ts` and `domain/workspace.ts`. Long braided cables cap sample count, and their geometry is relative to the source socket, so camera-only pans translate cached strands instead of rebuilding them.
 
 Library placement uses captured pointer events rather than relying on native HTML drag-and-drop, which is inconsistent on touch devices. `useModuleLibraryDrag` owns the movement threshold, click suppression, cancellation, and release coordinates; mouse users can drag a row, while touch/pen users drag its grip so normal list swipes scroll. Workspace hit-tests the visible rack, transforms through the current camera, snaps the position, enforces instance limits, and commits once on release. Successful drops retain the view. The + action searches around the visible centre and existing panel edges for a nearby non-overlapping position, rather than exhausting a fixed slot list; the new panel is framed afterwards. Invalid releases and cancellation add nothing.
+
+**More → Studio settings → Theme** stores `system`, `light`, or `dark` independently of patch data in the key configured by `CONFIG.appearance.themeKey`. Missing, invalid, or unavailable storage defaults to System. `main.tsx` applies a saved override before mounting; `useTheme` owns the current visit's choice, updates the browser theme-colour metadata, and cleans up its system-change listener. Failed persistence keeps the selected theme for the current visit and shows a notice.
+
+CSS `color-scheme` and `light-dark()` resolve System before React renders and follow live OS changes. Explicit document theme attributes force Light or Dark. Night colours are centralized in `styles.css`; chrome, workspace, dialogs, library, examples, and guides use them while preserving existing light colours. Physical `.module-panel` elements keep their original inherited text colour and a light native-control scheme, so enclosure palettes, instruments, sockets, and cables are unchanged. Appearance changes never edit patch data, history, positions, or audio topology; all theme resources are in the normal atomic offline build.
 
 **More → Studio settings** includes a browser-wide cable style choice. Classic preserves the existing signal/source colours. Braided uses both endpoint modules' enclosure colours for two interwoven strands. The `--enclosure-*` CSS tokens in `module-finishes.css` supply both panel faces and braid strands, keeping the weave aligned with the physical finishes (cream sequencer, ochre oscillator, forest-green filter, etc.). Registry accents continue to colour plugs independently. `cable-geometry.ts` samples the existing cubic curve and alternates strand depth at crossings; distance-based phase keeps the weave density consistent on horizontal, vertical, and long cables. Geometry is memoized by endpoint coordinates/style, so playback and unrelated parameter edits do not regenerate it. Cable hit areas and socket geometry are unchanged; the pending cable stays neutral until both endpoints are known. The weave is static and adds no animation.
 

@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## System, light, and dark appearance
+
+**More → Studio settings → Theme** now offers **System** (default), **Light**, and **Dark**, remembered in this browser independently of patches and history. System follows live device changes; overrides also apply on reload and offline. The toolbar, dotted workspace, navigation, dialogs, guides, examples, and libraries adjust together. Instrument colours, materials, controls, sockets, and cables retain their existing appearance and geometry. Browser theme-colour metadata follows the selected appearance. Restricted storage falls back to System and permits a session-only override with a notice.
+
+Validation: `npm run check` passes (strict types, all **80 tests**, production build), as do formatting and diff checks. Isolated production Chromium checks verified live system changes and browser theme colour, both explicit overrides against the opposite system setting, preference restoration, corrupt/unavailable storage, and offline reload/editing. All sixteen modules had identical computed colours, backgrounds, materials, native-control schemes, and dimensions in both modes. Live analyser output continued through theme changes with one audio context; patch data and history were unchanged. All navigation dialogs adapted, and mouse/keyboard plus coarse-pointer touch layouts at phone, tablet, portrait and short-landscape sizes remained accessible without overflow. No page errors occurred. Physical iPad/Safari appearance remains an on-device check.
+
 ## Undo/redo reliability
 
 The existing workspace arrow icons remain unchanged. History now ignores equivalent/no-op edits, preserves redo when an unchanged value is submitted, and keeps each pointer gesture or held adjustment key in one undo step even across a long pause. Separate fast gestures remain independent. Redo and project switches reset grouping. The 60-edit session limit and current-patch autosave remain in place; opening another patch or reloading starts a fresh history.

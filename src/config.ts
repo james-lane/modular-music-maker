@@ -4,6 +4,8 @@ export const CONFIG = {
   storageKey: 'patchwork.projects.v1',
   activeProjectKey: 'patchwork.active.v1',
   appearance: {
+    themeKey: 'patchwork.theme.v1',
+    defaultTheme: 'system',
     cableStyleKey: 'patchwork.cable-style.v1',
     defaultCableStyle: 'classic',
     cableOpacityKey: 'patchwork.cable-opacity.v1',

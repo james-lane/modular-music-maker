@@ -46,7 +46,7 @@
   border-radius: 6px;
 }
 .library-categories button.active {
-  border-color: #c7d0ba;
+  border-color: light-dark(#c7d0ba, var(--night-line));
 }
 .library-categories button span {
   flex: initial;
@@ -76,7 +76,7 @@
   align-self: stretch;
   width: 24px;
   flex: 0 0 24px;
-  color: #969e89;
+  color: light-dark(#969e89, var(--night-muted));
   cursor: grab;
   touch-action: none;
 }
@@ -99,7 +99,7 @@
 .library-module p {
   font-size: 10px;
   margin-top: 3px;
-  color: #818675;
+  color: light-dark(#818675, var(--night-secondary));
 }
 .library-module-actions {
   gap: 1px;
@@ -133,7 +133,7 @@
   padding: 16px;
   border: 2px dashed;
   border-radius: 9px;
-  background: #faf9f5e8;
+  background: light-dark(#faf9f5e8, var(--night-raised));
   box-shadow: 0 5px 20px #25312228;
   pointer-events: none;
   color: var(--ink);
