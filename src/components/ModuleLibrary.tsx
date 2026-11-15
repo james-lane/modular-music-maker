@@ -9,7 +9,7 @@ import {
   Waves,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MODULE_LIST } from '../domain/modules';
 import type { Category, ModuleType } from '../domain/types';
 import { Waveform } from './Waveform';
@@ -18,15 +18,20 @@ export function ModuleLibrary({
   onAdd,
   onHelp,
   onModuleHelp,
-  mobileOpen,
+  open,
   onClose,
 }: {
   onAdd: (type: ModuleType) => void;
   onHelp: () => void;
   onModuleHelp: (type: ModuleType) => void;
-  mobileOpen: boolean;
+  open: boolean;
   onClose: () => void;
 }) {
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (open)
+      panel.current?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true });
+  }, [open]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<Category | 'All modules'>('All modules');
   const filtered = MODULE_LIST.filter(
@@ -42,7 +47,18 @@ export function ModuleLibrary({
     { label: 'Utility', icon: Plus },
   ] as const;
   return (
-    <aside className={`module-library ${mobileOpen ? 'mobile-open' : ''}`}>
+    <aside
+      id="module-library"
+      ref={panel}
+      aria-label="Module library"
+      className={`module-library ${open ? 'is-open' : ''}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          event.stopPropagation();
+          onClose();
+        }
+      }}
+    >
       <div className="library-heading">
         <h2>Module library</h2>
         <span>{MODULE_LIST.length}</span>

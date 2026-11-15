@@ -3,6 +3,7 @@ import {
   Check,
   Hand,
   Maximize,
+  Minimize,
   Minus,
   MousePointer2,
   Plus,
@@ -21,6 +22,7 @@ import { ModuleCard } from './ModuleCard';
 import { PatchCable } from './PatchCable';
 import { cablePath } from './cable-geometry';
 import type { LiveControls } from '../audio/live';
+import { useWorkspaceGestures } from '../hooks/useWorkspaceGestures';
 
 interface Props {
   project: Project;
@@ -38,6 +40,10 @@ interface Props {
   redo: () => void;
   saveStatus: 'saving' | 'saved' | 'error';
   cableStyle: CableStyle;
+  libraryOpen: boolean;
+  onLibraryToggle: () => void;
+  focused: boolean;
+  onFocusToggle: () => void;
 }
 
 export function socketPosition(module: PatchModule, portId: string) {
@@ -66,18 +72,35 @@ export function Workspace({
   redo,
   saveStatus,
   cableStyle,
+  libraryOpen,
+  onLibraryToggle,
+  focused,
+  onFocusToggle,
 }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState<number>(() =>
-    window.innerWidth <= 760
-      ? 0.85
-      : Math.max(
-          CONFIG.canvas.minZoom,
-          Math.min(CONFIG.canvas.defaultZoom, (window.innerWidth - 270) / 1290),
-        ),
-  );
   const [selected, setSelected] = useState<string | null>(null);
   const previousIds = useRef(new Set(project.modules.map((module) => module.id)));
+  const [pending, setPending] = useState<Endpoint | null>(null);
+  const [pointer, setPointer] = useState({ x: 0, y: 0 });
+  const [dragPreview, setDragPreview] = useState<{ id: string; x: number; y: number } | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [handMode, setHandMode] = useState(false);
+  const drag = useRef<{
+    id: string;
+    startX: number;
+    startY: number;
+    moduleX: number;
+    moduleY: number;
+    x: number;
+    y: number;
+  } | null>(null);
+  const pan = useRef<{ x: number; y: number; scrollX: number; scrollY: number } | null>(null);
+  const gestures = useWorkspaceGestures(viewport, () => {
+    drag.current = null;
+    pan.current = null;
+    setDragPreview(null);
+  });
+  const { zoom, setZoom, zoomAt } = gestures;
   useEffect(() => {
     const added = project.modules.filter((module) => !previousIds.current.has(module.id));
     previousIds.current = new Set(project.modules.map((module) => module.id));
@@ -97,21 +120,6 @@ export function Workspace({
       });
     } else if (added.length > 1) viewport.current?.scrollTo(0, 0);
   }, [project.modules, zoom]);
-  const [pending, setPending] = useState<Endpoint | null>(null);
-  const [pointer, setPointer] = useState({ x: 0, y: 0 });
-  const [dragPreview, setDragPreview] = useState<{ id: string; x: number; y: number } | null>(null);
-  const [dragOver, setDragOver] = useState(false);
-  const [handMode, setHandMode] = useState(false);
-  const drag = useRef<{
-    id: string;
-    startX: number;
-    startY: number;
-    moduleX: number;
-    moduleY: number;
-    x: number;
-    y: number;
-  } | null>(null);
-  const pan = useRef<{ x: number; y: number; scrollX: number; scrollY: number } | null>(null);
   const displayModules = project.modules.map((module) =>
     module.id === dragPreview?.id ? { ...module, x: dragPreview.x, y: dragPreview.y } : module,
   );
@@ -259,7 +267,15 @@ export function Workspace({
     <main className="workspace">
       <div className="workspace-heading">
         <div className="patch-breadcrumb">
-          <span className="patch-color" />
+          <button
+            className="button library-toggle"
+            aria-label="Add modules"
+            onClick={onLibraryToggle}
+            aria-expanded={libraryOpen}
+            aria-controls="module-library"
+          >
+            <Plus size={16} /> <span>Add modules</span>
+          </button>
           <input
             aria-label="Patch name"
             value={project.name}
@@ -271,7 +287,6 @@ export function Workspace({
               )
             }
           />
-          <span className="patch-badge">PATCH 01</span>
           <span className={`save-indicator ${saveStatus}`}>
             <Check size={13} />
             {saveStatus === 'saved'
@@ -282,6 +297,15 @@ export function Workspace({
           </span>
         </div>
         <div className="history-controls">
+          <button
+            className="icon-button"
+            onClick={onFocusToggle}
+            aria-label={focused ? 'Leave workspace focus' : 'Focus on workspace'}
+            aria-pressed={focused}
+            title={focused ? 'Show studio toolbar' : 'Focus on workspace'}
+          >
+            {focused ? <Minimize size={17} /> : <Maximize size={17} />}
+          </button>
           <button
             className="icon-button"
             disabled={!canUndo}
@@ -305,16 +329,25 @@ export function Workspace({
       <div
         ref={viewport}
         className={`canvas-viewport ${dragOver ? 'drag-over' : ''} ${handMode ? 'hand-mode' : ''}`}
+        aria-label="Module workspace"
+        tabIndex={0}
+        onPointerDownCapture={gestures.onPointerDownCapture}
+        onPointerMoveCapture={gestures.onPointerMoveCapture}
+        onPointerUpCapture={gestures.endTouch}
+        onPointerCancelCapture={gestures.endTouch}
+        onClickCapture={gestures.onClickCapture}
         onPointerMove={onPointerMove}
         onPointerUp={finishDrag}
         onPointerCancel={finishDrag}
         onPointerDown={(event) => {
           if (
             event.target === event.currentTarget ||
-            (event.target as HTMLElement).classList.contains('canvas-stage')
+            (event.target as Element).matches(
+              '.canvas-stage, .canvas-size, .workspace-label, .workspace-label *',
+            )
           ) {
             setSelected(null);
-            if (handMode && viewport.current) {
+            if ((handMode || event.pointerType === 'touch') && viewport.current) {
               pan.current = {
                 x: event.clientX,
                 y: event.clientY,
@@ -532,27 +565,17 @@ export function Workspace({
           </button>
         </div>
         <span className="control-divider" />
-        <button
-          onClick={() => setZoom((value) => Math.max(CONFIG.canvas.minZoom, value - 0.1))}
-          aria-label="Zoom out"
-        >
+        <button onClick={() => zoomAt(zoom - 0.1)} aria-label="Zoom out">
           <Minus size={16} />
         </button>
         <span className="zoom-value">{Math.round(zoom * 100)}%</span>
-        <button
-          onClick={() => setZoom((value) => Math.min(CONFIG.canvas.maxZoom, value + 0.1))}
-          aria-label="Zoom in"
-        >
+        <button onClick={() => zoomAt(zoom + 0.1)} aria-label="Zoom in">
           <Plus size={16} />
         </button>
         <span className="control-divider" />
         <button onClick={fit} title="Fit all modules in view" aria-label="Fit modules to view">
           <Maximize size={16} />
         </button>
-      </div>
-      <div className="canvas-hint">
-        <span className="hint-socket" /> Click a socket to start patching <span>·</span>{' '}
-        Double-click a cable to unplug
       </div>
     </main>
   );

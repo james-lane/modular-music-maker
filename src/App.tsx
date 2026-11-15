@@ -1,4 +1,4 @@
-import { Cable, Check, Menu, X } from 'lucide-react';
+import { Cable, Check, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadRecordings } from './audio/recordings';
 import {
@@ -41,6 +41,7 @@ export default function App() {
   const audio = useAudio(project, notify);
   const [dialog, setDialog] = useState<StudioDialog>(studio.isFirstVisit ? 'examples' : null);
   const [guideType, setGuideType] = useState<ModuleType | null>(null);
+  const [focused, setFocused] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -102,6 +103,11 @@ export default function App() {
     return () => window.removeEventListener('keydown', shortcuts);
   }, [audio, studio, save, dialog]);
 
+  const closeLibrary = () => {
+    setLibraryOpen(false);
+    document.querySelector<HTMLButtonElement>('.library-toggle')?.focus();
+  };
+
   const addModule = (type: ModuleType) => {
     const definition = MODULES[type];
     if (project.modules.length >= CONFIG.maxModules) {
@@ -137,7 +143,7 @@ export default function App() {
           ...current,
           modules: [...current.modules, createModule(type, x, y)],
         }));
-        setLibraryOpen(false);
+        closeLibrary();
         notify(`${definition.name} added. Connect a cable to bring it into your patch.`);
         return;
       }
@@ -178,22 +184,35 @@ export default function App() {
   };
 
   return (
-    <div className="studio-app">
-      <StudioHeader dialog={dialog} recordingCount={recordingCount} onDialog={setDialog} />
-      <TransportBar
-        project={project}
-        commit={commit}
-        audio={audio}
-        saving={saving}
-        onSave={save}
-        onExport={() => setDialog('export')}
-        onNew={newProject}
-        onImport={() => importInput.current?.click()}
-        onExamples={() => setDialog('examples')}
-        onSettings={() => setDialog('settings')}
-        onOffline={() => setDialog('offline')}
-      />
+    <div className={`studio-app ${focused ? 'workspace-focused' : ''}`}>
+      <div className="studio-toolbar">
+        <StudioHeader />
+        <TransportBar
+          project={project}
+          commit={commit}
+          audio={audio}
+          saving={saving}
+          onSave={save}
+          onExport={() => setDialog('export')}
+          onNew={newProject}
+          onImport={() => importInput.current?.click()}
+          onExamples={() => setDialog('examples')}
+          onSettings={() => setDialog('settings')}
+          onOffline={() => setDialog('offline')}
+          onPatches={() => setDialog('patches')}
+          onRecordings={() => setDialog('recordings')}
+          onHelp={() => setDialog('help')}
+          recordingCount={recordingCount}
+        />
+      </div>
       <div className="studio-body">
+        {libraryOpen && (
+          <button
+            className="library-dismiss"
+            aria-label="Dismiss module library"
+            onClick={closeLibrary}
+          />
+        )}
         <ModuleLibrary
           onAdd={addModule}
           onHelp={() => setDialog('help')}
@@ -201,8 +220,8 @@ export default function App() {
             setGuideType(type);
             setDialog('module-help');
           }}
-          mobileOpen={libraryOpen}
-          onClose={() => setLibraryOpen(false)}
+          open={libraryOpen}
+          onClose={closeLibrary}
         />
         <Workspace
           {...studio}
@@ -214,10 +233,11 @@ export default function App() {
           live={audio.live}
           audioActive={audio.active}
           cableStyle={cableStyle}
+          libraryOpen={libraryOpen}
+          onLibraryToggle={() => setLibraryOpen((open) => !open)}
+          focused={focused}
+          onFocusToggle={() => setFocused((value) => !value)}
         />
-        <button className="mobile-library-toggle button" onClick={() => setLibraryOpen(true)}>
-          <Menu size={16} /> Add modules
-        </button>
       </div>
       <footer className="status-bar">
         <div>
@@ -236,9 +256,6 @@ export default function App() {
             {project.cables.length} connections
           </span>
         </div>
-        <p>
-          Made for exploring. <span>There’s no wrong way to play.</span>
-        </p>
         <div>
           <OfflineIndicator offline={offline} onOpen={() => setDialog('offline')} />
           <span className="audio-spec">

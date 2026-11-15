@@ -19,7 +19,6 @@
   --orange: #db673f;
   --orange-dark: #bf5230;
   --radius: 7px;
-  --library-width: 256px;
 }
 
 * {
@@ -82,6 +81,9 @@ svg {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: fixed;
+  inset: 0;
+  background: var(--paper);
 }
 .icon-button {
   display: inline-flex;
@@ -141,12 +143,12 @@ svg {
 .app-header {
   display: flex;
   align-items: center;
-  height: 72px;
   flex-shrink: 0;
-  padding: 0 26px;
-  border-bottom: 1px solid var(--line);
   background: var(--paper);
   gap: 22px;
+  height: 100%;
+  padding: 0 18px;
+  border: 0;
 }
 .brand {
   display: flex;
@@ -162,6 +164,8 @@ svg {
   gap: 3px;
   height: 28px;
   width: 27px;
+  transform: scale(0.8);
+  margin-right: -4px;
 }
 .brand-icon i {
   display: block;
@@ -175,83 +179,9 @@ svg {
   height: 28px;
 }
 .brand strong {
-  font-size: 25px;
   letter-spacing: -1.3px;
   font-weight: 750;
-}
-.brand strong > span {
-  font-size: 10px;
-  vertical-align: top;
-  margin-left: 2px;
-  position: relative;
-  top: 3px;
-}
-.brand-divider {
-  height: 20px;
-  width: 1px;
-  background: #dedfd5;
-  margin: 0 4px 0 10px;
-}
-.brand-tagline {
-  font-size: 11px;
-  color: #94958b;
-  letter-spacing: 0.05px;
-}
-.header-navigation {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  gap: 5px;
-  margin: 0 auto;
-}
-.header-navigation > button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 34px;
-  border-radius: 5px;
-  padding: 0 13px;
-  gap: 8px;
-  font-size: 12px;
-  color: #8a8d82;
-  white-space: nowrap;
-}
-.header-navigation > button.active {
-  background: #eeeee6;
-  color: #3e493d;
-  font-weight: 600;
-}
-.header-navigation > button:hover {
-  background: #eeeee6;
-  color: var(--ink);
-}
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-.beta-label {
-  font-size: 8px;
-  font-weight: 650;
-  letter-spacing: 1.3px;
-  color: #8d8e80;
-  border: 1px solid #dedfd4;
-  border-radius: 4px;
-  padding: 5px 7px;
-  white-space: nowrap;
-}
-.profile-avatar {
-  border: 1px solid #d8daca;
-  background: #e6e8da;
-  color: #626a52;
-  font-family: Georgia, serif;
-  font-style: italic;
-  font-size: 12px;
-  width: 31px;
-  height: 31px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
+  font-size: 21px;
 }
 .count-badge {
   background: #e0e4d6;
@@ -261,14 +191,16 @@ svg {
   font-size: 10px;
 }
 .transport-bar {
-  height: 76px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  gap: 13px;
-  padding: 0 23px;
-  background: #f9f8f4;
-  border-bottom: 1px solid #dfe1d6;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0 16px 0 0;
+  gap: 10px;
+  border: 0;
+  background: transparent;
 }
 .transport-buttons {
   display: flex;
@@ -445,7 +377,10 @@ svg {
   position: absolute;
   right: 0;
   top: 42px;
-  width: 205px;
+  width: 225px;
+  max-height: calc(100dvh - 80px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -480,14 +415,20 @@ svg {
   position: relative;
 }
 .module-library {
-  display: flex;
   flex-direction: column;
-  width: var(--library-width);
   flex-shrink: 0;
-  background: #f9f8f4;
   border-right: 1px solid #dce0d4;
-  padding: 26px 17px 0;
   overflow: hidden;
+  display: none;
+  position: absolute;
+  left: 0;
+  top: 46px;
+  bottom: 0;
+  z-index: 30;
+  width: min(300px, 90%);
+  padding: 18px 17px 0;
+  background: var(--paper);
+  box-shadow: 10px 0 30px #2b372725;
 }
 .library-heading {
   display: flex;
@@ -602,6 +543,7 @@ svg {
   padding-top: 6px;
   scrollbar-width: thin;
   scrollbar-color: #dedfd4 transparent;
+  overscroll-behavior: contain;
 }
 .library-module {
   display: flex;
@@ -712,9 +654,9 @@ svg {
 .help-link:hover {
   color: var(--orange);
 }
-.library-close,
-.mobile-library-toggle {
-  display: none;
+.library-close {
+  display: inline-flex;
+  margin-left: auto;
 }
 
 /* A large scrollable stage preserves exact socket coordinates at every zoom level. */
@@ -727,26 +669,21 @@ svg {
   background: #ecece6;
 }
 .workspace-heading {
-  height: 54px;
   flex-shrink: 0;
   background: #f6f6ef;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 25px;
   border-bottom: 1px solid #dedfd5;
+  height: 46px;
+  padding: 0 16px;
+  gap: 8px;
 }
 .patch-breadcrumb {
   display: flex;
   align-items: center;
-  gap: 10px;
   min-width: 0;
-}
-.patch-color {
-  width: 7px;
-  height: 7px;
-  background: #bbbc9e;
-  border-radius: 2px;
+  gap: 14px;
 }
 .patch-breadcrumb input {
   border: 0;
@@ -759,16 +696,6 @@ svg {
 }
 .patch-breadcrumb input:focus {
   width: 180px;
-}
-.patch-badge {
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 7px;
-  letter-spacing: 0.6px;
-  color: #9da28f;
-  background: #eceee3;
-  border: 1px solid #e0e4d5;
-  padding: 3px 4px;
-  border-radius: 3px;
 }
 .save-indicator {
   display: inline-flex;
@@ -799,6 +726,8 @@ svg {
   background-size: 18px 18px;
   scrollbar-width: thin;
   scrollbar-color: #c9ccbf transparent;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 .canvas-viewport.drag-over {
   box-shadow: inset 0 0 0 3px #a9b295;
@@ -839,8 +768,6 @@ svg {
   display: flex;
   align-items: center;
   position: absolute;
-  bottom: 21px;
-  left: 24px;
   padding: 5px;
   gap: 1px;
   border: 1px solid #d9ddcf;
@@ -850,6 +777,8 @@ svg {
     0 1px 2px #ffffffab inset;
   background: #fafbf4f5;
   z-index: 8;
+  bottom: 16px;
+  left: 16px;
 }
 .canvas-controls button {
   display: grid;
@@ -884,28 +813,6 @@ svg {
   font-size: 10px;
   min-width: 37px;
   text-align: center;
-}
-.canvas-hint {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  position: absolute;
-  right: 26px;
-  bottom: 36px;
-  font-size: 9px;
-  color: #a3ab94;
-  pointer-events: none;
-}
-.canvas-hint > span:not(.hint-socket) {
-  padding: 0 2px;
-}
-.hint-socket {
-  width: 8px;
-  height: 8px;
-  border: 1px solid #a6b096;
-  border-radius: 50%;
-  box-shadow: inset 0 0 0 2px #ebede4;
-  background: #bcc4af;
 }
 .wiring-message {
   position: absolute;
@@ -1656,16 +1563,16 @@ svg {
 
 /* Persistent state and light-touch notifications. */
 .status-bar {
-  height: 34px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   background: #f6f7ef;
-  padding: 0 23px;
   border-top: 1px solid #dce1d1;
   color: #9ba48d;
   font-size: 9px;
   flex-shrink: 0;
+  height: 26px;
+  padding: 0 16px;
 }
 .status-bar > div {
   display: flex;
@@ -1735,15 +1642,6 @@ svg {
   align-items: center;
   gap: 4px;
   margin-left: 4px;
-}
-.status-bar p {
-  margin: 0;
-  font-size: 9px;
-  color: #a2aa95;
-}
-.status-bar p > span {
-  color: #b5bca8;
-  margin-left: 3px;
 }
 .audio-spec {
   font-family: monospace;
@@ -2128,115 +2026,34 @@ svg {
 
 /* Compact layouts preserve the full canvas; users can pan or fit modules to view. */
 @media (min-width: 1600px) {
-  :root {
-    --library-width: 280px;
-  }
-  .app-header {
-    height: 78px;
-  }
-  .module-library {
-    padding-left: 22px;
-    padding-right: 22px;
-  }
   .library-module p {
     font-size: 9px;
   }
 }
 @media (max-width: 1250px) {
-  .brand-tagline,
-  .brand-divider {
-    display: none;
-  }
-  .app-header {
-    gap: 18px;
-  }
-  .header-navigation {
-    margin-left: 40px;
-  }
-  .beta-label {
-    font-size: 7px;
-  }
-  .transport-bar {
-    gap: 10px;
-  }
   .master-volume {
     display: none;
-  }
-  .canvas-hint {
-    font-size: 8px;
-    right: 16px;
   }
   .save-indicator {
     display: none;
   }
-  .status-bar > p {
-    display: none;
-  }
 }
 @media (max-width: 1050px) {
-  :root {
-    --library-width: 225px;
-  }
-  .module-library {
-    padding-left: 13px;
-    padding-right: 13px;
-  }
   .time-signature,
   .beat-indicators {
     display: none;
   }
-  .canvas-hint {
-    display: none;
-  }
-  .header-right {
-    gap: 6px;
-  }
   .brand strong {
     font-size: 23px;
   }
-  .header-navigation {
-    margin-left: auto;
-    gap: 0;
-  }
-  .header-navigation > button {
-    padding: 0 10px;
-  }
-  .beta-label {
-    display: none;
-  }
 }
 @media (max-width: 760px) {
-  .app-header {
-    padding: 0 15px;
-    height: 62px;
-    gap: 10px;
-  }
   .brand strong {
     font-size: 21px;
   }
   .brand-icon {
     transform: scale(0.8);
     margin-right: -4px;
-  }
-  .header-navigation > button {
-    padding: 0 7px;
-    font-size: 10px;
-    gap: 5px;
-  }
-  .header-navigation > button > svg {
-    width: 13px;
-  }
-  .header-right .profile-avatar,
-  .header-right .icon-button {
-    display: none;
-  }
-  .header-navigation {
-    margin-right: 0;
-  }
-  .transport-bar {
-    height: 68px;
-    padding: 0 13px;
-    gap: 8px;
   }
   .transport-buttons {
     gap: 5px;
@@ -2297,40 +2114,6 @@ svg {
   .more-container > button {
     width: 23px;
   }
-  .module-library {
-    display: none;
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 30;
-    width: 260px;
-    box-shadow: 10px 0 30px #2b372725;
-    background: #f9faf2;
-  }
-  .module-library.mobile-open {
-    display: flex;
-  }
-  .library-close {
-    display: inline-flex;
-    margin-left: auto;
-  }
-  .mobile-library-toggle {
-    display: flex;
-    position: absolute;
-    right: 16px;
-    bottom: 25px;
-    z-index: 10;
-    font-size: 10px;
-    background: #fafcf1;
-  }
-  .workspace-heading {
-    padding: 0 15px;
-    height: 49px;
-  }
-  .patch-badge {
-    font-size: 6px;
-  }
   .patch-breadcrumb input {
     width: 125px;
   }
@@ -2346,11 +2129,6 @@ svg {
   }
   .canvas-controls .zoom-value {
     min-width: 32px;
-  }
-  .status-bar {
-    padding: 0 15px;
-    font-size: 8px;
-    height: 30px;
   }
   .status-bar > div {
     gap: 6px;
@@ -2380,15 +2158,6 @@ svg {
   }
 }
 @media (max-width: 440px) {
-  .header-navigation > button:first-child {
-    display: none;
-  }
-  .app-header {
-    gap: 0;
-  }
-  .header-navigation > button {
-    font-size: 9px;
-  }
   .save-button svg {
     display: none;
   }
@@ -2403,9 +2172,6 @@ svg {
   }
   .record-button.recording {
     font-size: 10px;
-    gap: 6px;
-  }
-  .transport-bar {
     gap: 6px;
   }
   .transport-buttons {
@@ -2428,5 +2194,136 @@ svg {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* A bounded, opaque shell keeps iPadOS scrolling inside the rack, below the status area. */
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.studio-toolbar {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  height: 56px;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+}
+.library-toggle {
+  height: 34px;
+}
+.module-library.is-open {
+  display: flex;
+}
+.library-dismiss {
+  position: absolute;
+  inset: 46px 0 0;
+  background: #34373320;
+  z-index: 29;
+}
+.workspace-focused .studio-toolbar,
+.workspace-focused .status-bar {
+  display: none;
+}
+/* Prevent Safari's focus-to-zoom on text fields while keeping page zoom outside the rack. */
+@media (pointer: coarse) {
+  .patch-breadcrumb input,
+  .search-field input,
+  .studio-dialog input,
+  .studio-dialog select,
+  .tempo-control input,
+  .composition-select select {
+    font-size: 16px;
+  }
+  .history-controls .icon-button,
+  .library-toggle,
+  .canvas-controls button,
+  .library-module-actions button {
+    min-width: 40px;
+    min-height: 40px;
+  }
+  .canvas-controls {
+    padding: 4px;
+  }
+}
+@media (max-width: 1050px) {
+  .app-header {
+    padding: 0 12px;
+  }
+  .brand strong {
+    display: none;
+  }
+  .save-indicator {
+    display: none;
+  }
+}
+@media (max-width: 760px) {
+  .studio-toolbar {
+    height: 54px;
+  }
+  .app-header {
+    padding: 0 8px;
+    gap: 0;
+  }
+  .transport-bar {
+    gap: 6px;
+    padding-right: 8px;
+  }
+  .composition-select,
+  .transport-bar > .transport-divider,
+  .save-button {
+    display: none;
+  }
+  .transport-spacer {
+    min-width: 0;
+  }
+  .play-button,
+  .record-button,
+  .more-container > button {
+    min-width: 40px;
+    height: 40px;
+  }
+  .tempo-control {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tempo-control input {
+    width: 42px;
+  }
+  .tempo-control .transport-label,
+  .tempo-arrows {
+    display: none;
+  }
+  .workspace-heading {
+    padding: 0 8px;
+  }
+  .patch-breadcrumb {
+    gap: 8px;
+  }
+  .patch-breadcrumb input,
+  .patch-breadcrumb input:focus {
+    width: 120px;
+    min-width: 0;
+  }
+  .library-toggle {
+    padding: 0 8px;
+  }
+  .library-toggle span {
+    display: none;
+  }
+  .status-bar {
+    font-size: 8px;
+    padding: 0 8px;
+  }
+  .status-cables,
+  .status-separator,
+  .version-badge {
+    display: none;
   }
 }

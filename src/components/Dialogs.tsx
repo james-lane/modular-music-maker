@@ -383,7 +383,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '01',
             'Start with a sound',
-            'Choose one of five starting points in Examples, then press Play. Add modules from the library using +, or drag them onto the dotted workspace.',
+            'Choose More → Example patches, then press Play. Open Add modules to find instruments; use + or drag them onto the dotted workspace.',
           ],
           [
             '02',
@@ -393,7 +393,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '03',
             'Get your hands on it',
-            'Drag knobs up and down, or focus them and use arrow keys. Hold Shift for finer dragging. Double-click a knob to reset. Click sequencer steps to change notes; right-click for a rest.',
+            'Pinch the workspace to zoom, or drag its empty background with one finger to pan. Drag knobs up and down; arrow keys also adjust them. Hold Shift for finer dragging. Double-click resets a knob. Click sequencer steps to change notes; right-click for a rest.',
           ],
           [
             '04',

@@ -2,6 +2,8 @@ import {
   ArrowDownToLine,
   AudioLines,
   FolderOpen,
+  Headphones,
+  CircleHelp,
   MoreHorizontal,
   Play,
   Plus,
@@ -30,6 +32,10 @@ interface Props {
   onExamples: () => void;
   onSettings: () => void;
   onOffline: () => void;
+  onPatches: () => void;
+  onRecordings: () => void;
+  onHelp: () => void;
+  recordingCount: number;
 }
 
 /** Composition controls own temporary input text; the domain only receives valid values. */
@@ -45,6 +51,10 @@ export function TransportBar({
   onExamples,
   onSettings,
   onOffline,
+  onPatches,
+  onRecordings,
+  onHelp,
+  recordingCount,
 }: Props) {
   const [tempoDraft, setTempoDraft] = useState(String(project.tempo));
   const [moreOpen, setMoreOpen] = useState(false);
@@ -53,7 +63,18 @@ export function TransportBar({
     setTempoDraft(String(project.tempo));
   }, [project.tempo]);
   return (
-    <section className="transport-bar" aria-label="Composition and playback controls">
+    <section
+      className="transport-bar"
+      aria-label="Composition and playback controls"
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && moreOpen) {
+          setMoreOpen(false);
+          event.currentTarget
+            .querySelector<HTMLButtonElement>('[aria-label="More patch actions"]')
+            ?.focus();
+        }
+      }}
+    >
       <div className="transport-buttons">
         <button
           className={`play-button ${audio.active ? 'playing' : ''}`}
@@ -245,6 +266,40 @@ export function TransportBar({
           <>
             <div className="menu-dismiss" onClick={() => setMoreOpen(false)} />
             <div className="more-menu">
+              <button
+                disabled={saving}
+                onClick={() => {
+                  setMoreOpen(false);
+                  void onSave();
+                }}
+              >
+                <Save size={15} /> {saving ? 'Saving…' : 'Save patch'}
+              </button>
+              <button
+                onClick={() => {
+                  setMoreOpen(false);
+                  onPatches();
+                }}
+              >
+                <FolderOpen size={15} /> My patches
+              </button>
+              <button
+                onClick={() => {
+                  setMoreOpen(false);
+                  onRecordings();
+                }}
+              >
+                <Headphones size={15} /> Recordings{' '}
+                {recordingCount > 0 && <span className="count-badge">{recordingCount}</span>}
+              </button>
+              <button
+                onClick={() => {
+                  setMoreOpen(false);
+                  onHelp();
+                }}
+              >
+                <CircleHelp size={15} /> Getting started
+              </button>
               <button
                 onClick={() => {
                   setMoreOpen(false);
