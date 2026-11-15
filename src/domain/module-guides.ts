@@ -448,24 +448,28 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Connect instrument or effect audio outputs to IN 1, IN 2, IN 3, or IN 4. Each input takes one cable; unused inputs stay silent.',
       'Connect SUM OUT to Output AUDIO IN, or route it through an effect first.',
-      'Press Play or play a connected live instrument. Adjust Sum level to set the combined volume.',
+      'Press Play or play a connected live instrument. Balance the sounds with Input 1–4, then adjust Sum level to set the combined volume.',
     ],
     controls: {
+      in1: 'Sets the level of IN 1 before summing. Starts at 100%; zero mutes only this input without unplugging its cable.',
+      in2: 'Sets the level of IN 2 before summing, independently of the other inputs. Starts at 100%; zero mutes this input.',
+      in3: 'Sets the level of IN 3 before summing, independently of the other inputs. Starts at 100%; zero mutes this input.',
+      in4: 'Sets the level of IN 4 before summing, independently of the other inputs. Starts at 100%; zero mutes this input.',
       level:
         'Sets the gain of the whole sum. It starts at 50% to leave room for several sources. Zero silences the output; it does not erase your cables.',
     },
     extraControls: [
       {
-        label: 'Routing plate',
+        label: 'Input indicators',
         description:
           'Shows which inputs have cables attached. The amber indicators mean wired, rather than measuring audio level.',
       },
     ],
-    tip: 'Adding inputs can make the sum louder. Balance instruments at their source, or use a Mixer for individual faders. Connect SUM OUT to another Merger input when you need more than four sources. Pitch, modulation, and trigger cables need their own compatible modules.',
+    tip: 'Adding inputs can make the sum louder. Balance them with Input 1–4, then lower Sum level if needed. Connect SUM OUT to another Merger input when you need more than four sources. Pitch, modulation, and trigger cables need their own compatible modules.',
     example: {
       title: 'Combine a band and an echo return',
       description:
-        'Blend a synth, drums, filtered noise, and an echoed copy of the synth. Lower Noise level for a subtle texture, and set Delay Mix to 100% for an echo-only return.',
+        'Blend a synth, drums, filtered noise, and an echoed copy of the synth. Lower Merger Input 3 for subtle noise and Input 4 to balance the echoes; set Delay Mix to 100% for an echo-only return.',
       connections: [
         wire('oscillator', 'out', 'merger', 'in1'),
         wire('drum-machine', 'out', 'merger', 'in2'),

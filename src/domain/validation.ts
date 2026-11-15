@@ -170,8 +170,8 @@ function migrateProject(value: unknown): unknown {
   const project = value.version === 1 ? { ...value, version: 2 } : value;
   if (project.version !== 2 || !('modules' in project) || !Array.isArray(project.modules))
     return project;
-  // Additive sampler migration: older v2 saves play the entire original recording.
-  // Only the completely absent pair is legacy data; partial/invalid trim stays invalid.
+  // Additive controls preserve the sound of old saves. Only a completely absent
+  // control group is legacy data; partial or invalid values still fail validation.
   return {
     ...project,
     modules: project.modules.map((module: unknown) => {
@@ -179,18 +179,24 @@ function migrateProject(value: unknown): unknown {
         typeof module !== 'object' ||
         module === null ||
         !('type' in module) ||
-        module.type !== 'mic-sampler' ||
         !('parameters' in module)
       )
         return module;
       const parameters = module.parameters;
-      if (
-        typeof parameters !== 'object' ||
-        parameters === null ||
-        Array.isArray(parameters) ||
-        'trimStart' in parameters ||
-        'trimEnd' in parameters
-      )
+      if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters))
+        return module;
+      if (module.type === 'merger') {
+        const inputs = MODULES.merger.controls.filter((control) => control.id !== 'level');
+        if (inputs.some((control) => control.id in parameters)) return module;
+        return {
+          ...module,
+          parameters: {
+            ...parameters,
+            ...Object.fromEntries(inputs.map((control) => [control.id, control.default])),
+          },
+        };
+      }
+      if (module.type !== 'mic-sampler' || 'trimStart' in parameters || 'trimEnd' in parameters)
         return module;
       return {
         ...module,

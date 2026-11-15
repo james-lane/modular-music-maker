@@ -118,9 +118,9 @@ Snippets use the same compact mono 24 kHz PCM format and shared patch sample bud
 
 ## Merge several sounds
 
-Add **Merger** from **Utility** in the module library. Connect up to four instrument or effect audio outputs to **IN 1–IN 4**, then connect **SUM OUT → Output AUDIO IN** (or another effect). Its **Sum level** knob controls the combined volume and starts at 50%. Empty inputs are silent; the amber indicators show attached cables. The teal metal enclosure and ivory dial give it its own hardware identity.
+Add **Merger** from **Utility** in the module library. Connect up to four instrument or effect audio outputs to **IN 1–IN 4**, then connect **SUM OUT → Output AUDIO IN** (or another effect). Each **Input 1–4** knob independently controls its sound from silent to 100%; **Sum level** controls the combined volume and starts at 50%. Input levels start at 100%, including when opening older patches, so existing mixes keep their sound. Empty inputs are silent; the amber indicators show attached cables. The teal metal enclosure and ivory dials give it its own hardware identity.
 
-For more than four sources, connect one Merger's SUM OUT to another Merger input. Adding sources adds their levels, so balance them using their own controls; use the two-channel **Mixer** when you want separate faders. Pitch, modulation, and trigger signals retain their existing socket types: route a Keyboard through an Oscillator, or pads through a Drum machine, before merging their audio. The Merger's **?** guide includes a four-input example with an echo return.
+For more than four sources, connect one Merger's SUM OUT to another Merger input. Adding sources adds their levels, so balance them with the individual input knobs and lower Sum level if needed; use the two-channel **Mixer** when you prefer faders. Pitch, modulation, and trigger signals retain their existing socket types: route a Keyboard through an Oscillator, or pads through a Drum machine, before merging their audio. The Merger's **?** guide includes a four-input example with an echo return.
 
 ## Blend effects with a touch
 

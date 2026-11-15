@@ -30,6 +30,7 @@ test('a merger accepts four independent audio cables, chains, and preserves gain
     { moduleId: project.modules[0].id, portId: 'in' },
   );
   merger.parameters.level = 0.37;
+  Object.assign(merger.parameters, { in1: 0, in2: 0.25, in3: 0.6, in4: 1 });
   assert.deepEqual(parseProject(JSON.parse(JSON.stringify(project))), project);
   assert.match(
     connectionError(project, { moduleId: sources[0].id, portId: 'out' }, input('in1'))!,
@@ -55,7 +56,45 @@ test('a merger accepts four independent audio cables, chains, and preserves gain
   );
 });
 
-test('merger sockets retain separate audio paths, its level ramps, and disposal releases every node', () => {
+test('legacy mergers retain their mix without mutating saved v1/v2 patches', () => {
+  for (const version of [1, 2]) {
+    const project = createProject(true);
+    const merger = createModule('merger', 40, 40);
+    merger.parameters = { level: 0.37 };
+    project.modules.push(merger);
+    const saved = { ...project, version };
+    const original = structuredClone(saved);
+    const restored = parseProject(saved);
+    assert.deepEqual(restored.modules[1].parameters, {
+      level: 0.37,
+      in1: 1,
+      in2: 1,
+      in3: 1,
+      in4: 1,
+    });
+    assert.deepEqual(saved, original);
+  }
+});
+
+test('merger validation rejects incomplete or invalid input levels', () => {
+  const project = createProject(true);
+  const merger = createModule('merger', 40, 40);
+  project.modules.push(merger);
+  for (const input of ['in1', 'in2', 'in3', 'in4']) {
+    for (const value of [-0.01, 1.01, Number.NaN, '0.5', undefined]) {
+      const parameters = { ...merger.parameters, [input]: value };
+      if (value === undefined) delete parameters[input];
+      assert.throws(() =>
+        parseProject({
+          ...project,
+          modules: [project.modules[0], { ...merger, parameters }],
+        }),
+      );
+    }
+  }
+});
+
+test('merger inputs and sum ramp independently and disposal releases every node', () => {
   // Only spy on ownership and endpoints; live browser checks verify real audible summing.
   const nodes: ReturnType<typeof makeNode>[] = [];
   function makeNode() {
@@ -93,11 +132,31 @@ test('merger sockets retain separate audio paths, its level ramps, and disposal 
   for (const input of Object.values(runtime.inputs)) {
     assert.ok((input as unknown as ReturnType<typeof makeNode>).connections.has(output));
   }
-  runtime.update({ level: 0.5 });
+  runtime.update({ in1: 1, in2: 0.75, in3: 0.5, in4: 0.25, level: 0.5 });
   assert.equal(output.gain.value, 0.5);
-  runtime.update({ level: 0 });
+  const inputs = Object.values(runtime.inputs) as unknown as ReturnType<typeof makeNode>[];
+  assert.deepEqual(
+    inputs.map((input) => input.gain.value),
+    [1, 0.75, 0.5, 0.25],
+  );
+  runtime.update({ in1: 0, in2: 0.75, in3: 0.5, in4: 0.25, level: 0.5 });
+  assert.deepEqual(
+    inputs.map((input) => input.gain.value),
+    [0, 0.75, 0.5, 0.25],
+  );
+  assert.equal(output.gain.value, 0.5, 'muting one input does not change the sum or other inputs');
+  runtime.update({ in1: 0, in2: 0.75, in3: 0.5, in4: 0.25, level: 0 });
   assert.equal(output.gain.value, 0);
-  assert.deepEqual(output.gain.ramps, [0.5, 0]);
+  assert.deepEqual(output.gain.ramps, [0.5, 0.5, 0]);
+  assert.deepEqual(
+    inputs.map((input) => input.gain.ramps),
+    [
+      [1, 0, 0],
+      [0.75, 0.75, 0.75],
+      [0.5, 0.5, 0.5],
+      [0.25, 0.25, 0.25],
+    ],
+  );
   runtime.dispose();
   assert.ok(nodes.every((node) => node.connections.size === 0));
 });

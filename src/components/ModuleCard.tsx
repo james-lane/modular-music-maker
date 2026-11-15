@@ -248,7 +248,9 @@ export function ModuleCard({
           </div>
         )}
         {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
-        {module.type === 'merger' && <MergerPanel module={module} project={project} />}
+        {module.type === 'merger' && (
+          <MergerPanel module={module} project={project} onParameter={onParameter} />
+        )}
         {['noise', 'lfo', 'reverb'].includes(module.type) && (
           <div className="trace-display">
             <Waveform type={module.type} />
@@ -260,7 +262,9 @@ export function ModuleCard({
             {definition.controls
               .filter(
                 (control) =>
-                  module.type !== 'mic-sampler' || !['trimStart', 'trimEnd'].includes(control.id),
+                  (module.type !== 'mic-sampler' ||
+                    !['trimStart', 'trimEnd'].includes(control.id)) &&
+                  (module.type !== 'merger' || control.id === 'level'),
               )
               .map((control) => (
                 <Knob

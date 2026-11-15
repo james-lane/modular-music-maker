@@ -235,6 +235,9 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
       inputs,
       outputs: { out: sum },
       update(parameters) {
+        for (const [id, input] of Object.entries(inputs)) {
+          smooth(input.gain, value(parameters, id), context);
+        }
         // A fixed level preserves existing balances when another input is plugged in.
         smooth(sum.gain, value(parameters, 'level'), context);
       },

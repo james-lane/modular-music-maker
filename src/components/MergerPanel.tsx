@@ -1,9 +1,18 @@
 import { MODULES } from '../domain/modules';
 import type { PatchModule, Project } from '../domain/types';
+import { Knob } from './Knob';
 
-/** The printed routing diagram shows cable occupancy, not a simulated audio meter. */
-export function MergerPanel({ module, project }: { module: PatchModule; project: Project }) {
-  const inputs = MODULES.merger.ports.filter((port) => port.direction === 'input');
+/** Amber input indicators show cable occupancy, not a simulated audio meter. */
+export function MergerPanel({
+  module,
+  project,
+  onParameter,
+}: {
+  module: PatchModule;
+  project: Project;
+  onParameter: (id: string, value: number) => void;
+}) {
+  const inputs = MODULES.merger.controls.filter((control) => control.id !== 'level');
   const connected = new Set(
     project.cables
       .filter((cable) => cable.to.moduleId === module.id)
@@ -17,19 +26,20 @@ export function MergerPanel({ module, project }: { module: PatchModule; project:
       </div>
       <div className="merger-routing-inputs" aria-label="Merger input connections">
         {inputs.map((input) => (
-          <span key={input.id} className={connected.has(input.id) ? 'wired' : ''}>
-            <i aria-hidden="true" />
-            {input.label}
-            <small>{connected.has(input.id) ? 'wired' : 'free'}</small>
-          </span>
+          <div key={input.id} className={`merger-input ${connected.has(input.id) ? 'wired' : ''}`}>
+            <span
+              className="merger-input-indicator"
+              role="img"
+              aria-label={`${input.label} ${connected.has(input.id) ? 'wired' : 'free'}`}
+            />
+            <Knob
+              control={input}
+              value={Number(module.parameters[input.id])}
+              onChange={(value) => onParameter(input.id, value)}
+            />
+          </div>
         ))}
       </div>
-      <div className="merger-bus-line" aria-hidden="true">
-        <i />
-      </div>
-      <p>
-        {connected.size} of {inputs.length} inputs connected
-      </p>
     </div>
   );
 }

@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Independent Merger levels — local change
+
+Merger now has four **Input 1–4** level knobs and a separate **Sum level** knob, so four sources or effect returns can be balanced directly without extra Mixers. Each input ranges from silent to 100%, defaults to 100%, and ramps independently; Sum level retains its 50% default. The teal enclosure, amber cable indicators, original 320×336 footprint, and socket positions are preserved. All five values use normal saving, history, and JSON export/import. Older v1/v2 patches missing the entire input-level group explicitly migrate to unity gain without changing their sound or mutating saved data; partial and invalid groups are rejected. The guide documents each control and balancing an echo return. Deployment pending.
+
+Validation: `npm run check` passes (strict types, all **68 tests**, production build). Regression tests cover independent input gains, sum muting, disposal, level round trips, non-mutating legacy migration, and invalid/partial parameter groups. Browser checks on a separate local production-preview origin verified legacy import, all four inputs sounding individually, silence with all inputs muted or Sum level at zero, live pointer/keyboard edits, double-click reset, and all five levels/cables surviving save/reload. Controls fit above the unchanged socket footer; a 390px phone canvas retained keyboard access without document overflow. No browser warnings/errors occurred.
+
 ## Patch cable opacity — local change
 
 **More → Studio settings → Patch cable opacity** now adjusts connected cables from 0–100%, defaulting to 100%, with a percentage readout and native touch/mouse/keyboard slider. Both Classic and Braided styles fade as complete cables, including plugs. At zero, hidden cable hit areas no longer intercept controls; sockets still support rerouting. Pending connections remain fully visible. The validated browser preference survives patch switches and reloads independently of patch files, undo, and audio. Unavailable storage retains the current visit's choice and shows a notice.
