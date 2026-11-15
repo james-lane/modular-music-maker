@@ -206,13 +206,18 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       'An eight-step melody that repeats in time with the composition. It tells an Oscillator which notes to play.',
     steps: [
       'Connect PITCH to an Oscillator PITCH input, then route the Oscillator AUDIO OUT to Output AUDIO IN.',
-      'Press Play. Each button is one eighth-note in the repeating pattern.',
+      'Choose a Step rate and press Play. Each button lasts a quarter, eighth, or sixteenth note; the default is an eighth note.',
       'Tap a step to advance its note, or press and swipe up/down to raise/lower it. Right-click makes a rest. Change the composition key and scale in the top bar.',
     ],
     controls: {
       gate: 'Sets how long each note lasts within its step. Short gates make a more clipped rhythm.',
     },
     extraControls: [
+      {
+        label: 'Step rate',
+        description:
+          'Choose 1/4, 1/8, or 1/16 for the length of each step. Each sequencer has its own rate, synced to the composition tempo. Changes join the transport grid without restarting playback. Gate sets the sounding portion of that step.',
+      },
       {
         label: 'Note buttons',
         description:

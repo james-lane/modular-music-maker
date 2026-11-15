@@ -11,7 +11,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const [engine] = useState(() => new AudioEngine());
   const [playing, setPlaying] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [step, setStep] = useState(-1);
+  const [tick, setTick] = useState(-1);
   const [beat, setBeat] = useState(0);
   const [drumStep, setDrumStep] = useState(-1);
   const [liveActive, setLiveActive] = useState(false);
@@ -38,8 +38,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     setPlaying(engine.isPlaying);
     setLiveActive(engine.isActive);
     setRecording(recorder.current?.state === 'recording');
-    engine.onStep = (nextStep, nextBeat, nextDrumStep) => {
-      setStep(nextStep);
+    engine.onTick = (nextTick, nextBeat, nextDrumStep) => {
+      setTick(nextTick);
       setBeat(nextBeat);
       setDrumStep(nextDrumStep);
     };
@@ -258,7 +258,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     starting,
     play,
     stop,
-    step,
+    tick,
     beat,
     drumStep,
     recording,

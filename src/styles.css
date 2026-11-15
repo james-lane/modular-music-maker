@@ -1376,10 +1376,16 @@ svg {
 .port-button.connected > span {
   color: var(--panel-ink);
 }
+.module-sequencer .module-content {
+  padding-top: 8px;
+}
+.module-sequencer .instrument-caption {
+  margin-bottom: 6px;
+}
 .sequence-steps {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  gap: 6px;
 }
 .step-button {
   cursor: ns-resize;
@@ -1396,7 +1402,7 @@ svg {
     0 2px 2px #6c7c4d15,
     inset 0 1px 0 white;
   padding: 10px 0 3px;
-  height: 45px;
+  height: 42px;
 }
 .step-button i {
   height: 2px;
@@ -1437,7 +1443,7 @@ svg {
 .sequencer-lower {
   display: flex;
   align-items: center;
-  margin-top: 9px;
+  margin-top: 5px;
 }
 .sequencer-lower .knob-control {
   flex: 0 0 90px;
@@ -1462,7 +1468,7 @@ svg {
 }
 .rate-display {
   flex: 1;
-  padding: 0 0 5px 6px;
+  padding-left: 6px;
 }
 .rate-display > span {
   font-size: 6px;
@@ -1471,18 +1477,21 @@ svg {
   display: block;
   margin-bottom: 5px;
 }
-.rate-display strong {
+.rate-display select {
   font-family: 'SFMono-Regular', Consolas, monospace;
   display: block;
-  color: #8b9b72;
   font-weight: 500;
-  font-size: 18px;
-  letter-spacing: -1px;
+  font-size: 17px;
+  width: 106px;
+  min-height: 40px;
+  padding: 4px 10px;
+  border: 1px solid;
+  border-radius: 4px;
+  cursor: pointer;
 }
-.rate-display small {
-  font-size: 15px;
-  color: #b7bfa7;
-  padding-left: 6px;
+.rate-display select:focus-visible {
+  outline: 2px solid var(--panel-ink);
+  outline-offset: 3px;
 }
 .rate-display em {
   display: block;

@@ -3,6 +3,18 @@ import type { ModuleDefinition, ModuleType } from './types';
 /** Saved scale degrees include a rest and fourteen pitches, independently of the scale. */
 export const SEQUENCER_DEGREES = { rest: -1, min: 0, max: 13 } as const;
 
+/** Rates share the transport's sixteenth-note grid, keeping independent patterns in sync. */
+export const SEQUENCER_RATES = [
+  { value: '1/4', ticks: 4 },
+  { value: '1/8', ticks: 2 },
+  { value: '1/16', ticks: 1 },
+] as const;
+export const DEFAULT_SEQUENCER_RATE = SEQUENCER_RATES[1];
+
+export function sequencerRate(value: unknown) {
+  return SEQUENCER_RATES.find((rate) => rate.value === value) ?? DEFAULT_SEQUENCER_RATE;
+}
+
 export const SAMPLER_TRIM = { start: 0, end: 1, step: 0.001 } as const;
 
 /** The module catalog is the source of truth for appearance, ports and parameter ranges.
@@ -143,6 +155,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     controls: [
       { id: 'gate', label: 'Gate', min: 0.1, max: 0.95, step: 0.01, default: 0.65, unit: '%' },
     ],
+    defaults: { rate: DEFAULT_SEQUENCER_RATE.value },
   },
   oscillator: {
     type: 'oscillator',

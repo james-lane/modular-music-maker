@@ -2,7 +2,6 @@ import { GripVertical, X } from 'lucide-react';
 import type { CSSProperties, PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { MODULES } from '../domain/modules';
-import { noteLabel } from '../domain/project';
 import type { DrumSample, Endpoint, Parameters, PatchModule, Project } from '../domain/types';
 import { Knob } from './Knob';
 import { LevelMeter, Scope } from './Scope';
@@ -17,7 +16,8 @@ import { KeyboardPanel } from './KeyboardPanel';
 import { PadControllerPanel } from './PadControllerPanel';
 import { MixerPanel } from './MixerPanel';
 import { MergerPanel } from './MergerPanel';
-import { SequencerStep, type StepNoteChange } from './SequencerStep';
+import type { StepNoteChange } from './SequencerStep';
+import { SequencerPanel } from './SequencerPanel';
 import { XYEffectsPanel } from './XYEffectsPanel';
 
 interface Props {
@@ -27,7 +27,7 @@ interface Props {
   scale: number;
   project: Project;
   selected: boolean;
-  step: number;
+  tick: number;
   drumStep: number;
   live: LiveControls;
   audioActive: boolean;
@@ -52,7 +52,7 @@ export function ModuleCard({
   scale,
   project,
   selected,
-  step,
+  tick,
   drumStep,
   live,
   audioActive,
@@ -148,38 +148,14 @@ export function ModuleCard({
         )}
         {module.type === 'pad-controller' && <PadControllerPanel module={module} live={live} />}
         {module.type === 'sequencer' && (
-          <>
-            <div className="instrument-caption">
-              <span>8-STEP NOTE SEQUENCER</span>
-              <span className={`tiny-led ${playing ? 'on' : ''}`} />
-            </div>
-            <div className="sequence-steps">
-              {module.steps?.map((degree, index) => (
-                <SequencerStep
-                  key={index}
-                  degree={degree}
-                  index={index}
-                  label={noteLabel(project, degree)}
-                  active={index === step && playing}
-                  onChange={(next, group) => onStep(index, next, group)}
-                />
-              ))}
-            </div>
-            <div className="sequencer-lower">
-              <div className="rate-display">
-                <span>STEP RATE</span>
-                <strong>
-                  1/8 <small>♪</small>
-                </strong>
-                <em>SYNC TO TEMPO</em>
-              </div>
-              <Knob
-                control={definition.controls[0]}
-                value={Number(module.parameters.gate)}
-                onChange={(value) => onParameter('gate', value)}
-              />
-            </div>
-          </>
+          <SequencerPanel
+            module={module}
+            project={project}
+            playing={playing}
+            tick={tick}
+            onParameter={onParameter}
+            onStep={onStep}
+          />
         )}
         {module.type === 'oscillator' && (
           <>

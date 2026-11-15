@@ -1,6 +1,12 @@
 import { z } from 'zod';
 import { CONFIG, ROOT_NOTES } from '../config';
-import { MODULES, SAMPLER_TRIM, SEQUENCER_DEGREES } from './modules';
+import {
+  DEFAULT_SEQUENCER_RATE,
+  MODULES,
+  SAMPLER_TRIM,
+  SEQUENCER_DEGREES,
+  SEQUENCER_RATES,
+} from './modules';
 import { DRUM_LANES, DRUM_SOUNDS, DRUM_STEP_COUNT } from './instruments';
 import { isValidSamplePcm } from './samples';
 import { XY_CORNERS, XY_EFFECTS } from './xy-effects';
@@ -136,7 +142,11 @@ export const projectSchema = z
             issue(`Unknown XY Effects ${corner.label} effect.`);
         }
       }
-      if (module.type === 'sequencer' && !module.steps) issue('A sequencer needs eight steps.');
+      if (module.type === 'sequencer') {
+        if (!module.steps) issue('A sequencer needs eight steps.');
+        if (!SEQUENCER_RATES.some((rate) => rate.value === module.parameters.rate))
+          issue('Unknown sequencer step rate.');
+      }
       if (module.type === 'drum-machine') {
         if (typeof module.parameters.enabled !== 'boolean')
           issue('Drum sequencer enabled must be a boolean.');
@@ -185,6 +195,12 @@ function migrateProject(value: unknown): unknown {
       const parameters = module.parameters;
       if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters))
         return module;
+      if (module.type === 'sequencer' && !('rate' in parameters)) {
+        return {
+          ...module,
+          parameters: { ...parameters, rate: DEFAULT_SEQUENCER_RATE.value },
+        };
+      }
       if (module.type === 'merger') {
         const inputs = MODULES.merger.controls.filter((control) => control.id !== 'level');
         if (inputs.some((control) => control.id in parameters)) return module;

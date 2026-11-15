@@ -288,7 +288,7 @@ export default function App() {
           microphone={microphone}
           engine={audio.engine}
           playing={audio.playing}
-          step={audio.step}
+          tick={audio.tick}
           drumStep={audio.drumStep}
           live={audio.live}
           audioActive={playback.active}

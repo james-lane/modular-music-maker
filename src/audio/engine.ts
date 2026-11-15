@@ -1,5 +1,6 @@
 import { CONFIG } from '../config';
 import { stepFrequency } from '../domain/project';
+import { sequencerRate } from '../domain/modules';
 import {
   controllerTargets,
   connectedDrumKit,
@@ -31,9 +32,9 @@ export class AudioEngine {
   private scheduler?: ReturnType<typeof setInterval>;
   private visualTimers = new Set<ReturnType<typeof setTimeout>>();
   private nextStepTime = 0;
-  private stepIndex = 0;
+  private tickIndex = 0;
   private keyboardNotes = new Map<string, Map<number, number>>();
-  onStep?: (step: number, beat: number, drumStep: number) => void;
+  onTick?: (tick: number, beat: number, drumStep: number) => void;
 
   get sampleRate() {
     return this.context?.sampleRate ?? 48000;
@@ -74,7 +75,7 @@ export class AudioEngine {
   async play(project: Project) {
     await this.activate(project);
     if (this.isPlaying) return;
-    this.stepIndex = 0;
+    this.tickIndex = 0;
     this.nextStepTime = this.context!.currentTime + 0.03;
     this.scheduler = setInterval(() => this.schedule(), CONFIG.audio.schedulerIntervalMs);
     this.schedule();
@@ -94,7 +95,7 @@ export class AudioEngine {
       }
     });
     if (this.context && this.context.state !== 'closed') await this.context.suspend();
-    this.onStep?.(-1, 0, -1);
+    this.onTick?.(-1, 0, -1);
   }
 
   update(project: Project) {
@@ -232,27 +233,30 @@ export class AudioEngine {
     const context = this.context;
     const project = this.project;
     if (!context || !project) return;
-    // The shared clock ticks sixteenths. Existing melodic patterns advance every other tick.
+    // All rates divide this shared sixteenth-note clock, including after live rate edits.
     const tickSeconds = 60 / project.tempo / 4;
-    const stepSeconds = tickSeconds * 2;
     // Background tabs can miss timer windows. Resume from now instead of bursting
     // through a backlog of notes with timestamps that are already in the past.
     if (this.nextStepTime < context.currentTime - CONFIG.audio.scheduleAheadSeconds) {
       this.nextStepTime = context.currentTime + 0.03;
     }
     while (this.nextStepTime < context.currentTime + CONFIG.audio.scheduleAheadSeconds) {
-      const step = Math.floor(this.stepIndex / 2) % 8;
-      const drumStep = this.stepIndex % 16;
+      const tick = this.tickIndex;
+      const drumStep = this.tickIndex % 16;
       for (const module of project.modules) {
         for (const sound of drumHitsAtStep(module, drumStep))
           this.runtimes.get(module.id)?.trigger?.(sound, 0.85, this.nextStepTime);
       }
       for (const cable of project.cables) {
-        if (cable.to.portId !== 'pitch' || this.stepIndex % 2 !== 0) continue;
+        if (cable.to.portId !== 'pitch') continue;
         const sequencer = project.modules.find((module) => module.id === cable.from.moduleId);
         const oscillator = project.modules.find((module) => module.id === cable.to.moduleId);
         const voice = this.runtimes.get(cable.to.moduleId)?.voice;
-        if (!sequencer?.steps || !oscillator || !voice) continue;
+        if (sequencer?.type !== 'sequencer' || !sequencer.steps || !oscillator || !voice) continue;
+        const ticksPerStep = sequencerRate(sequencer.parameters.rate).ticks;
+        if (tick % ticksPerStep !== 0) continue;
+        const step = Math.floor(tick / ticksPerStep) % sequencer.steps.length;
+        const stepSeconds = tickSeconds * ticksPerStep;
         const degree = sequencer.steps[step];
         const start = this.nextStepTime;
         const gate = stepSeconds * Number(sequencer.parameters.gate);
@@ -265,27 +269,30 @@ export class AudioEngine {
           );
           voice.envelope.linearRampToValueAtTime(
             Number(oscillator.parameters.level),
-            start + 0.008,
+            start + Math.min(0.008, gate * 0.8),
           );
           voice.envelope.setValueAtTime(Number(oscillator.parameters.level), start + gate);
+          // Leave silence before the next onset, but keep release after the hold even
+          // at 1/16, maximum tempo and a long gate. Reversed events can leave a drone.
+          const endGap = Math.min(0.005, (stepSeconds - gate) / 2);
           voice.envelope.linearRampToValueAtTime(
             0,
-            start + Math.min(stepSeconds - 0.005, gate + 0.035),
+            start + Math.min(stepSeconds - endGap, gate + 0.035),
           );
         }
       }
       const beatsPerBar = project.timeSignature === '4/4' ? 4 : 3;
-      const beat = Math.floor(this.stepIndex / 4) % beatsPerBar;
+      const beat = Math.floor(this.tickIndex / 4) % beatsPerBar;
       const timer = setTimeout(
         () => {
-          this.onStep?.(step, beat, drumStep);
+          this.onTick?.(tick, beat, drumStep);
           this.visualTimers.delete(timer);
         },
         Math.max(0, (this.nextStepTime - context.currentTime) * 1000),
       );
       this.visualTimers.add(timer);
       this.nextStepTime += tickSeconds;
-      this.stepIndex++;
+      this.tickIndex++;
     }
   }
 

@@ -2,6 +2,14 @@
 
 Last updated: **15 November 2026**.
 
+## Adjustable sequencer step rate
+
+Each Step sequencer now has a native **Step rate** selector with **1/4**, **1/8** (default), and **1/16**. Rates are independent per module and remain synced to the composition tempo; live changes join the shared transport grid without restarting. Each playback light follows its own module's rate, and Gate scales with the selected step duration. The existing cream enclosure, 260×304 footprint, and sockets are preserved. The selector uses the normal parameter, undo/redo, autosave and export paths. The field guide explains the rates.
+
+`parseProject` explicitly migrates missing rates in v1/v2 saves to 1/8 without mutating input, preserving old playback. Unsupported explicit values are rejected. Patch version remains v2; earlier releases reject the new rate parameter. Attack/release timing is bounded within a step at maximum tempo and either Gate extreme, preventing incorrectly ordered envelopes at 1/16.
+
+Validation: `npm run check` passes (strict types, all **86 tests**, production build). New regressions cover independent rates, note/rest order and looping, gate duration, unchanged drum timing, visual ticks, Stop/restart, live rate/tempo edits without graph rebuilds, both Gate extremes at 240 BPM, saved-rate round trips, non-mutating v1/v2 migration, and invalid rates. Isolated production Chromium checks verified native keyboard selection, focused undo/redo, two rates sounding together with measured audio-clock intervals and matching playback lights, live rate changes, recording/saved-take playback, export/import, silent legacy import, and offline reload with saved independent rates and live audio. Desktop, portrait/landscape tablet and 390px phone checks confirmed the selector fits above the unchanged sockets, focus/editing works, and the document does not overflow. No page errors occurred. Physical iPad/Safari selector interaction remains an on-device check. This change is local and has not been deployed.
+
 ## System, light, and dark appearance
 
 **More → Studio settings → Theme** now offers **System** (default), **Light**, and **Dark**, remembered in this browser independently of patches and history. System follows live device changes; overrides also apply on reload and offline. The toolbar, dotted workspace, navigation, dialogs, guides, examples, and libraries adjust together. Instrument colours, materials, controls, sockets, and cables retain their existing appearance and geometry. Browser theme-colour metadata follows the selected appearance. Restricted storage falls back to System and permits a session-only override with a notice.

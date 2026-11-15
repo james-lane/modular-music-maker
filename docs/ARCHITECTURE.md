@@ -67,6 +67,7 @@ React controls / workspace
 | `src/components/PatchCable.tsx`           | Classic/braided cable rendering and endpoint-coloured plugs          |
 | `src/components/cable-geometry.ts`        | Cable curves and distance-based over/under braid geometry            |
 | `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls                |
+| `src/components/SequencerPanel.tsx`       | Eight notes, tempo-synced rate selector and per-module playhead      |
 | `src/components/SequencerStep.tsx`        | Tap-to-cycle notes, vertical note gestures and keyboard adjustment   |
 | `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters     |
 | `src/components/MergerPanel.tsx`          | Four-input cable-occupancy diagram for the summing module            |
@@ -126,7 +127,11 @@ The Merger factory derives its inputs from the registry. Each socket owns a sepa
 
 `parseProject` explicitly migrates v1/v2 Merger saves missing all four input parameters to registry defaults, preserving their original sound and Sum level without mutating the source. Partial groups, invalid levels, and unknown parameters are rejected. The patch stays v2; earlier releases cannot read the new input parameters.
 
-The scheduler wakes every 25 ms and queues notes/hits 120 ms ahead using `AudioContext.currentTime`. Its shared tick is now one sixteenth-note. Drum machines advance every tick; melodic sequencers advance every second tick, preserving their original eighth-note timing. Visual step updates use separate timers aligned to the audio clock. Both pattern lengths repeat independently of the displayed time signature; 3/4 and 6/8 currently share three quarter-note beat groups. Tempo edits affect the next scheduling window, so a short already-queued segment may retain the old tempo.
+The scheduler wakes every 25 ms and queues notes/hits 120 ms ahead using `AudioContext.currentTime`. Its shared tick is one sixteenth-note. Drum machines advance every tick; each melodic sequencer independently selects `rate`: `1/4`, `1/8` (default), or `1/16`, advancing every four, two, or one ticks respectively. Rate options, tick divisions and defaults live in the module registry. Step index is derived from the absolute transport tick, so live rate changes join the new grid rather than resetting a local clock. Gate scales with that sequencer's step duration. The release gap contracts for short steps/long gates so the release always follows the hold and ends before the next onset. Existing eighth-note envelopes retain their timing.
+
+`AudioEngine.onTick` publishes the absolute tick through audio-aligned visual timers; `SequencerPanel` derives each module's light from its own rate. UI timers never schedule sound. Both pattern lengths repeat independently of the displayed time signature; 3/4 and 6/8 currently share three quarter-note beat groups. Tempo/rate edits affect the next scheduling window, so a short already-queued segment may retain the previous timing. Stop clears pending visual timers; Play restarts all patterns at step one.
+
+Step rate is an ordinary saved module parameter, with the usual undo/redo, autosave and offline behavior; editing it never rebuilds the audio graph. `parseProject` explicitly migrates v1/v2 sequencers missing `rate` to `1/8` without mutating saved input, while explicit unsupported values are rejected. Patch version stays v2; earlier releases reject the new parameter. The native selector replaces the old passive readout within the original 260×304 panel and leaves all socket geometry unchanged.
 
 Signal chain: Output module gain → dynamics compressor → master gain → analyser → speakers and recording destination. Filter/resonance and delay feedback have bounded parameters. The compressor softens peaks; this is not a mastering limiter. Reverb builds a local random decaying impulse, so recreating the graph produces a slightly different ambience. Noise is also generated locally.
 

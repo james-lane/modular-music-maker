@@ -43,7 +43,7 @@ interface Props {
   notify: (message: string) => void;
   engine: AudioEngine;
   playing: boolean;
-  step: number;
+  tick: number;
   drumStep: number;
   live: LiveControls;
   audioActive: boolean;
@@ -82,7 +82,7 @@ export function Workspace({
   microphone,
   engine,
   playing,
-  step,
+  tick,
   drumStep,
   live,
   audioActive,
@@ -568,7 +568,7 @@ export function Workspace({
                 scale={zoom}
                 project={project}
                 selected={module.id === selected}
-                step={step}
+                tick={tick}
                 drumStep={drumStep}
                 live={live}
                 microphone={microphone}

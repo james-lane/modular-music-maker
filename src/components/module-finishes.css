@@ -260,12 +260,17 @@
   background: #f1aa43;
   box-shadow: 0 0 7px #df8a2e;
 }
-.module-sequencer .rate-display > strong {
-  color: #8d6542;
+.module-sequencer .rate-display select {
+  color: var(--panel-ink);
+  border-color: var(--panel-edge);
+  background: linear-gradient(#fff7e8, #e7dac3);
+  box-shadow:
+    inset 0 1px 1px #fff9,
+    0 2px 0 #ad9876,
+    0 3px 4px #51453220;
 }
 .module-sequencer .rate-display > span,
-.module-sequencer .rate-display > em,
-.module-sequencer .rate-display small {
+.module-sequencer .rate-display > em {
   color: var(--panel-muted);
 }
 
