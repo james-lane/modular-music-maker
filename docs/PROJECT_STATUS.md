@@ -10,11 +10,13 @@ A direct **Mic sampler AUDIO OUT → Drum kit IN 1–IN 4 → Drum machine KIT I
 
 Validation: all **65 tests**, strict types, production build, formatting, and diff checks pass. Reproduction before the fix confirmed silence through the exact chain until sampler playback. New regression tests cover eight independent complete overlapping hits, Decay envelopes without source truncation, trim/Speed/Level/Tone, empty and imported sample behavior, disposal/late completion, direct-cable resolution, persistence, and combined live idle timing. Isolated production-browser QA then confirmed eight scheduled four-second sources all playing simultaneously, each with a distinct start and complete end time, without manual sampler playback or microphone access. It measured a quieter tail at 0.3× Decay than at 1× while preserving the four-second source length, checked two eight-second slowed/trimmed hits, and verified those older hits survived a later short-trim edit and shorter hit’s idle timer. Patch export/import retained the cable reference without copying PCM into the kit. Offline reload, audition, removal/undo, and recovery all produced the expected sound/silence with no page errors. Deployment pending.
 
-## Clean workspace
+## Clean workspace — deployed 15 November 2026
 
 Removed the “YOUR SOUND, YOUR RULES.” slogan and its decorative light from the canvas, along with their unused styling and pointer-target handling. The workspace keeps its dot grid, instruments, cables, and functional controls.
 
 Validation: all 61 tests, strict types, production build, formatting, and deployment dry run pass in an isolated checkout. Browser checks confirmed the clean canvas, nonzero live output, saved tempo after reload, and a 390px phone layout without document overflow. Unfinished drum-related edits in the main checkout are excluded from this release.
+
+Published clean app version **`0.1.0+34.g522992b`** at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** (Cloudflare version `43727d45-cc3b-4b80-a957-0492f10c276b`). All twelve public release files match the isolated build byte for byte; update headers and public API isolation pass. The verification browser retained an older offline release, so hosted visual activation was not confirmed; the identical local production build passed the canvas checks above. Existing installs can use Refresh now when idle or close all studio windows and reopen after the complete update downloads.
 
 ## Mic sampler trimming — deployed 15 November 2026
 
