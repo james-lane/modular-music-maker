@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Sharing previews
+
+The initial HTML now includes the canonical production URL, complete Open Graph website metadata, and Twitter/X large-image cards. Both use a locally bundled 1200×630 JPEG composed from the actual studio UI: the connected cream sequencer, ochre oscillator, forest-green filter, blue delay, and cream output. Matching title/description copy, image alt text, dimensions, and MIME type make the preview available without running JavaScript. The versioned image is included automatically in the atomic offline release; refresh instructions live in [sharing previews](SOCIAL_PREVIEWS.md). These source changes still need the normal production deployment before public links can use them.
+
+Production browser checks with JavaScript disabled confirmed unique sharing tags, matching page/Open Graph/Twitter titles and descriptions, absolute production URLs, image alt text, and a successful JPEG response with actual 1200×630 dimensions (122,089 bytes). An isolated offline reload retained the saved patch, served the cached image, and produced a nonzero live output level without page errors. Strict types, all 38 tests, and the production build passed for the checked working tree; the sharing files pass formatting.
+
 ## Implemented foundation
 
 Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes thirteen functioning modules, including a 16-step drum machine, 25-key keyboard, 16-pad controller, and four-input audio Merger, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.

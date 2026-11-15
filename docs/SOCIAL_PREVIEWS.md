@@ -1,0 +1,13 @@
+# Sharing previews
+
+The canonical app address is `https://patchwork.jameslane.dev/`. `index.html` includes the page description, canonical link, [Open Graph metadata](https://ogp.me/), and Twitter/X large-image card metadata in the initial HTML. All sharing fields use the same title, description, and preview image; no JavaScript execution or Node API is needed to read them.
+
+`public/social/patchwork-studio-v1.jpg` is a 1200×630 JPEG. It pairs Patchwork's branding with a capture of the actual studio controls, five differently finished instruments, and their connected cables. It is intentionally interface imagery rather than an abstract waveform or icon. The capture uses a fresh, isolated browser session and an ordinary Sunday circuits patch, with its modules arranged in one row for readability. Audio is stopped. No user patches, recordings, or private data are included.
+
+## Refresh the artwork
+
+1. Start the local app and use a fresh browser profile/context to preserve existing work. Open a new Sunday circuits example. Arrange its sequencer, oscillator, filter, delay, and output in a readable row and use Fit modules to view. The current capture uses a 1440×530 viewport, 2× pixel density, and reduced motion. Keep all panels and cables visible, close dialogs, move the pointer away, and wait for saving to finish.
+2. Capture the rendered interface. Keep its real materials, control geometry, and socket positions; do not substitute invented instruments. Frame the capture with the existing brand, “A playground for sound.” headline, short browser-studio description, and production address on the app's paper background. Check readability at normal card size and keep essential content away from the edges to accommodate cropping.
+3. Export a 1200×630 JPEG under a new versioned name in `public/social/`. Keep it small enough for a quick download (the current file is under 200 KB). Update both image URLs in `index.html`, image descriptions, and the Open Graph type/dimensions if the format changes. A new filename avoids reusing a social crawler's previously cached image.
+4. Run `npm run check` and `npm run format:check`. Serve the production build, inspect its raw HTML without JavaScript, and fetch the image directly. Verify a successful image response, JPEG content type, and actual 1200×630 dimensions. Confirm that the generated `dist/service-worker.js` includes the image in its release assets and the studio still reloads offline.
+5. After the normal deployment, verify the same fields and image at the public URL. Social platforms cache previews independently; already-shared links may need their platform's re-scrape/debugger before showing the new card. A local change or Git commit alone does not update the deployed app.

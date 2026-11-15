@@ -139,6 +139,7 @@ Login is only needed when credentials are missing or expired. `npm run deploy` r
 
 ## Configuration and architecture
 
+- `index.html`: canonical production address, Open Graph, and Twitter/X large-image sharing cards. The locally bundled 1200×630 preview in `public/social/` shows the real studio interface. See [sharing previews](docs/SOCIAL_PREVIEWS.md) for refresh and verification steps.
 - `src/config.ts`: application limits, tempo range, canvas size, autosave, scheduler timing, scales, and root notes.
 - `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors. `src/domain/module-guides.ts` contains the guides and derives compatibility from the catalog sockets.
 - `src/domain/examples.ts`: example patch catalog, sound recipes, artwork colours, and starter tips. Recipes use the ordinary module defaults and override only the settings that define each sound.

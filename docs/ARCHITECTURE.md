@@ -65,6 +65,10 @@ React controls / workspace
 | `server/app.ts`                           | Local Express API and production static serving                     |
 | `server/repository.ts`                    | Validated atomic filesystem persistence                             |
 
+## Link sharing
+
+`index.html` declares the canonical production URL, Open Graph website metadata, and Twitter/X `summary_large_image` metadata directly in the HTML head. Crawlers do not need React, JavaScript, the Node API, or a saved patch. Both card formats reference the same absolute HTTPS URL for a locally bundled 1200×630 JPEG showing the real studio, with matching image descriptions and Open Graph dimensions/type. The production build copies `public/social/` unchanged and includes it in the atomic offline release. Replace the versioned filename and metadata together when refreshing the artwork; see [sharing previews](SOCIAL_PREVIEWS.md).
+
 ## Module field guides
 
 Each library item has an accessible question-mark button alongside Add. `domain/module-guides.ts` stores a required guide for every module type: overview, setup steps, numeric control descriptions, special controls, a tip, and a worked example with actual module/port endpoints. `compatiblePorts()` derives possible partners directly from registry socket directions and signal types, excluding the same module type. These are capability matches; the normal workspace rules still reject occupied inputs and feedback loops.
