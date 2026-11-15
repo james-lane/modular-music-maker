@@ -2,7 +2,7 @@
 
 Last updated: **15 November 2026**.
 
-## Large-patch navigation: first performance fixes
+## Large-patch navigation: first performance fixes — deployed 15 November 2026
 
 Neon chorus retains all **38 modules / 41 cables**, its exact musical recipe and all physical finishes. Ordinary rack navigation now transforms a shared instrument/cable surface, with memoized instrument/control and cable boundaries. Compact patches keep a stable content origin, avoiding a whole-rack redraw when the camera crosses a tile boundary. Dispersed patches retain a floating origin; extremely spread-out imports use per-panel screen placement to preserve full-range Fit and keyboard recovery. Graphics-layer hints are bounded by drawing span/distance rather than applied to an unbounded world surface. Braided spans are computed before rebasing so rounding cannot invalidate cached strand paths.
 
@@ -21,7 +21,9 @@ Panel style mutations during the sequence fell from roughly **4,000 to zero**. S
 
 Validation: strict types, all **105 tests**, production build, formatting and diff checks pass. Four new regressions cover independent visual rates/looping/Stop/unsubscription; final-view coalescing/cancellation; native animation API receiver safety; and playback-rate throttling without lost gesture state. Production-browser checks verified independent audio note times and matching sequencer lights, live rate edits, Stop, recording/reopening and offline rate restoration. The complete example passed accumulated wheel input, immediate Fit replacing a queued zoom, large camera travel, real touch pinch/partial release, cable/socket alignment, dragging/Undo, Switch and knob edits, double-click unplug/Undo, library placement, offscreen focus recovery, full ±1 billion coordinate rendering/recovery, live keyboard/pad sound and offline restoration/playback. A 6.66-second take recorded while zooming under 4× CPU pressure decoded with nonzero audio, no silent 50 ms windows, a 0.429 peak, and thirteen bass-note onsets retaining their exact audio-clock spacing. Tablet landscape/portrait and 390px phone layouts passed without document overflow or browser errors.
 
-This is a first local performance pass and has **not been deployed**. The reported physical-device pauses still need verification on the affected iPad/Safari session after release; keep the full example as the performance reference and continue measuring any remaining stalls rather than reducing its scale.
+Published source commit `1680dad` as clean app version **`0.1.0+49.g1680dad`** at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** (Cloudflare version `2c27a444-f289-4b77-95ef-bee82fa998b9`). All fifteen public release files match the clean build byte for byte; update-cache headers and public Node API isolation pass. The previous release is `3096c0c6-3394-4fca-82ea-50974b60103d`. Existing installs can use **Refresh now** when the complete update is ready and audio is stopped, or close all Patchwork windows and reopen. The reported physical-device pauses still need verification on the affected iPad/Safari session; keep the full example as the performance reference and continue measuring any remaining stalls rather than reducing its scale.
+
+Hosted verification passed the same complete navigation/audio workflow in a fresh isolated browser, including real touch pinch and partial release, queued Fit cancellation, live keyboard/pads, Switch/knob edits and Undo, cable alignment/unplugging, module placement/dragging, distant-coordinate recovery, offline reload/playback, and tablet/phone layouts. A 6.6-second hosted take recorded during 4×-throttled zooming decoded with no silent 50 ms windows, a 0.405 peak and thirteen bass notes retaining their exact scheduled spacing. No page errors occurred. Physical iPad/Safari behavior remains an on-device check.
 
 ## Eighth example and Switch — deployed 15 November 2026
 
@@ -37,7 +39,7 @@ Hosted verification repeated the eight-card chooser, all automatic sources, samp
 
 ### Reported large-patch performance issue
 
-After deployment, the user reports that playing Neon chorus and zooming causes audible pauses and visible zoom jitter. **Keep the complete 38-module example** as the scale/performance reference. The original functional checks above did not establish smooth sustained navigation on the user's device. The first local fixes and measurements are documented at the top of this file; physical-device verification remains open.
+After deployment, the user reports that playing Neon chorus and zooming causes audible pauses and visible zoom jitter. **Keep the complete 38-module example** as the scale/performance reference. The original functional checks above did not establish smooth sustained navigation on the user's device. The first fixes and measurements are documented at the top of this file; physical-device verification remains open.
 
 Initial source inspection shows that transport ticks update React state at the app root, while every camera change renders the Workspace and its complete ModuleCard trees. Every card receives the tick and drum-step props, including modules without playback indicators, and camera movement updates each panel's position/scale separately. `useWorkspaceGestures` publishes a state change for every movement event. The audio look-ahead scheduler also uses the browser's main thread, so long rendering/painting work is a plausible cause of missed scheduling windows; this is a lead rather than a measured diagnosis. Cable shadows and detailed panel finishes add painting work and should be measured before changing their appearance.
 
