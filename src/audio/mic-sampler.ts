@@ -1,6 +1,6 @@
 import { CONFIG } from '../config';
-import { decodeSamplePcm } from '../domain/samples';
-import type { DrumSample } from '../domain/types';
+import { decodeSamplePcm, sampleRegion } from '../domain/samples';
+import type { DrumSample, Parameters } from '../domain/types';
 import type { AudioRuntime } from './factories';
 
 /** Playback owns only saved PCM. The microphone never enters the studio graph. */
@@ -10,6 +10,7 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
   let pcm: string | undefined;
   let buffer: AudioBuffer | undefined;
   let rate = 1;
+  let trim: Parameters = {};
   const voices = new Set<{ source: AudioBufferSourceNode; envelope: GainNode }>();
   const disconnect = (voice: { source: AudioBufferSourceNode; envelope: GainNode }) => {
     voice.source.onended = null;
@@ -34,6 +35,7 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
       );
       // A speed change applies to the next hit so its end envelope stays on the audio clock.
       rate = Number(parameters.rate);
+      trim = parameters;
     },
     configureSample(sample: DrumSample | undefined) {
       if (sample?.pcm === pcm) return;
@@ -46,7 +48,7 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
       buffer.copyToChannel(data, 0);
     },
     trigger(_sound, velocity, time) {
-      if (!buffer) return;
+      if (!buffer || !pcm) return;
       const start = Math.max(time, context.currentTime);
       const fade = CONFIG.audio.samplerFadeSeconds;
       // A retrigger restarts the clip, with a short retiring tail to avoid a hard cut.
@@ -65,7 +67,8 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
       const envelope = context.createGain();
       source.buffer = buffer;
       source.playbackRate.value = rate;
-      const duration = buffer.duration / rate;
+      const region = sampleRegion(pcm, trim);
+      const duration = region.duration / rate;
       const edge = Math.min(fade, duration / 2);
       envelope.gain.setValueAtTime(0, start);
       envelope.gain.linearRampToValueAtTime(velocity, start + edge);
@@ -76,7 +79,7 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
       const voice = { source, envelope };
       voices.add(voice);
       source.onended = () => disconnect(voice);
-      source.start(start);
+      source.start(start, region.startSeconds);
       source.stop(start + duration);
     },
     silence,

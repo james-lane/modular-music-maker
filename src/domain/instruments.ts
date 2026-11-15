@@ -1,4 +1,5 @@
 import { CONFIG } from '../config';
+import { sampleRegion } from './samples';
 import type { PatchModule, Project } from './types';
 
 /** Shared identities keep synthesis, pad labels, pattern editing and validation aligned. */
@@ -67,9 +68,7 @@ export function drumLiveTailMs(project: Project): number {
     if (pcm)
       longest = Math.max(
         longest,
-        Math.floor((pcm.length * 3) / 8) /
-          CONFIG.samples.sampleRate /
-          Number(sampler.parameters.rate),
+        sampleRegion(pcm, sampler.parameters).duration / Number(sampler.parameters.rate),
       );
   }
   return CONFIG.audio.liveTailMs + longest * 1000;

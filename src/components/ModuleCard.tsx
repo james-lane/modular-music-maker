@@ -138,6 +138,7 @@ export function ModuleCard({
             module={module}
             microphone={microphone}
             live={live}
+            onParameters={onParameters}
             onClear={() => onSample('clip', null)}
           />
         )}
@@ -256,15 +257,20 @@ export function ModuleCard({
         )}
         {!['sequencer', 'mixer', 'xy-effects'].includes(module.type) && (
           <div className={`module-knobs ${definition.controls.length === 1 ? 'single-knob' : ''}`}>
-            {definition.controls.map((control) => (
-              <Knob
-                key={control.id}
-                control={control}
-                value={Number(module.parameters[control.id])}
-                onChange={(value) => onParameter(control.id, value)}
-                large={module.type === 'output'}
-              />
-            ))}
+            {definition.controls
+              .filter(
+                (control) =>
+                  module.type !== 'mic-sampler' || !['trimStart', 'trimEnd'].includes(control.id),
+              )
+              .map((control) => (
+                <Knob
+                  key={control.id}
+                  control={control}
+                  value={Number(module.parameters[control.id])}
+                  onChange={(value) => onParameter(control.id, value)}
+                  large={module.type === 'output'}
+                />
+              ))}
           </div>
         )}
       </div>

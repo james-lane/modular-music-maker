@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { CONFIG } from '../src/config';
 import { MicrophoneCapture, type CapturePhase } from '../src/audio/microphone';
 import { createModule, createProject } from '../src/domain/project';
-import { encodeSamplePcm, sampleWav } from '../src/domain/samples';
+import { encodeSamplePcm, sampleRegion, sampleWav } from '../src/domain/samples';
 import { drumLiveTailMs } from '../src/domain/instruments';
 import { parseProject } from '../src/domain/validation';
 
@@ -190,6 +190,7 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
     onended: (() => void) | null = null;
     stopped = false;
     startTime = -1;
+    offset = -1;
     stopTime = -1;
     connect(node: Node) {
       this.connections.add(node);
@@ -197,7 +198,8 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
     disconnect() {
       this.connections.clear();
     }
-    start(time: number) {
+    start(time: number, offset = 0) {
+      this.offset = offset;
       this.startTime = time;
     }
     stop(time = 0) {
@@ -233,15 +235,79 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
   assert.equal(sources[0].playbackRate.value, 0.5);
   assert.equal(sources[0].startTime, 2.1);
   assert.equal(sources[0].stopTime, 10.1);
+  runtime.update({ level: 0.7, rate: 0.5, trimStart: 0.25, trimEnd: 0.75 });
+  runtime.trigger?.('kick', 1, 2.2);
+  assert.equal(sources[1].offset, 1);
+  assert.equal(
+    sources[1].stopTime,
+    6.2,
+    'two selected seconds play for four seconds at half speed',
+  );
   for (let index = 0; index < 30; index++) runtime.trigger?.('snare', 1, 2.2);
   assert(sources.filter((node) => node.connections.size).length <= CONFIG.audio.maxSamplerTails);
   runtime.configureSample?.(undefined);
   assert(sources.every((node) => node.stopped && !node.connections.size));
-  runtime.configureSample?.({ name: 'Again', pcm: 'AAAA' });
+  runtime.configureSample?.({ name: 'Again', pcm: 'AAA=' });
   runtime.trigger?.('kick', 1, 3);
   const lateEnded = sources.at(-1)?.onended;
   runtime.silence?.();
   lateEnded?.();
   runtime.dispose();
   assert([...nodes, ...sources].every((node) => !node.connections.size));
+});
+
+test('legacy sampler trim migrates to the full recording without mutating old saves', () => {
+  const sampler = createModule('mic-sampler', 0, 0);
+  const project = { ...createProject(true), modules: [sampler] };
+  sampler.samples = { clip: { name: 'Original', pcm: 'AAA=' } };
+  delete sampler.parameters.trimStart;
+  delete sampler.parameters.trimEnd;
+  const before = structuredClone(project);
+  const migrated = parseProject(project);
+  assert.equal(migrated.modules[0].parameters.trimStart, 0);
+  assert.equal(migrated.modules[0].parameters.trimEnd, 1);
+  assert.deepEqual(project, before);
+  assert.equal(migrated.modules[0].samples?.clip.pcm, 'AAA=');
+  for (const [start, end] of [
+    [0.8, 0.2],
+    [0.5, 0.5],
+    [-0.1, 1],
+    [0, 1.1],
+    [NaN, 1],
+  ]) {
+    sampler.parameters.trimStart = start;
+    sampler.parameters.trimEnd = end;
+    assert.throws(() => parseProject(project));
+  }
+  sampler.parameters.trimStart = 0;
+  delete sampler.parameters.trimEnd;
+  assert.throws(() => parseProject(project), 'partial trim data is invalid, not legacy');
+});
+
+test('trimmed WAV and idle timing use only selected frames while keeping original PCM intact', async () => {
+  const pcm = encodeSamplePcm(new Float32Array([0, 0.25, -0.5, 0.75]));
+  const parameters = { trimStart: 0.25, trimEnd: 0.75 };
+  const region = sampleRegion(pcm, parameters);
+  assert.equal(region.startFrame, 1);
+  assert.equal(region.endFrame, 3);
+  assert.equal(
+    sampleRegion('AAA=', { trimStart: 0.499, trimEnd: 0.5 }).duration,
+    1 / CONFIG.samples.sampleRate,
+  );
+  const view = new DataView(await sampleWav(pcm, parameters).arrayBuffer());
+  assert.equal(view.getUint32(40, true), 4);
+  assert.equal(view.getInt16(44, true), 8192);
+  assert.equal(view.getInt16(46, true), -16384);
+  assert.equal(
+    (await sampleWav(pcm).arrayBuffer()).byteLength,
+    52,
+    'reset exports the original frames',
+  );
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.parameters = { ...sampler.parameters, ...parameters, rate: 0.5 };
+  sampler.samples = { clip: { name: 'Original', pcm: encodeSamplePcm(new Float32Array(96000)) } };
+  const project = { ...createProject(true), modules: [sampler] };
+  assert.equal(drumLiveTailMs(project), CONFIG.audio.liveTailMs + 4000);
+  assert.deepEqual(parseProject(JSON.parse(JSON.stringify(project))), project);
+  assert.equal(sampler.samples.clip.pcm.length, 256000, 'trimming does not discard the original');
 });

@@ -3,6 +3,8 @@ import type { ModuleDefinition, ModuleType } from './types';
 /** Saved scale degrees include a rest and fourteen pitches, independently of the scale. */
 export const SEQUENCER_DEGREES = { rest: -1, min: 0, max: 13 } as const;
 
+export const SAMPLER_TRIM = { start: 0, end: 1, step: 0.001 } as const;
+
 /** The module catalog is the source of truth for appearance, ports and parameter ranges.
  * To add a module, register its definition here and its sound factory in audio/factories.ts.
  * Ordinary numeric controls render automatically; only special interfaces need a component.
@@ -47,6 +49,22 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     controls: [
       { id: 'level', label: 'Level', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
       { id: 'rate', label: 'Speed', min: 0.5, max: 2, step: 0.01, default: 1, unit: '×' },
+      {
+        id: 'trimStart',
+        label: 'Trim start',
+        min: 0,
+        max: 1,
+        step: SAMPLER_TRIM.step,
+        default: SAMPLER_TRIM.start,
+      },
+      {
+        id: 'trimEnd',
+        label: 'Trim end',
+        min: 0,
+        max: 1,
+        step: SAMPLER_TRIM.step,
+        default: SAMPLER_TRIM.end,
+      },
     ],
   },
   'drum-kit': {

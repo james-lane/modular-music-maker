@@ -1,4 +1,26 @@
 import { CONFIG } from '../config';
+import { SAMPLER_TRIM } from './modules';
+import type { Parameters } from './types';
+
+/** Derive exact frame boundaries without decoding PCM on every trim edit. Missing trim
+ * parameters mean the original full recording, including in pre-trim sampler patches.
+ */
+export function sampleRegion(pcm: string, parameters: Parameters = {}) {
+  const padding = pcm.endsWith('==') ? 2 : pcm.endsWith('=') ? 1 : 0;
+  const frames = ((pcm.length / 4) * 3 - padding) / 2;
+  const start = Number(parameters.trimStart ?? SAMPLER_TRIM.start);
+  const end = Number(parameters.trimEnd ?? SAMPLER_TRIM.end);
+  const startFrame = Math.min(frames - 1, Math.floor(start * frames));
+  const endFrame = Math.min(frames, Math.max(startFrame + 1, Math.ceil(end * frames)));
+  return {
+    startFrame,
+    endFrame,
+    startSeconds: startFrame / CONFIG.samples.sampleRate,
+    endSeconds: endFrame / CONFIG.samples.sampleRate,
+    duration: (endFrame - startFrame) / CONFIG.samples.sampleRate,
+    sourceDuration: frames / CONFIG.samples.sampleRate,
+  };
+}
 
 /** Fixed PCM format avoids trusting file headers or decoding untrusted media at playback. */
 export function isValidSamplePcm(pcm: string): boolean {
@@ -38,8 +60,9 @@ export function decodeSamplePcm(pcm: string): Float32Array<ArrayBuffer> {
 }
 
 /** A standard mono WAV lets the same clip become a Drum kit voice via Load audio. */
-export function sampleWav(pcm: string): Blob {
-  const data = decodeSamplePcm(pcm);
+export function sampleWav(pcm: string, parameters: Parameters = {}): Blob {
+  const region = sampleRegion(pcm, parameters);
+  const data = decodeSamplePcm(pcm).subarray(region.startFrame, region.endFrame);
   const bytes = new ArrayBuffer(44 + data.length * 2);
   const view = new DataView(bytes);
   const label = (offset: number, value: string) => {

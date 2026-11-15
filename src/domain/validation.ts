@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CONFIG, ROOT_NOTES } from '../config';
-import { MODULES, SEQUENCER_DEGREES } from './modules';
+import { MODULES, SAMPLER_TRIM, SEQUENCER_DEGREES } from './modules';
 import { DRUM_LANES, DRUM_SOUNDS, DRUM_STEP_COUNT } from './instruments';
 import { isValidSamplePcm } from './samples';
 import { XY_CORNERS, XY_EFFECTS } from './xy-effects';
@@ -125,6 +125,8 @@ export const projectSchema = z
             issue('Unknown drum voice source.');
         }
       } else if (module.type === 'mic-sampler') {
+        if (Number(module.parameters.trimStart) >= Number(module.parameters.trimEnd))
+          issue('Trim start must be before trim end.');
         if (Object.keys(module.samples ?? {}).some((slot) => slot !== 'clip'))
           issue('Mic sampler only stores one clip.');
       } else if (module.samples) issue('Only Drum kit and Mic sampler modules can store samples.');
@@ -164,7 +166,36 @@ export function parseProject(value: unknown): Project {
  * Validation still runs after migration and unknown versions remain unsupported.
  */
 function migrateProject(value: unknown): unknown {
-  if (typeof value === 'object' && value !== null && 'version' in value && value.version === 1)
-    return { ...value, version: 2 };
-  return value;
+  if (typeof value !== 'object' || value === null || !('version' in value)) return value;
+  const project = value.version === 1 ? { ...value, version: 2 } : value;
+  if (project.version !== 2 || !('modules' in project) || !Array.isArray(project.modules))
+    return project;
+  // Additive sampler migration: older v2 saves play the entire original recording.
+  // Only the completely absent pair is legacy data; partial/invalid trim stays invalid.
+  return {
+    ...project,
+    modules: project.modules.map((module: unknown) => {
+      if (
+        typeof module !== 'object' ||
+        module === null ||
+        !('type' in module) ||
+        module.type !== 'mic-sampler' ||
+        !('parameters' in module)
+      )
+        return module;
+      const parameters = module.parameters;
+      if (
+        typeof parameters !== 'object' ||
+        parameters === null ||
+        Array.isArray(parameters) ||
+        'trimStart' in parameters ||
+        'trimEnd' in parameters
+      )
+        return module;
+      return {
+        ...module,
+        parameters: { ...parameters, trimStart: SAMPLER_TRIM.start, trimEnd: SAMPLER_TRIM.end },
+      };
+    }),
+  };
 }

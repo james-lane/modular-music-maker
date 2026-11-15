@@ -66,6 +66,10 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     ],
     controls: {
       level: 'Sets the saved snippet’s output volume without changing the recording.',
+      trimStart:
+        'Sets where the kept section begins, on the original recording’s timeline. Move Start past unwanted silence or noise; it cannot cross End.',
+      trimEnd:
+        'Sets where the kept section ends. The highlighted waveform section is used for playback, pad hits, and WAV downloads. Trimming preserves the original recording and takes effect on the next hit.',
       rate: 'Changes playback speed and pitch together on the next hit. Half speed is an octave lower and twice as long; double speed is an octave higher and half as long.',
     },
     extraControls: [
@@ -75,9 +79,14 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
           'Only Record mic requests microphone permission. Finish keeps the captured sound; Cancel discards it. Capture stops automatically after four seconds. Replacing a clip keeps the old one until the new capture succeeds. Stop, switching patches, removing the module, and hiding the app cancel capture and release the microphone.',
       },
       {
+        label: 'Reset trim / Download WAV',
+        description:
+          'Reset trim restores the full original recording. Download WAV exports only the kept section at its original speed and level, ready to load into Drum kit. Trim changes save with the patch and support Undo/Redo. A successful new recording resets the selection; a failed/cancelled replacement preserves it.',
+      },
+      {
         label: 'Play snippet / Clear',
         description:
-          'Play the whole snippet once through connected cables; each hit restarts it. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
+          'Play the selected part once through connected cables; each hit restarts it. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
       },
     ],
     tip: 'Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence a recording as a drum voice, download the clip as WAV and load it into a Drum kit sample slot. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',

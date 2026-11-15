@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
 import type { LiveControls } from '../audio/live';
 import { CONFIG } from '../config';
-import { decodeSamplePcm, sampleWav } from '../domain/samples';
+import { decodeSamplePcm, sampleRegion, sampleWav } from '../domain/samples';
 import { downloadFile, fileSlug } from '../domain/storage';
-import type { PatchModule } from '../domain/types';
+import type { Parameters, PatchModule } from '../domain/types';
+import { SAMPLER_TRIM } from '../domain/modules';
+import { SampleTrimControls } from './SampleTrimControls';
 import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 
 export function MicSamplerPanel({
@@ -11,11 +13,13 @@ export function MicSamplerPanel({
   microphone,
   live,
   onClear,
+  onParameters,
 }: {
   module: PatchModule;
   microphone: MicrophoneControls;
   live: LiveControls;
   onClear: () => void;
+  onParameters: (values: Parameters, group?: string) => void;
 }) {
   const clip = module.samples?.clip;
   const ownsCapture = microphone.moduleId === module.id;
@@ -37,7 +41,10 @@ export function MicSamplerPanel({
       return `M${x},${30 - height}V${30 + height}`;
     }).join(' ');
   }, [clip]);
-  const duration = clip ? decodeDuration(clip.pcm) : 0;
+  const region = clip ? sampleRegion(clip.pcm, module.parameters) : null;
+  const start = Number(module.parameters.trimStart);
+  const end = Number(module.parameters.trimEnd);
+  const trimmed = start !== SAMPLER_TRIM.start || end !== SAMPLER_TRIM.end;
   return (
     <div className="mic-instrument">
       <div className="mic-grille" aria-hidden="true">
@@ -57,19 +64,42 @@ export function MicSamplerPanel({
                     : 'NO CLIP'}
           </span>
           <strong>
-            {(recording ? microphone.seconds : duration).toFixed(1)}{' '}
-            <small>/ {CONFIG.samples.maxSeconds}s</small>
+            {(recording ? microphone.seconds : (region?.duration ?? 0)).toFixed(2)}{' '}
+            <small>/ {region?.sourceDuration.toFixed(2) ?? CONFIG.samples.maxSeconds}s</small>
           </strong>
         </div>
         <svg
           viewBox="0 0 256 60"
           role="img"
-          aria-label={clip ? 'Recorded snippet waveform' : 'No recorded snippet'}
+          aria-label={
+            region
+              ? `Recorded snippet waveform, selected ${region.startSeconds.toFixed(2)} to ${region.endSeconds.toFixed(2)} seconds`
+              : 'No recorded snippet'
+          }
         >
           <path d={waveform || 'M0 30H256'} />
+          {clip && (
+            <>
+              <rect className="mic-trim-outside" x={0} y={0} width={start * 256} height={60} />
+              <rect
+                className="mic-trim-outside"
+                x={end * 256}
+                y={0}
+                width={(1 - end) * 256}
+                height={60}
+              />
+              <path className="mic-trim-boundary" d={`M${start * 256} 0V60M${end * 256} 0V60`} />
+            </>
+          )}
         </svg>
         <span className="mic-clip-name">{clip?.name ?? 'Your next sound starts here'}</span>
       </div>
+      <SampleTrimControls
+        parameters={module.parameters}
+        duration={region?.sourceDuration ?? 0}
+        disabled={!clip || busy}
+        onParameters={onParameters}
+      />
       <div className="mic-transport">
         <button
           className="mic-record"
@@ -104,10 +134,22 @@ export function MicSamplerPanel({
             <button
               disabled={!clip || busy}
               onClick={() => {
-                if (clip) downloadFile(sampleWav(clip.pcm), `${fileSlug(clip.name)}.wav`);
+                if (clip)
+                  downloadFile(
+                    sampleWav(clip.pcm, module.parameters),
+                    `${fileSlug(clip.name)}.wav`,
+                  );
               }}
             >
               Download WAV
+            </button>
+            <button
+              disabled={!clip || busy || !trimmed}
+              onClick={() =>
+                onParameters({ trimStart: SAMPLER_TRIM.start, trimEnd: SAMPLER_TRIM.end })
+              }
+            >
+              Reset trim
             </button>
             <button disabled={!clip || busy} onClick={onClear} aria-label="Clear recorded snippet">
               Clear
@@ -124,12 +166,8 @@ export function MicSamplerPanel({
               ? 'Preparing your snippet…'
               : busy
                 ? 'Another sampler is using the microphone.'
-                : '4 seconds · saved in patch · no live monitoring'}
+                : 'Trim the part to keep · original saved in patch'}
       </p>
     </div>
   );
-}
-function decodeDuration(pcm: string) {
-  const padding = pcm.endsWith('==') ? 2 : pcm.endsWith('=') ? 1 : 0;
-  return ((pcm.length / 4) * 3 - padding) / 2 / CONFIG.samples.sampleRate;
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CONFIG } from '../config';
+import { SAMPLER_TRIM } from '../domain/modules';
 import { createProject } from '../domain/project';
 import { loadActiveProject, saveLocally } from '../domain/storage';
 import type { DrumSample, Project } from '../domain/types';
@@ -55,7 +56,13 @@ export function useStudio() {
               parameters:
                 item.type === 'drum-kit'
                   ? { ...item.parameters, [slot]: sample ? 'sample' : slot }
-                  : item.parameters,
+                  : item.type === 'mic-sampler'
+                    ? {
+                        ...item.parameters,
+                        trimStart: SAMPLER_TRIM.start,
+                        trimEnd: SAMPLER_TRIM.end,
+                      }
+                    : item.parameters,
             };
           }),
         };
