@@ -1,0 +1,191 @@
+/* Compact chrome reserves the drawer's height for instruments, even in short windows. */
+.module-library {
+  width: min(340px, 92%);
+  padding: 12px 12px 0;
+}
+.library-heading {
+  flex-shrink: 0;
+}
+.library-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex-shrink: 0;
+  margin: 4px 0;
+}
+.library-tools p {
+  margin: 0 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
+.library-search-toggle {
+  width: 36px;
+  height: 36px;
+}
+.module-library .search-field {
+  height: 40px;
+  margin-bottom: 8px;
+}
+.module-library .search-field[hidden] {
+  display: none;
+}
+.library-categories {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 0 0 8px;
+  flex-shrink: 0;
+}
+.library-categories button {
+  gap: 5px;
+  height: 34px;
+  padding: 6px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.library-categories button.active {
+  border-color: #c7d0ba;
+}
+.library-categories button span {
+  flex: initial;
+}
+.library-section-title {
+  flex-shrink: 0;
+  padding: 0 4px 7px;
+  font-size: 10px;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+.library-modules {
+  min-height: 0;
+  padding-top: 0;
+}
+.library-module {
+  gap: 7px;
+  min-height: 68px;
+  padding: 8px 0;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+.library-drag-handle {
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 24px;
+  flex: 0 0 24px;
+  color: #969e89;
+  cursor: grab;
+  touch-action: none;
+}
+.library-drag-handle:active,
+.module-library.is-dragging .library-module {
+  cursor: grabbing;
+}
+.module-library .library-module .library-module-icon {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 34px;
+}
+.library-module .library-module-copy {
+  flex: 1;
+  min-width: 0;
+}
+.library-module strong {
+  font-size: 12px;
+}
+.library-module p {
+  font-size: 10px;
+  margin-top: 3px;
+  color: #818675;
+}
+.library-module-actions {
+  gap: 1px;
+}
+.library-module-actions button {
+  width: 30px;
+  height: 36px;
+}
+.library-footer {
+  margin: 0;
+  padding: 10px 4px;
+  border-top: 1px solid var(--line);
+}
+.library-footer .help-link {
+  min-height: 24px;
+  font-size: 11px;
+}
+/* The backdrop must not intercept pointer hit testing while placing an instrument. */
+.library-dragging .library-dismiss {
+  pointer-events: none;
+  background: transparent;
+}
+.library-drop-preview {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 16px;
+  border: 2px dashed;
+  border-radius: 9px;
+  background: #faf9f5e8;
+  box-shadow: 0 5px 20px #25312228;
+  pointer-events: none;
+  color: var(--ink);
+}
+.library-drop-preview span {
+  font-size: 12px;
+  color: var(--muted);
+}
+@media (pointer: coarse) {
+  .library-categories button,
+  .library-search-toggle,
+  .library-close {
+    min-height: 40px;
+  }
+  .library-drag-handle {
+    width: 30px;
+    flex-basis: 30px;
+  }
+  .module-library .library-module .library-module-icon {
+    display: none;
+  }
+}
+/* Short landscape/split-view windows still need room to browse and scroll instruments. */
+@media (max-height: 600px) {
+  .module-library .library-heading {
+    padding-right: 42px;
+  }
+  .library-tools {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    margin: 0;
+  }
+  .library-tools p,
+  .module-library .library-section-title,
+  .module-library .library-footer {
+    display: none;
+  }
+  .module-library .search-field {
+    margin-top: 8px;
+  }
+  .library-categories {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-top: 8px;
+    padding: 2px;
+    scrollbar-width: thin;
+  }
+  .library-categories button {
+    flex-shrink: 0;
+  }
+  .library-module {
+    min-height: 60px;
+  }
+}

@@ -24,6 +24,7 @@ import { PatchCable } from './PatchCable';
 import { cablePath } from './cable-geometry';
 import type { LiveControls } from '../audio/live';
 import { useWorkspaceGestures } from '../hooks/useWorkspaceGestures';
+import type { ModuleLibraryDrag } from '../hooks/useModuleLibraryDrag';
 
 interface Props {
   project: Project;
@@ -41,6 +42,8 @@ interface Props {
   redo: () => void;
   saveStatus: 'saving' | 'saved' | 'error';
   cableStyle: CableStyle;
+  libraryDrag: ModuleLibraryDrag | null;
+  onLibraryDragFinish: (added: boolean) => void;
   libraryOpen: boolean;
   onLibraryToggle: () => void;
   focused: boolean;
@@ -73,6 +76,8 @@ export function Workspace({
   redo,
   saveStatus,
   cableStyle,
+  libraryDrag,
+  onLibraryDragFinish,
   libraryOpen,
   onLibraryToggle,
   focused,
@@ -80,6 +85,7 @@ export function Workspace({
 }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
+  const droppedModule = useRef<string | null>(null);
   const previousIds = useRef(new Set(project.modules.map((module) => module.id)));
   const [pending, setPending] = useState<Endpoint | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
@@ -109,6 +115,11 @@ export function Workspace({
       const module = added[0];
       const definition = MODULES[module.type];
       setSelected(module.id);
+      // A placed module is already under the pointer; preserve the rack's scroll position.
+      if (droppedModule.current === module.id) {
+        droppedModule.current = null;
+        return;
+      }
       viewport.current.scrollTo({
         left: Math.max(
           0,
@@ -221,32 +232,65 @@ export function Workspace({
     pan.current = null;
   };
 
-  const onDrop = (event: DragEvent) => {
-    event.preventDefault();
-    setDragOver(false);
-    const type = event.dataTransfer.getData('application/patchwork-module') as ModuleType;
-    if (!MODULES[type] || !viewport.current) return;
+  const dropPosition = (type: ModuleType, clientX: number, clientY: number) => {
+    const element = viewport.current;
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    // Hit testing excludes the library, toolbar and overlays, even though the rack runs behind them.
+    const target = document.elementFromPoint(clientX, clientY);
+    if (
+      !target ||
+      (!element.contains(target) && !(libraryDrag && target.matches('.library-dismiss'))) ||
+      clientX < rect.left ||
+      clientX >= rect.right ||
+      clientY < rect.top ||
+      clientY >= rect.bottom
+    )
+      return null;
+    return boundedPosition(
+      type,
+      (clientX - rect.left + element.scrollLeft) / zoom - MODULES[type].width / 2,
+      (clientY - rect.top + element.scrollTop) / zoom - 30,
+    );
+  };
+
+  const addAtPointer = (type: ModuleType, clientX: number, clientY: number) => {
+    const position = dropPosition(type, clientX, clientY);
+    if (!position) return false;
     const definition = MODULES[type];
     if (project.modules.length >= CONFIG.maxModules) {
       notify(`You can add up to ${CONFIG.maxModules} modules.`);
-      return;
+      return false;
     }
     if (
       definition.maxInstances &&
       project.modules.filter((module) => module.type === type).length >= definition.maxInstances
     ) {
-      notify('Your patch already has an Output module.');
-      return;
+      notify('Your patch already has an Output module. Use a Merger or Mixer to combine sounds.');
+      return false;
     }
-    const rect = viewport.current.getBoundingClientRect();
-    const position = boundedPosition(
-      type,
-      (event.clientX - rect.left + viewport.current.scrollLeft) / zoom - definition.width / 2,
-      (event.clientY - rect.top + viewport.current.scrollTop) / zoom - 30,
-    );
     const module = createModule(type, position.x, position.y);
+    droppedModule.current = module.id;
     commit((current) => ({ ...current, modules: [...current.modules, module] }));
     setSelected(module.id);
+    notify(`${definition.name} added. Connect a cable to bring it into your patch.`);
+    return true;
+  };
+
+  useEffect(() => {
+    if (libraryDrag?.released)
+      onLibraryDragFinish(addAtPointer(libraryDrag.type, libraryDrag.clientX, libraryDrag.clientY));
+  }, [libraryDrag, onLibraryDragFinish]);
+
+  const placement =
+    libraryDrag && dropPosition(libraryDrag.type, libraryDrag.clientX, libraryDrag.clientY);
+  const onDrop = (event: DragEvent) => {
+    event.preventDefault();
+    setDragOver(false);
+    const definition = Object.values(MODULES).find(
+      (module) => module.type === event.dataTransfer.getData('application/patchwork-module'),
+    );
+    if (definition) addAtPointer(definition.type, event.clientX, event.clientY);
   };
 
   const fit = () => {
@@ -329,7 +373,7 @@ export function Workspace({
       </div>
       <div
         ref={viewport}
-        className={`canvas-viewport ${dragOver ? 'drag-over' : ''} ${handMode ? 'hand-mode' : ''}`}
+        className={`canvas-viewport ${dragOver || placement ? 'drag-over' : ''} ${handMode ? 'hand-mode' : ''}`}
         aria-label="Module workspace"
         tabIndex={0}
         onPointerDownCapture={gestures.onPointerDownCapture}
@@ -387,6 +431,22 @@ export function Workspace({
             <div className="workspace-label">
               <span className="tiny-led on" /> YOUR SOUND, YOUR RULES.
             </div>
+            {libraryDrag && placement && (
+              <div
+                className="library-drop-preview"
+                style={{
+                  left: placement.x,
+                  top: placement.y,
+                  width: MODULES[libraryDrag.type].width,
+                  height: MODULES[libraryDrag.type].height,
+                  borderColor: MODULES[libraryDrag.type].color,
+                }}
+              >
+                <Plus size={20} />
+                <strong>{MODULES[libraryDrag.type].name}</strong>
+                <span>Release to place</span>
+              </div>
+            )}
             {displayModules.map((module) => (
               <ModuleCard
                 key={module.id}

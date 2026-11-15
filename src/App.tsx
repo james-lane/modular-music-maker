@@ -9,6 +9,7 @@ import {
   SettingsDialog,
 } from './components/Dialogs';
 import { ModuleLibrary } from './components/ModuleLibrary';
+import type { ModuleLibraryDrag } from './hooks/useModuleLibraryDrag';
 import { ModuleHelpDialog } from './components/ModuleHelpDialog';
 import { ExamplePatchesDialog } from './components/ExamplePatchesDialog';
 import { OfflineDialog, OfflineIndicator } from './components/OfflineDialog';
@@ -54,6 +55,14 @@ export default function App() {
   const [guideType, setGuideType] = useState<ModuleType | null>(null);
   const [focused, setFocused] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [libraryDrag, setLibraryDrag] = useState<ModuleLibraryDrag | null>(null);
+  const finishLibraryDrag = useCallback((added: boolean) => {
+    setLibraryDrag(null);
+    if (added) {
+      setLibraryOpen(false);
+      document.querySelector<HTMLDivElement>('.canvas-viewport')?.focus({ preventScroll: true });
+    }
+  }, []);
   const [recordingCount, setRecordingCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [cableStyle, setCableStyle] = useState(loadCableStyle);
@@ -116,6 +125,7 @@ export default function App() {
   }, [audio, studio, save, dialog, offline.applying]);
 
   const closeLibrary = () => {
+    setLibraryDrag(null);
     setLibraryOpen(false);
     document.querySelector<HTMLButtonElement>('.library-toggle')?.focus();
   };
@@ -218,7 +228,10 @@ export default function App() {
           recordingCount={recordingCount}
         />
       </div>
-      <div className="studio-body" inert={offline.applying}>
+      <div
+        className={`studio-body ${libraryDrag ? 'library-dragging' : ''}`}
+        inert={offline.applying}
+      >
         {libraryOpen && (
           <button
             className="library-dismiss"
@@ -227,6 +240,8 @@ export default function App() {
           />
         )}
         <ModuleLibrary
+          drag={libraryDrag}
+          onDragChange={setLibraryDrag}
           onAdd={addModule}
           onHelp={() => setDialog('help')}
           onModuleHelp={(type) => {
@@ -246,6 +261,8 @@ export default function App() {
           live={audio.live}
           audioActive={audio.active}
           cableStyle={cableStyle}
+          libraryDrag={libraryDrag}
+          onLibraryDragFinish={finishLibraryDrag}
           libraryOpen={libraryOpen}
           onLibraryToggle={() => setLibraryOpen((open) => !open)}
           focused={focused}
