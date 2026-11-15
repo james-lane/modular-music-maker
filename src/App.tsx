@@ -174,7 +174,8 @@ export default function App() {
   const importProject = async (file?: File) => {
     if (!file) return;
     try {
-      if (file.size > 256 * 1024) throw new Error('This patch is too large. The limit is 256 KB.');
+      if (file.size > CONFIG.maxPatchBytes)
+        throw new Error('This patch is too large. The limit is 2 MB.');
       const imported = parseProject(JSON.parse(await file.text()));
       // Import a copy so opening a shared file cannot silently overwrite an existing patch.
       await openProject({

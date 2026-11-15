@@ -1,5 +1,5 @@
 import { CONFIG } from '../config';
-import type { ModuleType, Parameters } from '../domain/types';
+import type { ModuleType, Parameters, PatchModule } from '../domain/types';
 import type { DrumSound } from '../domain/instruments';
 import { createDrumRuntime } from './drums';
 import { MODULES } from '../domain/modules';
@@ -13,6 +13,7 @@ export interface AudioRuntime {
   voice?: { frequency: AudioParam; envelope: AudioParam };
   trigger?: (sound: DrumSound, velocity: number, time: number) => void;
   silence?: () => void;
+  configureKit?: (kit: PatchModule | undefined) => void;
 }
 
 type Factory = (context: AudioContext, masterBus: AudioNode) => AudioRuntime;
@@ -26,6 +27,23 @@ const smooth = (parameter: AudioParam, target: number, context: AudioContext) =>
  */
 export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
   'drum-machine': createDrumRuntime,
+  'drum-kit': (context) => {
+    // Four independent buses carry external audio. The KIT route assigns their voices;
+    // envelopes belong to each receiving drum machine, allowing independent fan-out.
+    const buses = Object.fromEntries(
+      MODULES['drum-kit'].ports
+        .filter((port) => port.signal === 'audio')
+        .map((port) => [port.id, context.createGain()]),
+    );
+    return {
+      inputs: buses,
+      outputs: buses,
+      update() {},
+      dispose() {
+        Object.values(buses).forEach((node) => node.disconnect());
+      },
+    };
+  },
   keyboard: () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),
   'pad-controller': () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),
   sequencer: () => ({ inputs: {}, outputs: {}, update() {}, dispose() {} }),

@@ -26,11 +26,11 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 
 ## What works
 
-- A searchable module library with thirteen working modules: drum machine, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, merger, and output.
+- A searchable module library with fourteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, merger, and output.
 - Five contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Open **Add modules** to browse the module drawer, then drag modules into the workspace or use the **+** buttons. Move panels by dragging their headers.
-- Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, and trigger are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
+- Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, trigger, and kit are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
 - Choose **More → Studio settings → Patch cable style → Braided module colours** to weave together both connected modules' enclosure colours: for example, cream and ochre from the sequencer and oscillator. Plug colours retain their socket accents. **Classic colours** remains the default. The choice is remembered in this browser across patches and reloads.
 - Individual hardware finishes: walnut keyboard cheeks, a violet rubber-pad controller, coloured effects enclosures, ivory/chrome knobs, and a compact silver mixer with vertical faders. Module dimensions vary to suit the instrument.
 - Hardware-style knobs respond to vertical dragging, arrow keys, Home/End, and double-click reset. Hold Shift for finer dragging.
@@ -67,23 +67,28 @@ See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, devi
 
 Open **More → Example patches**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically.
 
-| Patch           | Sound and approach                                                        |
-| --------------- | ------------------------------------------------------------------------- |
-| Sunday circuits | Warm C-minor sequenced melody at 108 BPM, with filtering and delay        |
-| Pocket rhythm   | Drum groove at 108 BPM with a live keyboard and sixteen percussion pads   |
-| Warehouse pulse | Driving drums and a clipped F-minor bass line at 128 BPM                  |
-| Coastal static  | Ambient noise, slowly swept by an LFO through a filter and reverb         |
-| Tiny arcade     | Two independent sequencers playing square/triangle voices in G at 152 BPM |
+| Patch           | Sound and approach                                                         |
+| --------------- | -------------------------------------------------------------------------- |
+| Sunday circuits | Warm C-minor sequenced melody at 108 BPM, with filtering and delay         |
+| Pocket rhythm   | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads |
+| Warehouse pulse | Driving drums and a clipped F-minor bass line at 128 BPM                   |
+| Coastal static  | Ambient noise, slowly swept by an LFO through a filter and reverb          |
+| Tiny arcade     | Two independent sequencers playing square/triangle voices in G at 152 BPM  |
 
 Coastal static is free-running: its LFO Rate controls the wash rather than the composition tempo. The other patches use the transport clock. Choose the same example again for a fresh original; your edited copies remain available in **More → My patches**. Returning visits restore the active saved patch without reopening the chooser.
 
 ## Play drums and keys
 
-Use **More → Example patches → Pocket rhythm** for the connected performance example. Your current patch stays in My patches. The three instruments are also available separately in the module library.
+Use **More → Example patches → Pocket rhythm** for the connected performance example. Your current patch stays in My patches. The instruments and Drum kit are also available separately in the module library.
 
-- **Drum machine:** a 16-step, four-lane sequencer for kick, snare, clap, and closed hat. Click switches to edit the rhythm; click a voice name to audition it. **Pattern on/off** mutes the sequencer without disabling live pad hits. Level, tone, and decay are configurable. Press Play to start the pattern at the composition tempo.
+- **Drum machine:** a 16-step, four-voice sequencer defaulting to kick, snare, clap, and closed hat. Connect a Drum kit to assign different sounds; the numbered voice labels follow your choices. Click switches to edit the rhythm; click a voice name to audition it. **Pattern on/off** mutes the sequencer without disabling live pad hits. Level, tone, and decay are configurable. Press Play to start the pattern at the composition tempo.
 - **Keyboard:** 25 chromatic piano keys with octave and velocity controls. Wire **PITCH / GATE → Oscillator PITCH**, then route the oscillator's audio to an output (directly or through effects/mixer). Hold keys with the pointer/touch, or focus the keys and use **A W S E D F T G Y H U J K O L P ;**. Enter/Space on a focused key plays a short note. Oscillator voices are monophonic: the last held note wins and releasing it returns to the previous held note. Keyboard notes are chromatic, independently of the sequencer's scale.
 - **Pad controller:** sixteen rubber-style pads mapped to kick, snare, clap, hats, toms, rim shot, shaker, crash, ride, cowbell, tambourine, claves, and congas. Wire **TRIGGER OUT → Drum machine TRIGGER IN**, then route the drum machine's **AUDIO OUT**. Focus the pads to use **1 2 3 4 / Q W E R / A S D F / Z X C V**.
+
+- **Drum kit:** a terracotta sound cartridge, included in fresh Pocket rhythm examples. Connect **KIT OUT → Drum machine KIT IN**. For each of voices **1–4**, choose any built-in percussion sound, **Imported sample**, or **Audio input**. The rhythm stays on the drum machine. Its first four pad triggers follow these assignments; the other twelve pads retain their printed sounds. Unplug KIT IN to restore the internal kit.
+  - **Samples:** choose Imported sample, then Load audio. WAV, MP3, and other browser-supported audio are accepted, up to **four seconds / 20 MB per file**. Samples become compact mono audio at 24 kHz and are embedded in the patch, so saves, exports, and offline playback include them. The patch sample budget is roughly sixteen seconds in total. Replace loads a different sound; × removes it. Switching sound modes keeps the sample for later.
+  - **Other modules:** connect an audio output, such as Noise or Oscillator, to the matching **IN 1–IN 4**, then choose that numbered Audio input. Each hit opens a short envelope over the incoming sound; **Input decay** sets its length. It gates the current sound rather than recording a sample. Empty inputs and unloaded sample slots are silent.
+  - Click a numbered cartridge button to audition through its connected drum machine. Drum machine Level and Decay apply to every source; Tone tunes built-in sounds and samples, while live audio inputs retain their incoming pitch. One kit can feed several machines. Importing and reading the guide are silent.
 
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 

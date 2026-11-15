@@ -30,7 +30,7 @@ const wire = (
 export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
   'drum-machine': {
     overview:
-      'A drum kit with a repeating rhythm. Its four lanes play kick, snare, clap, and closed hat; a Pad controller can play the full sixteen-sound kit.',
+      'A drum kit with a repeating rhythm. Its four voices default to kick, snare, clap, and closed hat; connect a Drum kit to replace them with built-in sounds, imported samples, or external audio. A Pad controller can play the full sixteen-sound kit.',
     steps: [
       'Connect AUDIO OUT to an Output AUDIO IN socket, or route it through a Mixer or an effect first.',
       'Press Play in the top bar. The sixteen steps follow the composition tempo.',
@@ -49,11 +49,52 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
           'Enables the repeating pattern. Live drum audition and pad hits still work when Pattern is off.',
       },
     ],
-    tip: 'To finger-drum without a backing loop, turn Pattern off and connect a Pad controller to TRIGGER IN.',
+    tip: 'Connect Drum kit KIT OUT to KIT IN to change the four voice sounds. The first four pads follow these assignments; the other twelve retain their printed sounds. Unplug KIT IN to restore the internal kit. To finger-drum without a backing loop, turn Pattern off and connect a Pad controller to TRIGGER IN.',
     example: {
       title: 'Play a beat',
       description: 'Start with this direct connection. Press Play to hear and edit the pattern.',
       connections: [wire('drum-machine', 'out', 'output', 'in')],
+    },
+  },
+  'drum-kit': {
+    overview:
+      'A four-voice sound cartridge for the Drum machine. Give each voice a built-in percussion sound, an imported audio sample, or a sound patched in from another module. The drum machine keeps the rhythm and produces the final audio.',
+    steps: [
+      'Connect KIT OUT to Drum machine KIT IN, then Drum machine AUDIO OUT to Output AUDIO IN.',
+      'Choose a sound for each numbered voice. The drum machine updates its lane labels while keeping your steps.',
+      'For Imported sample, use Load audio. For Audio input, connect an audio source to the matching numbered input. Press Play or click a voice button to audition through the drum machine.',
+    ],
+    controls: {
+      length:
+        'Sets the envelope length for audio inputs. The drum machine Decay multiplies this length; its Level also applies. Tone tunes built-in sounds and samples, but does not transpose live audio inputs.',
+    },
+    extraControls: [
+      {
+        label: 'Voice sound selectors',
+        description:
+          'Each of four voices can use any of sixteen built-in percussion sounds, an imported sample, or its corresponding audio input. Voices 1–4 correspond to the original kick, snare, clap, and hat lanes and the first four pads.',
+      },
+      {
+        label: 'Load / Replace / Remove sample',
+        description:
+          'Choose browser-supported audio such as WAV or MP3, up to four seconds and 20 MB per file. Samples are converted to mono at 24 kHz and embedded in the patch for saving, export, and offline use. A patch holds about sixteen seconds of samples in total. Remove deletes that voice’s stored sample and restores its original sound; switching sound modes retains it for later.',
+      },
+      {
+        label: 'Voice audition buttons',
+        description:
+          'Play a voice through all connected drum machines without starting the pattern. A silent sample slot or unpatched Audio input is silent. The module has no direct audio output: connect KIT OUT first.',
+      },
+    ],
+    tip: 'Try Noise AUDIO OUT into IN 4 and choose Audio input 4 for a textured hat. Input decay shapes each hit. Kit cables carry voice assignments and external sounds, so they only connect to KIT IN. Browsing this guide is silent.',
+    example: {
+      title: 'Build a hybrid kit',
+      description:
+        'Connect the kit and choose Audio input 4 for the fourth voice. Noise becomes a short burst on each hat step; the other voices keep their built-in sounds. Try a sample on voice 2 next.',
+      connections: [
+        wire('noise', 'out', 'drum-kit', 'closed-hat'),
+        wire('drum-kit', 'kit', 'drum-machine', 'kit'),
+        wire('drum-machine', 'out', 'output', 'in'),
+      ],
     },
   },
   keyboard: {
@@ -89,7 +130,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
   },
   'pad-controller': {
     overview:
-      'Sixteen playable pads for the Drum machine’s percussion sounds. Its trigger cable carries the sound choice and velocity to the drum kit.',
+      'Sixteen playable pads for the Drum machine’s percussion sounds. The first four pads follow a connected Drum kit’s voice assignments; the remaining pads keep their printed sounds. Its trigger cable carries the sound choice and velocity to the drum kit.',
     steps: [
       'Connect TRIGGER OUT to a Drum machine TRIGGER IN socket.',
       'Connect the Drum machine AUDIO OUT to an Output AUDIO IN socket.',

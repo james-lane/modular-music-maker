@@ -1496,6 +1496,7 @@ svg {
 .patch-cables {
   --cable-pitch-color: #c89a52;
   --cable-control-color: #9385b7;
+  --cable-kit-color: #c3945c;
   --cable-trigger-color: #b9788f;
   --cable-braid-core: #34342f;
   --cable-braid-width: 3.4px;

@@ -19,6 +19,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     width: 452,
     height: 432,
     ports: [
+      { id: 'kit', label: 'KIT IN', direction: 'input', signal: 'kit' },
       { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
     ],
@@ -28,6 +29,37 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
       { id: 'decay', label: 'Decay', min: 0.3, max: 1.5, step: 0.01, default: 0.8, unit: '×' },
     ],
     defaults: { enabled: true },
+  },
+  'drum-kit': {
+    type: 'drum-kit',
+    name: 'Drum kit',
+    subtitle: 'A new character for every voice',
+    description: 'Built-in drums, your samples, or patched-in sounds.',
+    category: 'Sources',
+    color: '#ba795e',
+    code: 'KIT–04',
+    width: 360,
+    height: 500,
+    ports: [
+      { id: 'kick', label: 'IN 1', direction: 'input', signal: 'audio' },
+      { id: 'snare', label: 'IN 2', direction: 'input', signal: 'audio' },
+      { id: 'clap', label: 'IN 3', direction: 'input', signal: 'audio' },
+      { id: 'closed-hat', label: 'IN 4', direction: 'input', signal: 'audio' },
+      { id: 'kit', label: 'KIT OUT', direction: 'output', signal: 'kit' },
+    ],
+    controls: [
+      {
+        id: 'length',
+        label: 'Input decay',
+        min: 0.03,
+        max: 2,
+        step: 0.01,
+        default: 0.3,
+        unit: 's',
+      },
+    ],
+    // Stable lane IDs preserve existing patterns even when their sounds are replaced.
+    defaults: { kick: 'kick', snare: 'snare', clap: 'clap', 'closed-hat': 'closed-hat' },
   },
   keyboard: {
     type: 'keyboard',

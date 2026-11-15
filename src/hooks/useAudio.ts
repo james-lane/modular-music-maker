@@ -4,7 +4,7 @@ import { preferredRecordingType, saveRecording, type Recording } from '../audio/
 import { CONFIG } from '../config';
 import { downloadFile, fileSlug } from '../domain/storage';
 import type { Project } from '../domain/types';
-import { controllerTargets, type DrumSound } from '../domain/instruments';
+import { controllerTargets, drumLiveTailMs, type DrumSound } from '../domain/instruments';
 import type { LiveControls } from '../audio/live';
 
 export function useAudio(project: Project, notify: (message: string) => void) {
@@ -86,7 +86,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
         void engine.stop();
         setLiveActive(false);
       }
-    }, CONFIG.audio.liveTailMs);
+    }, drumLiveTailMs(latest.current));
   }, [engine]);
 
   const activateLive = useCallback(

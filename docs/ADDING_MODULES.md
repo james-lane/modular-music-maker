@@ -12,7 +12,7 @@ Add a `ModuleDefinition` to `MODULES` in `src/domain/modules.ts`:
 
 - Human name, short description, category, accent color, and panel code.
 - Width and height in logical canvas pixels. Leave room for the header, controls, and the 54px socket footer.
-- Unique port IDs with `input`/`output` direction and `audio`/`pitch`/`control`/`trigger` signal types.
+- Unique port IDs with `input`/`output` direction and `audio`/`pitch`/`control`/`trigger`/`kit` signal types.
 - Numeric control definitions with bounds, step size, default, optional unit, and optional logarithmic response.
 - Non-numeric defaults only when needed. Validate any new string enum in `validation.ts`.
 - Optional maximum instance count.
@@ -42,7 +42,7 @@ function makeGain(context: AudioContext): AudioRuntime {
 }
 ```
 
-Name runtime endpoints exactly like registry port IDs. Control inputs may be AudioParams; audio outputs must be AudioNodes. Pitch and trigger ports are musical events, so their runtime endpoints do not appear in the AudioNode input/output maps. Sequencers and live keyboards currently target oscillator voices; pad controllers target a drum runtime through its optional `trigger(sound, velocity, time)` method. A new event producer/consumer needs explicit routing support in `AudioEngine` and a `LiveControls` command if it is played directly.
+Name runtime endpoints exactly like registry port IDs. Control inputs may be AudioParams; audio outputs must be AudioNodes. Pitch and trigger ports are musical events, and kit ports carry drum voice assignments plus external-input buses, so their runtime endpoints do not appear in the AudioNode input/output maps. Sequencers and live keyboards currently target oscillator voices; pad controllers target a drum runtime through its optional `trigger(sound, velocity, time)` method. A new event producer/consumer needs explicit routing support in `AudioEngine` and a `LiveControls` command if it is played directly.
 
 For summing modules, give each input its own node before connecting to a shared sum (see Merger). Mapping several socket IDs to one AudioNode can collapse two cables from the same source into one connection. Keep input count/IDs in the registry and derive runtime endpoints and connection indicators from it.
 
@@ -67,13 +67,14 @@ Changing a footprint can affect old saved positions. The current visual refresh 
 
 ## Current signal contracts
 
-| Signal    | Meaning                                             | Current examples                       |
-| --------- | --------------------------------------------------- | -------------------------------------- |
-| `audio`   | Audible sample stream                               | Oscillator → Filter → Delay → Output   |
-| `pitch`   | Scheduled or live pitch and gate                    | Step sequencer / Keyboard → Oscillator |
-| `control` | Audio-rate modulation, measured in target units     | LFO depth in Hz → Filter MOD/frequency |
-| `trigger` | Sound identity, velocity and scheduled trigger time | Pad controller → Drum machine          |
+| Signal    | Meaning                                              | Current examples                       |
+| --------- | ---------------------------------------------------- | -------------------------------------- |
+| `audio`   | Audible sample stream                                | Oscillator → Filter → Delay → Output   |
+| `pitch`   | Scheduled or live pitch and gate                     | Step sequencer / Keyboard → Oscillator |
+| `control` | Audio-rate modulation, measured in target units      | LFO depth in Hz → Filter MOD/frequency |
+| `trigger` | Sound identity, velocity and scheduled trigger time  | Pad controller → Drum machine          |
+| `kit`     | Four drum voice assignments and external audio buses | Drum kit → Drum machine                |
 
-Drum patterns are an optional additive v1 field, validated as four named lanes of sixteen booleans. Drum voice identities and shortcut mappings live in `domain/instruments.ts`; synthesis recipes live in `audio/drums.ts`. New sounds need corresponding recipes and explicit validation for any persisted data. Never persist held notes or one-shot trigger events.
+Drum patterns are an optional additive v1 field, validated as four named lanes of sixteen booleans. Drum voice identities and shortcut mappings live in `domain/instruments.ts`; synthesis recipes live in `audio/drums.ts`. New sounds need corresponding recipes and explicit validation for any persisted data. Drum kit assignments keep these stable lane keys even when the sound changes. Samples use the optional validated `samples` map on Drum kit modules only; see Architecture for PCM format, total/per-file limits, and audio-clock cleanup of external-input envelopes. Never persist held notes or one-shot trigger events.
 
 Feedback between modules is intentionally rejected. The Delay factory contains its own bounded feedback loop. A future general feedback system needs explicit delay and stability semantics rather than removing cycle validation.

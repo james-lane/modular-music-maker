@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createDrumRuntime } from '../src/audio/drums';
+import { createModule } from '../src/domain/project';
+import { encodeSamplePcm } from '../src/domain/samples';
 import { DRUM_SOUNDS } from '../src/domain/instruments';
 
 /** A small ownership spy, not an audio implementation. Browser QA verifies actual sound. */
@@ -25,6 +27,7 @@ class Node {
   gain = new Parameter();
   frequency = new Parameter();
   Q = new Parameter();
+  playbackRate = new Parameter();
   connections = new Set<Node>();
   stops: (number | undefined)[] = [];
   started = false;
@@ -32,8 +35,9 @@ class Node {
   connect(target: Node) {
     this.connections.add(target);
   }
-  disconnect() {
-    this.connections.clear();
+  disconnect(target?: Node) {
+    if (target) assert.ok(this.connections.delete(target), 'specific input connection must exist');
+    else this.connections.clear();
   }
   start() {
     this.started = true;
@@ -57,8 +61,10 @@ function audioSpy() {
     createOscillator: create,
     createBiquadFilter: create,
     createBufferSource: create,
-    createBuffer: (_channels: number, length: number) => ({
+    createBuffer: (_channels: number, length: number, rate = 48000) => ({
+      duration: length / rate,
       getChannelData: () => new Float32Array(length),
+      copyToChannel: () => {},
     }),
   };
   return { context: context as unknown as AudioContext, nodes };
@@ -88,5 +94,59 @@ test('a closed hat cuts an open hat short instead of leaving its source alive', 
   assert.ok(!openHat.stops.includes(undefined));
   runtime.trigger!('closed-hat', 1, 0);
   assert.ok(openHat.stops.includes(undefined));
+  runtime.dispose();
+});
+
+test('kit resolves lane sounds once, tunes samples, and leaves the other twelve pads unchanged', () => {
+  const { context, nodes } = audioSpy();
+  const runtime = createDrumRuntime(context);
+  const kit = createModule('drum-kit', 0, 0);
+  kit.parameters.kick = 'low-tom';
+  kit.parameters.snare = 'kick';
+  kit.parameters.clap = 'sample';
+  kit.samples = { clap: { name: 'Test', pcm: encodeSamplePcm(new Float32Array([0, 1, -1, 0])) } };
+  runtime.configureKit!(kit);
+  runtime.trigger!('kick', 1, 0);
+  assert.ok(nodes.some((node) => node.started && node.frequency.value === 75));
+  const firstCount = nodes.length;
+  runtime.trigger!('snare', 1, 0);
+  assert.ok(
+    nodes.slice(firstCount).some((node) => node.started && node.frequency.value === 42),
+    'snare maps directly to kick, without remapping through voice 1',
+  );
+  runtime.update({ level: 0.7, tone: 12, decay: 1 });
+  const beforeSample = nodes.length;
+  runtime.trigger!('clap', 1, 0);
+  assert.ok(
+    nodes.slice(beforeSample).some((node) => node.started && node.playbackRate.value === 2),
+  );
+  const beforePad = nodes.length;
+  runtime.trigger!('low-conga', 1, 0);
+  assert.ok(nodes.slice(beforePad).some((node) => node.started && node.frequency.value === 340));
+  runtime.configureKit!(undefined);
+  const beforeDefault = nodes.length;
+  runtime.trigger!('kick', 1, 0);
+  assert.ok(nodes.slice(beforeDefault).some((node) => node.started && node.frequency.value === 84));
+  runtime.dispose();
+});
+
+test('external voice hits own their input connections and Stop tolerates late source completion', () => {
+  const { context, nodes } = audioSpy();
+  const runtime = createDrumRuntime(context);
+  const kit = createModule('drum-kit', 0, 0);
+  kit.parameters.kick = 'input';
+  runtime.configureKit!(kit);
+  const input = runtime.inputs['kit-kick'] as unknown as Node;
+  assert.equal(input.connections.size, 0);
+  runtime.trigger!('kick', 1, 0.2);
+  runtime.trigger!('kick', 1, 0.5);
+  assert.equal(input.connections.size, 2);
+  const sources = nodes.filter((node) => node.started);
+  sources[0].onended?.();
+  assert.equal(input.connections.size, 1, 'ending one hit preserves the other input envelope');
+  runtime.silence!();
+  sources.forEach((source) => source.onended?.());
+  assert.equal(input.connections.size, 0);
+  assert.ok(nodes.every((node) => node.connections.size === 0));
   runtime.dispose();
 });

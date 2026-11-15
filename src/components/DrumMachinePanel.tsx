@@ -1,9 +1,15 @@
 import type { LiveControls } from '../audio/live';
-import { DRUM_LANES, DRUM_SOUNDS, type DrumSound } from '../domain/instruments';
-import type { PatchModule } from '../domain/types';
+import {
+  connectedDrumKit,
+  drumVoiceLabel,
+  DRUM_LANES,
+  type DrumSound,
+} from '../domain/instruments';
+import type { PatchModule, Project } from '../domain/types';
 
 export function DrumMachinePanel({
   module,
+  project,
   live,
   playing,
   step,
@@ -11,12 +17,14 @@ export function DrumMachinePanel({
   onEnabled,
 }: {
   module: PatchModule;
+  project: Project;
   live: LiveControls;
   playing: boolean;
   step: number;
   onToggle: (sound: DrumSound, step: number) => void;
   onEnabled: () => void;
 }) {
+  const kit = connectedDrumKit(project, module.id);
   return (
     <div className="drum-instrument">
       <div className="drum-toolbar">
@@ -41,17 +49,18 @@ export function DrumMachinePanel({
           <div className="drum-lane" key={sound}>
             <button
               className="drum-voice"
-              aria-label={`Audition ${sound}`}
-              title="Play this drum"
+              aria-label={`Audition ${drumVoiceLabel(kit, sound)}`}
+              title={`Voice ${DRUM_LANES.indexOf(sound) + 1}: ${drumVoiceLabel(kit, sound)} · Click to audition`}
               onClick={() => live.drumHit(module.id, sound)}
             >
-              {DRUM_SOUNDS.find((item) => item.id === sound)!.short}
+              <small>{String(DRUM_LANES.indexOf(sound) + 1).padStart(2, '0')}</small>
+              <span>{drumVoiceLabel(kit, sound)}</span>
             </button>
             {module.drumPattern?.[sound]?.map((on, index) => (
               <button
                 key={index}
                 className={`drum-step ${on ? 'on' : ''} ${playing && module.parameters.enabled && index === step ? 'current' : ''} ${index % 4 === 0 ? 'beat-start' : ''}`}
-                aria-label={`${sound} step ${index + 1}`}
+                aria-label={`${drumVoiceLabel(kit, sound)} (voice ${DRUM_LANES.indexOf(sound) + 1}) step ${index + 1}`}
                 aria-pressed={on}
                 onClick={() => onToggle(sound, index)}
               >
@@ -62,7 +71,7 @@ export function DrumMachinePanel({
         ))}
       </div>
       <div className="drum-caption">
-        <span>● KICK · SNARE · CLAP · HAT</span>
+        <span>{kit ? '● EXTERNAL KIT · VOICES 1–4' : '● INTERNAL KIT · VOICES 1–4'}</span>
         <span>1/16 · SYNC TO TEMPO</span>
       </div>
     </div>

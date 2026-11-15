@@ -6,7 +6,9 @@ import path from 'node:path';
 import { test } from 'node:test';
 import { createApp } from '../server/app';
 import { ProjectRepository } from '../server/repository';
-import { createProject } from '../src/domain/project';
+import { CONFIG } from '../src/config';
+import { encodeSamplePcm } from '../src/domain/samples';
+import { createModule, createProject } from '../src/domain/project';
 
 test('repository writes real patch files atomically and tolerates a corrupt neighbor', async () => {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'patchwork-test-'));
@@ -47,6 +49,19 @@ test('HTTP API saves/lists patches and rejects mismatched IDs and invalid payloa
     assert.equal((await put(project, crypto.randomUUID())).status, 400);
     assert.equal((await put({ ...project, masterVolume: 50 })).status, 400);
     assert.equal((await fetch(`${base}/api/missing`)).status, 404);
+    // Embedded samples must pass the real HTTP body limit, not only the domain parser.
+    const kit = createModule('drum-kit', 40, 40);
+    const pcm = encodeSamplePcm(
+      new Float32Array(CONFIG.samples.sampleRate * CONFIG.samples.maxSeconds),
+    );
+    kit.samples = { kick: { name: 'Kick sample', pcm }, snare: { name: 'Snare sample', pcm } };
+    kit.parameters.kick = 'sample';
+    const withSamples = { ...project, modules: [...project.modules, kit] };
+    assert.ok(JSON.stringify(withSamples).length > 256 * 1024);
+    assert.equal((await put(withSamples)).status, 200);
+    assert.deepEqual(await (await fetch(`${base}/api/projects`)).json(), [withSamples]);
+    kit.samples.kick.pcm = 'invalid';
+    assert.equal((await put(withSamples)).status, 400);
   } finally {
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),

@@ -3,12 +3,13 @@ import type { CSSProperties, PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { MODULES } from '../domain/modules';
 import { noteLabel } from '../domain/project';
-import type { Endpoint, PatchModule, Project } from '../domain/types';
+import type { DrumSample, Endpoint, PatchModule, Project } from '../domain/types';
 import { Knob } from './Knob';
 import { LevelMeter, Scope } from './Scope';
 import { Waveform } from './Waveform';
 import type { LiveControls } from '../audio/live';
-import type { DrumSound } from '../domain/instruments';
+import type { DrumLane, DrumSound } from '../domain/instruments';
+import { DrumKitPanel } from './DrumKitPanel';
 import { DrumMachinePanel } from './DrumMachinePanel';
 import { KeyboardPanel } from './KeyboardPanel';
 import { PadControllerPanel } from './PadControllerPanel';
@@ -28,6 +29,7 @@ interface Props {
   playing: boolean;
   pending: Endpoint | null;
   onParameter: (id: string, value: number | string | boolean) => void;
+  onSample: (lane: DrumLane, sample: DrumSample | null) => boolean;
   onDrumStep: (sound: DrumSound, step: number) => void;
   onStep: (index: number, degree: StepNoteChange, group?: string) => void;
   onPort: (endpoint: Endpoint) => void;
@@ -49,6 +51,7 @@ export function ModuleCard({
   pending,
   onParameter,
   onDrumStep,
+  onSample,
   onStep,
   onPort,
   onRemove,
@@ -98,11 +101,21 @@ export function ModuleCard({
         {module.type === 'drum-machine' && (
           <DrumMachinePanel
             module={module}
+            project={project}
             live={live}
             playing={playing}
             step={drumStep}
             onToggle={onDrumStep}
             onEnabled={() => onParameter('enabled', !module.parameters.enabled)}
+          />
+        )}
+        {module.type === 'drum-kit' && (
+          <DrumKitPanel
+            module={module}
+            project={project}
+            live={live}
+            onParameter={onParameter}
+            onSample={onSample}
           />
         )}
         {module.type === 'keyboard' && <KeyboardPanel module={module} live={live} />}

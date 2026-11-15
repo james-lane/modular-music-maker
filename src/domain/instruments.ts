@@ -1,3 +1,4 @@
+import { CONFIG } from '../config';
 import type { PatchModule, Project } from './types';
 
 /** Shared identities keep synthesis, pad labels, pattern editing and validation aligned. */
@@ -21,7 +22,49 @@ export const DRUM_SOUNDS = [
 ] as const;
 
 export type DrumSound = (typeof DRUM_SOUNDS)[number]['id'];
-export const DRUM_LANES: DrumSound[] = ['kick', 'snare', 'clap', 'closed-hat'];
+export const DRUM_LANES = ['kick', 'snare', 'clap', 'closed-hat'] as const;
+export type DrumLane = (typeof DRUM_LANES)[number];
+export type DrumVoiceSource = DrumSound | 'sample' | 'input';
+
+export function connectedDrumKit(project: Project, drumId: string): PatchModule | undefined {
+  const cable = project.cables.find(
+    (item) => item.to.moduleId === drumId && item.to.portId === 'kit',
+  );
+  return project.modules.find(
+    (item) => item.id === cable?.from.moduleId && item.type === 'drum-kit',
+  );
+}
+
+export function drumVoiceLabel(kit: PatchModule | undefined, lane: DrumLane): string {
+  const source = kit?.parameters[lane] ?? lane;
+  if (source === 'sample') return kit?.samples?.[lane]?.name ?? 'No sample';
+  if (source === 'input') return `Input ${DRUM_LANES.indexOf(lane) + 1}`;
+  return DRUM_SOUNDS.find((sound) => sound.id === source)?.name ?? lane;
+}
+/** Imported/tuned hits can outlast the normal live-instrument idle tail. */
+export function drumLiveTailMs(project: Project): number {
+  let longest = 0;
+  for (const drums of project.modules.filter((module) => module.type === 'drum-machine')) {
+    const kit = connectedDrumKit(project, drums.id);
+    if (!kit) continue;
+    for (const lane of DRUM_LANES) {
+      const source = kit.parameters[lane];
+      const pcm = kit.samples?.[lane]?.pcm;
+      const duration =
+        source === 'sample' && pcm
+          ? (Math.floor((pcm.length * 3) / 8) /
+              CONFIG.samples.sampleRate /
+              2 ** (Number(drums.parameters.tone) / 12)) *
+            Math.min(1, Number(drums.parameters.decay))
+          : source === 'input'
+            ? Number(kit.parameters.length) * Number(drums.parameters.decay)
+            : 0;
+      longest = Math.max(longest, duration);
+    }
+  }
+  return CONFIG.audio.liveTailMs + longest * 1000;
+}
+
 export const DRUM_STEP_COUNT = 16;
 export const KEYBOARD_BASE_MIDI = 48; // C3 before the octave shift.
 export const KEYBOARD_NOTE_COUNT = 25;
@@ -97,7 +140,7 @@ export function midiLabel(note: number): string {
 export function controllerTargets(
   project: Project,
   controllerId: string,
-  portId: 'pitch' | 'trigger',
+  portId: 'pitch' | 'trigger' | 'kit',
 ): string[] {
   return project.cables
     .filter((cable) => cable.from.moduleId === controllerId && cable.from.portId === portId)

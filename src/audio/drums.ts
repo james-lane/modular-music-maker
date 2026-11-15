@@ -1,6 +1,7 @@
 import { CONFIG } from '../config';
-import type { DrumSound } from '../domain/instruments';
-import type { Parameters } from '../domain/types';
+import { DRUM_LANES, DRUM_SOUNDS, type DrumSound } from '../domain/instruments';
+import { decodeSamplePcm } from '../domain/samples';
+import type { Parameters, PatchModule } from '../domain/types';
 import type { AudioRuntime } from './factories';
 
 interface Tone {
@@ -70,6 +71,7 @@ interface ActiveHit {
   sound: DrumSound;
   sources: AudioScheduledSourceNode[];
   nodes: AudioNode[];
+  inputConnection?: { input: AudioNode; gain: GainNode };
 }
 
 export function createDrumRuntime(context: AudioContext): AudioRuntime {
@@ -81,10 +83,17 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
   );
   const samples = noiseBuffer.getChannelData(0);
   for (let index = 0; index < samples.length; index++) samples[index] = Math.random() * 2 - 1;
+  const inputs = Object.fromEntries(DRUM_LANES.map((lane) => [lane, context.createGain()]));
+  const silentBuffer = context.createBuffer(1, 1, context.sampleRate);
+  let kit: PatchModule | undefined;
+  const sampleBuffers = new Map<string, { pcm: string; buffer: AudioBuffer }>();
   const active = new Set<ActiveHit>();
   let parameters: Parameters = { tone: 0, decay: 0.8, level: 0.7 };
 
   const clean = (hit: ActiveHit) => {
+    // Stop and a later onended callback can both reach cleanup.
+    if (!active.has(hit)) return;
+    if (hit.inputConnection) hit.inputConnection.input.disconnect(hit.inputConnection.gain);
     hit.nodes.forEach((node) => node.disconnect());
     active.delete(hit);
   };
@@ -94,7 +103,20 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
   };
 
   return {
-    inputs: {},
+    inputs: Object.fromEntries(DRUM_LANES.map((lane) => [`kit-${lane}`, inputs[lane]])),
+    configureKit(next) {
+      kit = next;
+      for (const lane of DRUM_LANES) {
+        const sample = next?.samples?.[lane];
+        if (!sample) sampleBuffers.delete(lane);
+        else if (sampleBuffers.get(lane)?.pcm !== sample.pcm) {
+          const data = decodeSamplePcm(sample.pcm);
+          const buffer = context.createBuffer(1, data.length, CONFIG.samples.sampleRate);
+          buffer.copyToChannel(data, 0);
+          sampleBuffers.set(lane, { pcm: sample.pcm, buffer });
+        }
+      }
+    },
     outputs: { out: output },
     update(next) {
       parameters = next;
@@ -105,21 +127,28 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
       );
     },
     trigger(sound, velocity, when) {
-      const recipe = DRUM_RECIPES[sound];
-      if (!recipe) return;
+      // Lane identity stays stable in patterns and the first four pads. Resolve once,
+      // so choosing a sound never recursively remaps another lane or rewrites a pattern.
+      const isLane = DRUM_LANES.some((lane) => lane === sound);
+      const source = isLane ? (kit?.parameters[sound] ?? sound) : sound;
+      const builtIn = DRUM_SOUNDS.find((item) => item.id === source)?.id;
+      const recipe = builtIn ? DRUM_RECIPES[builtIn] : undefined;
+      const sample = source === 'sample' ? sampleBuffers.get(sound)?.buffer : undefined;
+      if (!recipe && !sample && source !== 'input') return;
       // Like a real kit, a closed hat cuts the open hat short. Bound overlap under rapid playing.
-      if (sound === 'closed-hat')
+      if (source === 'closed-hat')
         [...active].filter((hit) => hit.sound === 'open-hat').forEach(stopHit);
       if (active.size >= CONFIG.audio.maxDrumHits) stopHit(active.values().next().value!);
       const start = Math.max(context.currentTime, when);
       const decay = Number(parameters.decay);
       const pitch = 2 ** (Number(parameters.tone) / 12);
       const strength = Math.max(0.01, Math.min(1, velocity));
-      const hit: ActiveHit = { sound, sources: [], nodes: [] };
+      const hit: ActiveHit = { sound: builtIn ?? sound, sources: [], nodes: [] };
       active.add(hit);
 
       const envelope = (duration: number, level: number, bursts = 1) => {
         const gain = context.createGain();
+        gain.gain.value = 0;
         const end = start + duration * decay;
         gain.gain.setValueAtTime(0.0001, start);
         for (let burst = 0; burst < bursts; burst++) {
@@ -136,7 +165,29 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
         return { gain, end: Math.max(end, start + bursts * 0.012 + 0.01) };
       };
 
-      for (const tone of recipe.tones ?? []) {
+      if (sample || source === 'input') {
+        const player = context.createBufferSource();
+        const duration = sample ? sample.duration / pitch : Number(kit?.parameters.length ?? 0.3);
+        const { gain, end } = envelope(duration, 1);
+        if (sample) {
+          player.buffer = sample;
+          player.playbackRate.value = pitch;
+        } else {
+          const input = inputs[sound];
+          input.connect(gain);
+          hit.inputConnection = { input, gain };
+          // A silent looping source gives external-input hits audio-clock cleanup, even
+          // in background tabs. It contributes no signal; the connected input is heard.
+          player.buffer = silentBuffer;
+          player.loop = true;
+        }
+        player.connect(gain);
+        hit.sources.push(player);
+        hit.nodes.push(player);
+        player.start(start);
+        player.stop(end + 0.01);
+      }
+      for (const tone of recipe?.tones ?? []) {
         const oscillator = context.createOscillator();
         const { gain, end } = envelope(tone.duration, tone.level);
         oscillator.type = tone.wave ?? 'sine';
@@ -149,7 +200,7 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
         oscillator.start(start);
         oscillator.stop(end + 0.01);
       }
-      if (recipe.noise) {
+      if (recipe?.noise) {
         const noise = context.createBufferSource();
         const filter = context.createBiquadFilter();
         const { gain, end } = envelope(
@@ -184,6 +235,8 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
     },
     dispose() {
       [...active].forEach(stopHit);
+      Object.values(inputs).forEach((input) => input.disconnect());
+      sampleBuffers.clear();
       output.disconnect();
     },
   };

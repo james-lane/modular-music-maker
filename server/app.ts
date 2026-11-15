@@ -1,3 +1,4 @@
+import { CONFIG } from '../src/config';
 import express from 'express';
 import path from 'node:path';
 import { ZodError } from 'zod';
@@ -10,7 +11,7 @@ export function createApp(dataDirectory = path.resolve(process.env.PATCHWORK_DAT
   const app = express();
   const repository = new ProjectRepository(dataDirectory);
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '256kb' }));
+  app.use(express.json({ limit: CONFIG.maxPatchBytes }));
   app.get('/api/health', (_request, response) =>
     response.json({ status: 'ok', application: 'patchwork' }),
   );

@@ -15,6 +15,7 @@ import { useEffect, useRef, useState, type DragEvent, type PointerEvent } from '
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
 import { MODULES, SEQUENCER_DEGREES } from '../domain/modules';
+import { parseProject } from '../domain/validation';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
@@ -428,6 +429,37 @@ export function Workspace({
                     `${module.id}:${id}`,
                   )
                 }
+                onSample={(lane, sample) => {
+                  let accepted = false;
+                  commit((current) => {
+                    if (!current.modules.some((item) => item.id === module.id)) return current;
+                    const next = {
+                      ...current,
+                      modules: current.modules.map((item) => {
+                        if (item.id !== module.id) return item;
+                        const samples = { ...item.samples };
+                        if (sample) samples[lane] = sample;
+                        else delete samples[lane];
+                        return {
+                          ...item,
+                          samples,
+                          parameters: { ...item.parameters, [lane]: sample ? 'sample' : lane },
+                        };
+                      }),
+                    };
+                    try {
+                      const validated = parseProject(next);
+                      accepted = true;
+                      return validated;
+                    } catch {
+                      notify(
+                        'This sample exceeds the patch storage limit. Remove an unused sample first.',
+                      );
+                      return current;
+                    }
+                  });
+                  return accepted;
+                }}
                 onStep={(index, next, group) =>
                   commit(
                     (current) => ({

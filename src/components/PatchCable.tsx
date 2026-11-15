@@ -32,7 +32,9 @@ export function PatchCable({
         ? 'var(--cable-control-color)'
         : signal === 'trigger'
           ? 'var(--cable-trigger-color)'
-          : sourceColor;
+          : signal === 'kit'
+            ? 'var(--cable-kit-color)'
+            : sourceColor;
   const braided = cableStyle === 'braided';
   const path = cablePath(from, to);
   const strands = useMemo(

@@ -36,6 +36,9 @@ React controls / workspace
 | `src/domain/preferences.ts`               | Validated browser-only cable appearance preference                  |
 | `src/audio/factories.ts`                  | Audio node creation, parameter updates, disposal                    |
 | `src/audio/engine.ts`                     | Context lifecycle, graph topology, note scheduling, analysis        |
+| `src/domain/samples.ts`                   | Portable PCM conversion and validation                              |
+| `src/audio/sample-import.ts`              | Silent browser decoding/downmixing of imported percussion samples   |
+| `src/components/DrumKitPanel.tsx`         | Voice selectors, local sample import, and routed audition           |
 | `src/audio/drums.ts`                      | Synthesized kit recipes, scheduled one-shot ownership and cleanup   |
 | `src/audio/live.ts`                       | Ephemeral keyboard/pad gesture contract                             |
 | `src/domain/instruments.ts`               | Drum identities/patterns, shortcuts and chromatic pitch helpers     |
@@ -79,7 +82,7 @@ The guide layout lives in `components/module-help.css`. Instructions and connect
 
 ## Patch format and validation
 
-`Project.version` is currently `1`. A patch contains its UUID, title, update time, tempo, root/scale, time signature, master volume, positioned modules, and directed cables. A module stores its registry type, UUID, position, parameters, optional eight scale degrees, and an optional `drumPattern` map. The new drum field is an additive v1 extension: old patches do not need migration. Drum machines must contain exactly the four named lanes of sixteen booleans; other module types cannot store a drum pattern. `-1` is a rest. Degrees `0…13` span two octaves of a seven-note scale; pentatonic degrees use its five-note table.
+`Project.version` is currently `1`. A patch contains its UUID, title, update time, tempo, root/scale, time signature, master volume, positioned modules, and directed cables. A module stores its registry type, UUID, position, parameters, optional eight scale degrees, an optional `drumPattern` map, and optional Drum kit `samples`. These fields are additive v1 extensions: old patches do not need migration. Drum machines must contain exactly the four named lanes of sixteen booleans; other module types cannot store a drum pattern. `-1` is a rest. Degrees `0…13` span two octaves of a seven-note scale; pentatonic degrees use its five-note table.
 
 No AudioContext, AudioNode, React state, object URL, or recording blob is serialized into a patch. `parseProject` checks UUIDs, bounds, module types, parameter ranges/enums, unique IDs, known sockets, signal compatibility, input occupancy, instance limits, and acyclic routing. Unknown top-level/module/cable fields and unknown parameters are rejected. Imported patches receive a fresh project ID to preserve existing saved work.
 
@@ -111,7 +114,17 @@ Keyboard holds have last-note priority per oscillator. Releasing the last note s
 
 `audio/drums.ts` builds sixteen kit sounds from short oscillators and filtered noise using editable recipes. Each triggered hit owns its nodes until all its sources end. Stop/disposal disconnects and stops outstanding sources, including scheduled hits. A closed hat chokes a ringing open hat; a configurable overlap limit bounds rapid triggering. Drum level/tone/decay affect sequenced and live hits. The four pattern lanes remain editable independently of the sixteen pad sound mappings; disabling Pattern stops scheduled hits but accepts live triggers.
 
-The _Pocket rhythm_ example connects Keyboard → Oscillator, Pad controller → Drum machine, Drum machine/Oscillator → Mixer → Output. It is available through the example collection alongside the other starting points.
+The _Pocket rhythm_ example connects Keyboard → Oscillator, Pad controller → Drum machine, Drum kit → Drum machine, Drum machine/Oscillator → Mixer → Output. It is available through the example collection alongside the other starting points.
+
+## Drum kit voice assignment
+
+Drum kit adds a distinct `kit` signal: KIT OUT → Drum machine KIT IN. The existing v1 drum pattern keys (`kick`, `snare`, `clap`, `closed-hat`) remain stable lane identities, displayed as voices 01–04. Kit parameters use those same IDs to select a built-in recipe, `sample`, or `input`; defaults remain in the registry. Both sequenced hits and live audition/first-four-pad triggers resolve an assignment exactly once. The remaining twelve pads retain their literal sound identity. Unlinked drum machines use the original sounds. Fresh Pocket rhythm examples include a connected kit without changing the original rhythm or sound.
+
+Kit runtimes own four independent passthrough buses. KIT links explicitly connect those buses to private per-lane drum-runtime inputs; they are not ordinary public audio sockets. Each receiving drum machine owns its envelopes, sample buffers, and one-shot sources, so fan-out remains independent. External audio is gated on each hit with Input decay multiplied by drum Decay; no audio is recorded, buffered, or pitch shifted. A silent looping source supplies audio-clock `onended` cleanup for each input envelope, including scheduled hits. Cleanup detaches only that hit’s connection, is idempotent across Stop/late callbacks, and uses the existing overlap bound. Topology replacement/removal disposes buses, buffers, sources, and connections. Parameter/assignment edits leave existing hits to finish and affect the next scheduling window.
+
+Drum kit modules alone may contain `samples`, a map of known lane IDs to `{ name, pcm }`. PCM is base64 little-endian signed 16-bit mono at `CONFIG.samples.sampleRate` (24 kHz). This additive optional v1 field needs no migration; old project shapes/defaults still validate. Browser OfflineAudioContexts silently decode supported files, reject oversized/overlong clips, then downmix/resample before encoding. Four seconds and 20 MB are the per-file limits; decoded sample data is bounded independently, including at import/storage/API boundaries. The total encoded sample budget is 1,024,000 characters per patch (about sixteen seconds), and JSON import/API requests share a 2 MiB limit. Samples stay inside the patch rather than relying on URLs, IndexedDB IDs, or external services. Browser library quota can still be exhausted by multiple sample-heavy patches; the existing visible save failure/export path applies.
+
+`configureKit` synchronously reconstructs AudioBuffers from validated PCM only when the data changes, avoiding asynchronous loading during playback. Sample playback starts at the scheduled hit time and follows drum Tone/Decay/Level. Empty sample/input modes are silent. `drumLiveTailMs` adds the possible sample/input duration to the normal idle effect tail so tuned samples are not cut short by live-audio suspension. Sample import checks module lifetime and commits data plus its selection atomically through validation/history/autosave; a removed module or switched project cannot receive a late import. Browsing the guide and importing samples never starts studio audio.
 
 ## Example patches
 

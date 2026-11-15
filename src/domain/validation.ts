@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { CONFIG, ROOT_NOTES } from '../config';
 import { MODULES, SEQUENCER_DEGREES } from './modules';
-import { DRUM_LANES, DRUM_STEP_COUNT } from './instruments';
+import { DRUM_LANES, DRUM_SOUNDS, DRUM_STEP_COUNT } from './instruments';
+import { isValidSamplePcm } from './samples';
 import { connectionError } from './project';
 import type { ModuleType, Project } from './types';
 
@@ -35,6 +36,20 @@ export const projectSchema = z
               .array(z.number().int().min(SEQUENCER_DEGREES.rest).max(SEQUENCER_DEGREES.max))
               .length(8)
               .optional(),
+            samples: z
+              .record(
+                z.string(),
+                z
+                  .object({
+                    name: z.string().trim().min(1).max(80),
+                    pcm: z
+                      .string()
+                      .max(CONFIG.samples.maxEncodedLength)
+                      .refine(isValidSamplePcm, 'Invalid sample PCM'),
+                  })
+                  .strict(),
+              )
+              .optional(),
             drumPattern: z
               .record(z.string(), z.array(z.boolean()).length(DRUM_STEP_COUNT))
               .optional(),
@@ -53,6 +68,14 @@ export const projectSchema = z
       issue('Module IDs must be unique.');
     if (new Set(project.cables.map((cable) => cable.id)).size !== project.cables.length)
       issue('Cable IDs must be unique.');
+    const sampleLength = project.modules.reduce(
+      (sum, module) =>
+        sum +
+        Object.values(module.samples ?? {}).reduce((total, sample) => total + sample.pcm.length, 0),
+      0,
+    );
+    if (sampleLength > CONFIG.samples.maxProjectEncodedLength)
+      issue('Samples exceed the patch storage limit.');
     for (const module of project.modules) {
       const definition = MODULES[module.type];
       if (
@@ -93,6 +116,19 @@ export const projectSchema = z
         !['lowpass', 'highpass', 'bandpass'].includes(String(module.parameters.mode))
       )
         issue('Unknown filter mode.');
+      if (module.type === 'drum-kit') {
+        if (Object.keys(module.samples ?? {}).some((lane) => !DRUM_LANES.some((id) => id === lane)))
+          issue('Unknown sample voice.');
+        for (const lane of DRUM_LANES) {
+          const source = module.parameters[lane];
+          if (
+            source !== 'sample' &&
+            source !== 'input' &&
+            !DRUM_SOUNDS.some((sound) => sound.id === source)
+          )
+            issue('Unknown drum voice source.');
+        }
+      } else if (module.samples) issue('Only Drum kit modules can store samples.');
       if (module.type === 'sequencer' && !module.steps) issue('A sequencer needs eight steps.');
       if (module.type === 'drum-machine') {
         if (typeof module.parameters.enabled !== 'boolean')

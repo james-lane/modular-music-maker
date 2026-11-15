@@ -55,6 +55,7 @@ export function createProject(empty = false): Project {
 export function createPerformanceProject(): Project {
   const drums = createModule('drum-machine', 48, 60);
   const pads = createModule('pad-controller', 560, 60);
+  const kit = createModule('drum-kit', 1300, 60);
   const keyboard = createModule('keyboard', 48, 550);
   const oscillator = createModule('oscillator', 560, 610);
   oscillator.parameters.waveform = 'triangle';
@@ -73,8 +74,9 @@ export function createPerformanceProject(): Project {
   return {
     ...createProject(true),
     name: 'Pocket rhythm',
-    modules: [drums, pads, keyboard, oscillator, mixer, output],
+    modules: [drums, pads, keyboard, oscillator, mixer, output, kit],
     cables: [
+      connect(kit, 'kit', drums, 'kit'),
       connect(pads, 'trigger', drums, 'trigger'),
       connect(keyboard, 'pitch', oscillator, 'pitch'),
       connect(drums, 'out', mixer, 'a'),
@@ -97,7 +99,7 @@ export function connectionError(project: Project, from: Endpoint, to: Endpoint):
   if (output.direction !== 'output' || input.direction !== 'input')
     return 'Connect an output socket to an input socket.';
   if (output.signal !== input.signal)
-    return 'Match socket types: audio, pitch, modulation, or trigger.';
+    return 'Match socket types: audio, pitch, modulation, trigger, or kit.';
   if (from.moduleId === to.moduleId) return 'Connect two different modules.';
   if (
     project.cables.some(

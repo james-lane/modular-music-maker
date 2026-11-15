@@ -10,9 +10,19 @@ Production browser checks with JavaScript disabled confirmed unique sharing tags
 
 ## Implemented foundation
 
-Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes thirteen functioning modules, including a 16-step drum machine, 25-key keyboard, 16-pad controller, and four-input audio Merger, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
+Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes fourteen functioning modules, including a 16-step drum machine, 25-key keyboard, 16-pad controller, and four-input audio Merger, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
 
 The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture.
+
+## Drum kit companion
+
+The new terracotta Drum kit cartridge assigns each of four drum voices a built-in percussion sound, an imported sample, or a live audio input from another module. Connect KIT OUT → Drum machine KIT IN. Numbered drum lanes show the assigned names and keep their existing steps; the first four pad triggers follow the assignments, while the other twelve retain their printed sounds. No kit connection restores the original internal sounds. Fresh Pocket rhythm examples now include the connected cartridge.
+
+Sample files are limited to four seconds / 20 MB, converted silently to mono PCM16 at 24 kHz, and embedded in saved/exported patches for offline use. A patch has roughly sixteen seconds of sample capacity. Empty sample slots and unpatched Audio inputs are silent. External inputs receive per-hit envelopes controlled by Input decay and drum Decay, with drum Level applied; Tone tunes built-ins/samples, without transposing incoming audio. Kit fan-out has independent envelopes per receiving machine. Cleanup handles Stop, removal, rewiring, and late source completion, and live-idle suspension allows long tuned samples to finish. The optional samples field preserves v1 compatibility; JSON import and the local API now share a 2 MiB request limit.
+
+All 38 automated tests, strict types, and the production build pass. Tests cover source assignment without recursive remapping, signed PCM round trips and malformed/oversized data, sample-aware live tail duration, source ownership/late completion, and sample-heavy patch saving through the real HTTP API. Browser audio rendering measured nonzero built-in/sample/input hits with silence before and between hits; a live engine check verified routed kit audition, external buses, and Stop. Studio QA verified WAV import, live assignment/decay changes, labelled lanes, valid/incompatible wiring, connected module movement, removal/undo, unplug/reconnect, export/import, and full reload persistence. A 28-second mixed-kit take played back and downloaded as stereo 48 kHz Opus, measuring approximately −27.8 dBFS RMS, with no browser errors.
+
+A separate production/offline browser run could not be opened because automatic browser approval hit an account usage limit. The new sample workflow has not had a full offline or physical iPad test; the existing offline cache design is unchanged and all sound assets remain local. This change is local and has not been deployed.
 
 ## Sequencer note gestures
 

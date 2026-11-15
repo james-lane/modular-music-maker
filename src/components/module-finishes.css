@@ -20,6 +20,7 @@
   --enclosure-drum-machine: #eee8da;
   --enclosure-keyboard: #3c3c3a;
   --enclosure-pad-controller: #413c52;
+  --enclosure-drum-kit: #ac614c;
   --enclosure-merger: #345b5b;
 }
 
@@ -771,4 +772,210 @@
 }
 .module-merger .port-button:last-child {
   color: #e1ba77;
+}
+
+/* A terracotta sound cartridge: ribbed side grips, recessed selectors and ivory keys. */
+.module-drum-kit {
+  --panel-face: var(--enclosure-drum-kit);
+  --panel-end: #814a3f;
+  --panel-edge: #583d35;
+  --panel-ink: #fff0d1;
+  --panel-muted: #f2ceb0;
+  --panel-rule: #613d33;
+  --legend-shadow: #381d1c50;
+  border-radius: 16px 16px 7px 7px;
+  background:
+    repeating-linear-gradient(0deg, #291e1940 0 2px, transparent 2px 6px) left / 7px 100% no-repeat,
+    repeating-linear-gradient(0deg, #291e1940 0 2px, transparent 2px 6px) right / 7px 100% no-repeat,
+    repeating-linear-gradient(90deg, #ffffff06 0 1px, transparent 1px 3px),
+    linear-gradient(115deg, var(--panel-face), var(--panel-end));
+}
+.kit-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font: 7px monospace;
+  letter-spacing: 0.7px;
+  color: var(--panel-muted);
+}
+.kit-badge strong {
+  font-weight: 500;
+}
+.kit-badge > span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.kit-badge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #573b2e;
+  box-shadow: inset 0 1px 2px #1e1917;
+}
+.kit-badge .wired i {
+  background: #f6bf6b;
+  box-shadow: 0 0 5px #ffcc75;
+}
+.kit-voices {
+  padding: 8px;
+  background: linear-gradient(#3f3630, #302b28);
+  border: 1px solid #58372c;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 2px 5px #211b18,
+    0 1px 0 #f3c29470;
+}
+.kit-voice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 49px;
+}
+.kit-voice + .kit-voice {
+  border-top: 1px solid #615044;
+  padding-top: 7px;
+  margin-top: 7px;
+}
+.kit-audition {
+  flex: 0 0 46px;
+  height: 43px;
+  display: grid;
+  grid-template-columns: 1fr 10px;
+  padding: 5px 6px;
+  background: linear-gradient(#f4e2bb, #cbbb99);
+  color: #68523c;
+  border: 1px solid #ead1a2;
+  border-bottom: 3px solid #89704e;
+  border-radius: 4px;
+  box-shadow: 0 2px 3px #15100fa0;
+}
+.kit-audition small {
+  grid-column: 1 / -1;
+  font: 6px monospace;
+}
+.kit-audition strong {
+  font: 17px monospace;
+}
+.kit-audition > span {
+  font-size: 7px;
+  align-self: center;
+}
+.kit-audition:active {
+  transform: translateY(1px);
+}
+.kit-audition:disabled {
+  opacity: 0.6;
+}
+.kit-choice {
+  min-width: 0;
+  flex: 1;
+}
+.kit-choice select {
+  width: 100%;
+  height: 25px;
+  padding: 2px 6px;
+  background: #e5ddbf;
+  color: #3d392f;
+  border: 1px solid #151c17;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 3px #51482e50;
+  font: 11px monospace;
+}
+.kit-choice > small {
+  display: block;
+  margin-top: 5px;
+  color: #cbbb9c;
+  font: 7px monospace;
+}
+.kit-sample-tools {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  height: 16px;
+  color: #ddc9a9;
+  font: 8px monospace;
+}
+.kit-sample-tools > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kit-load {
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  padding: 2px 4px;
+  border: 1px solid #a18b6c;
+  border-radius: 2px;
+  cursor: pointer;
+  background: #57493b;
+  color: #fff0d1;
+}
+.kit-load:focus-within {
+  outline: 2px solid #ffcd7f;
+  outline-offset: 1px;
+}
+.kit-load input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.kit-sample-tools > button {
+  margin-left: auto;
+  color: #f9d8b1;
+  padding: 0 3px;
+}
+.kit-message {
+  font: 8px/1.5 monospace;
+  color: var(--panel-ink);
+  margin: 8px 0 0;
+  min-height: 24px;
+  max-height: 36px;
+  overflow-y: auto;
+}
+.module-drum-kit .module-knobs {
+  margin-top: 3px;
+}
+.module-drum-kit .knob-assembly {
+  width: 44px;
+  height: 44px;
+}
+.module-drum-kit .knob-dial {
+  inset: 6px;
+}
+.module-drum-kit .knob-dial i::before {
+  height: 7px;
+}
+.module-drum-machine .drum-lane,
+.module-drum-machine .drum-step-labels {
+  grid-template-columns: 68px repeat(16, minmax(0, 1fr));
+}
+.module-drum-machine .drum-voice {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: 7px;
+}
+.module-drum-machine .drum-voice small {
+  color: #a9b29f;
+  font-size: 6px;
+}
+.module-drum-machine .drum-voice > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.signal-kit .socket {
+  background: conic-gradient(#ffedbe, #b58c52, #f2d7a4, #8f6939, #ffedbe);
+}
+.guide-signal.signal-kit {
+  background: #f4e3bf;
+  color: #775022;
 }

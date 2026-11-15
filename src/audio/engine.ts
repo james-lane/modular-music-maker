@@ -2,6 +2,8 @@ import { CONFIG } from '../config';
 import { stepFrequency } from '../domain/project';
 import {
   controllerTargets,
+  connectedDrumKit,
+  DRUM_LANES,
   drumHitsAtStep,
   midiFrequency,
   type DrumSound,
@@ -116,12 +118,26 @@ export class AudioEngine {
           else output.connect(input);
         }
       }
+      for (const module of project.modules) {
+        if (module.type !== 'drum-machine') continue;
+        const kit = connectedDrumKit(project, module.id);
+        if (!kit) continue;
+        for (const lane of DRUM_LANES) {
+          const output = this.runtimes.get(kit.id)?.outputs[lane];
+          const input = this.runtimes.get(module.id)?.inputs[`kit-${lane}`];
+          if (output && input) {
+            if (input instanceof AudioParam) output.connect(input);
+            else output.connect(input);
+          }
+        }
+      }
       this.graphSignature = signature;
     }
     this.master.gain.setTargetAtTime(project.masterVolume, this.context.currentTime, 0.025);
     for (const module of project.modules) {
       const runtime = this.runtimes.get(module.id)!;
       runtime.update(module.parameters);
+      runtime.configureKit?.(connectedDrumKit(project, module.id));
       if (
         runtime.voice &&
         !project.cables.some(
@@ -187,8 +203,12 @@ export class AudioEngine {
   }
 
   hitDrum(moduleId: string, sound: DrumSound, velocity: number) {
-    if (this.context)
-      this.runtimes.get(moduleId)?.trigger?.(sound, velocity, this.context.currentTime);
+    if (!this.context || !this.project) return;
+    const module = this.project.modules.find((item) => item.id === moduleId);
+    if (module?.type === 'drum-kit') {
+      for (const id of controllerTargets(this.project, moduleId, 'kit'))
+        this.hitDrum(id, sound, velocity);
+    } else this.runtimes.get(moduleId)?.trigger?.(sound, velocity, this.context.currentTime);
   }
 
   hitPad(controllerId: string, sound: DrumSound, velocity: number) {

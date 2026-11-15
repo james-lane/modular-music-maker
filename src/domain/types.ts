@@ -11,9 +11,10 @@ export type ModuleType =
   | 'merger'
   | 'output'
   | 'drum-machine'
+  | 'drum-kit'
   | 'keyboard'
   | 'pad-controller';
-export type SignalType = 'audio' | 'pitch' | 'control' | 'trigger';
+export type SignalType = 'audio' | 'pitch' | 'control' | 'trigger' | 'kit';
 export type Category = 'Sources' | 'Modulation' | 'Effects' | 'Utility';
 export type Parameters = Record<string, number | string | boolean>;
 
@@ -51,6 +52,12 @@ export interface ModuleDefinition {
   maxInstances?: number;
 }
 
+/** Compact mono PCM16 at CONFIG.samples.sampleRate; portable without external asset URLs. */
+export interface DrumSample {
+  name: string;
+  pcm: string;
+}
+
 export interface PatchModule {
   id: string;
   type: ModuleType;
@@ -61,6 +68,8 @@ export interface PatchModule {
   steps?: number[];
   /** Optional additive v1 field: only drum machines persist a per-voice step pattern. */
   drumPattern?: Record<string, boolean[]>;
+  /** Optional additive v1 data, owned only by Drum kit modules. */
+  samples?: Record<string, DrumSample>;
 }
 
 export interface Endpoint {

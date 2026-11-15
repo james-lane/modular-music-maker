@@ -41,6 +41,14 @@ export const CONFIG = {
     maxDrumHits: 96,
   },
   tempo: { min: 40, max: 240, default: 108 },
+  samples: {
+    sampleRate: 24000,
+    maxSeconds: 4,
+    maxFileBytes: 20 * 1024 * 1024,
+    maxEncodedLength: 256000,
+    maxProjectEncodedLength: 1024000,
+  },
+  maxPatchBytes: 2 * 1024 * 1024,
   maxModules: 40,
   maxCables: 100,
 } as const;
