@@ -2,15 +2,21 @@
 
 Last updated: **15 November 2026**.
 
+## Combined production release — 15 November 2026
+
+This release combines all completed agent work on `main`: automatic app/footer versioning (`e02faaa`), compact module-library browsing and touch placement (`33df30d`), assignable Drum kit voices with samples/external audio (`22e643f`), and sharing previews (`a5c5b04`), together with the previously published sequencer gestures and workspace/update improvements. The production target is **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** on the existing `patchwork-studio` Worker. No separate local branches or worktrees require merging.
+
+All 43 tests, strict types, production build, and formatting pass for the combined application. The deployed `version.json` and bottom-right badge identify the exact release commit automatically; the manifest is included in the complete offline cache. Existing installs can choose **Refresh now** when ready, or close every Patchwork window and reopen. The preceding Cloudflare version is `e49df5a2-9188-4def-a31b-ec1a0e2276aa` for a code/assets rollback; browser-saved patches and recordings remain independent of deployment versions. Physical iPad validation remains separate from the browser checks below.
+
 ## Automatic app versions
 
 The hard-coded `v0.1` footer has been replaced with a Git-derived version, visible at the bottom right on desktop, tablet, and phone. The package release series is combined with the commit count in the badge; its full accessible label/hover text also identifies the commit hash. `*` marks local edits. Every commit gets a distinct build identity automatically, including empty/documentation commits and branches with equal counts. No manual bump or Git hook is required. The development server refreshes the version after commits and branch changes. Production emits a matching `version.json`, bundled into the existing atomic offline release, so installed sessions identify the version actually running. Patch schema v1 is unchanged; publication remains manual.
 
-All 43 tests, strict types, the production build, and formatting pass. Versioning checks cover clean/dirty/staged/untracked/ignored files, deterministic rebuilds, successive commits, divergent branches, detached HEAD, linked worktrees, shallow-history rejection, explicit source archives, the built UI/manifest identity, and development refresh after a commit. Browser checks confirm the full accessible label and a visible badge without document overflow at 360×640 and 1194×834, with no browser warnings/errors. The production worker includes `version.json` in its complete release cache. This change is local and has not been deployed.
+All 43 tests, strict types, the production build, and formatting pass. Versioning checks cover clean/dirty/staged/untracked/ignored files, deterministic rebuilds, successive commits, divergent branches, detached HEAD, linked worktrees, shallow-history rejection, explicit source archives, the built UI/manifest identity, and development refresh after a commit. Browser checks confirm the full accessible label and a visible badge without document overflow at 360×640 and 1194×834, with no browser warnings/errors. The production worker includes `version.json` in its complete release cache. Included in the combined production release above.
 
 ## Sharing previews
 
-The initial HTML now includes the canonical production URL, complete Open Graph website metadata, and Twitter/X large-image cards. Both use a locally bundled 1200×630 JPEG composed from the actual studio UI: the connected cream sequencer, ochre oscillator, forest-green filter, blue delay, and cream output. Matching title/description copy, image alt text, dimensions, and MIME type make the preview available without running JavaScript. The versioned image is included automatically in the atomic offline release; refresh instructions live in [sharing previews](SOCIAL_PREVIEWS.md). These source changes still need the normal production deployment before public links can use them.
+The initial HTML now includes the canonical production URL, complete Open Graph website metadata, and Twitter/X large-image cards. Both use a locally bundled 1200×630 JPEG composed from the actual studio UI: the connected cream sequencer, ochre oscillator, forest-green filter, blue delay, and cream output. Matching title/description copy, image alt text, dimensions, and MIME type make the preview available without running JavaScript. The versioned image is included automatically in the atomic offline release; refresh instructions live in [sharing previews](SOCIAL_PREVIEWS.md). Included in the combined production release above.
 
 Production browser checks with JavaScript disabled confirmed unique sharing tags, matching page/Open Graph/Twitter titles and descriptions, absolute production URLs, image alt text, and a successful JPEG response with actual 1200×630 dimensions (122,089 bytes). An isolated offline reload retained the saved patch, served the cached image, and produced a nonzero live output level without page errors. Strict types, all 38 tests, and the production build passed for the checked working tree; the sharing files pass formatting.
 
@@ -28,7 +34,7 @@ Sample files are limited to four seconds / 20 MB, converted silently to mono PCM
 
 All 38 automated tests, strict types, and the production build pass. Tests cover source assignment without recursive remapping, signed PCM round trips and malformed/oversized data, sample-aware live tail duration, source ownership/late completion, and sample-heavy patch saving through the real HTTP API. Browser audio rendering measured nonzero built-in/sample/input hits with silence before and between hits; a live engine check verified routed kit audition, external buses, and Stop. Studio QA verified WAV import, live assignment/decay changes, labelled lanes, valid/incompatible wiring, connected module movement, removal/undo, unplug/reconnect, export/import, and full reload persistence. A 28-second mixed-kit take played back and downloaded as stereo 48 kHz Opus, measuring approximately −27.8 dBFS RMS, with no browser errors.
 
-A separate production/offline browser run could not be opened because automatic browser approval hit an account usage limit. The new sample workflow has not had a full offline or physical iPad test; the existing offline cache design is unchanged and all sound assets remain local. This change is local and has not been deployed.
+A separate production/offline browser run could not be opened because automatic browser approval hit an account usage limit. The new sample workflow has not had a full offline or physical iPad test; the existing offline cache design is unchanged and all sound assets remain local. Included in the combined production release above.
 
 ## Sequencer note gestures
 
@@ -46,7 +52,7 @@ Pointer capture provides placement across the dismissal backdrop, with a registr
 
 Touch-enabled Chromium checks verified explicit search focus and reopening without input focus, retained filters/search through guides, mouse/touch placement previews, normal touch scrolling, zoomed/panned placement without a viewport jump, one-step undo/redo, invalid releases, duplicate-Output rejection, Escape/pointer-cancel/blur cleanup, + additions, live analyser output while adding, and saved placements/editing after an offline reload. Layout checks at 1194×834, 834×1194, 1024×768, 768×1024, 390×844, 844×390, and 360×640 found no document/drawer overflow; short landscape retains a usable scrolling list. Tests used a separate browser context, preserving user work, with no page errors. Strict types, all 38 automated tests, production build, and formatting pass. Physical iPad keyboard/drag feel still needs on-device confirmation.
 
-This change is local and has not been deployed.
+Included in the combined production release above.
 
 ## Workspace-first iPad layout
 
