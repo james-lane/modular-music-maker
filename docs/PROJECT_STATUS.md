@@ -2,17 +2,23 @@
 
 Last updated: **15 November 2026**.
 
-## Independent Merger levels — local change
+## Independent Merger levels — deployed 15 November 2026
 
-Merger now has four **Input 1–4** level knobs and a separate **Sum level** knob, so four sources or effect returns can be balanced directly without extra Mixers. Each input ranges from silent to 100%, defaults to 100%, and ramps independently; Sum level retains its 50% default. The teal enclosure, amber cable indicators, original 320×336 footprint, and socket positions are preserved. All five values use normal saving, history, and JSON export/import. Older v1/v2 patches missing the entire input-level group explicitly migrate to unity gain without changing their sound or mutating saved data; partial and invalid groups are rejected. The guide documents each control and balancing an echo return. Deployment pending.
+Merger now has four **Input 1–4** level knobs and a separate **Sum level** knob, so four sources or effect returns can be balanced directly without extra Mixers. Each input ranges from silent to 100%, defaults to 100%, and ramps independently; Sum level retains its 50% default. The teal enclosure, amber cable indicators, original 320×336 footprint, and socket positions are preserved. All five values use normal saving, history, and JSON export/import. Older v1/v2 patches missing the entire input-level group explicitly migrate to unity gain without changing their sound or mutating saved data; partial and invalid groups are rejected. The guide documents each control and balancing an echo return.
 
 Validation: `npm run check` passes (strict types, all **68 tests**, production build). Regression tests cover independent input gains, sum muting, disposal, level round trips, non-mutating legacy migration, and invalid/partial parameter groups. Browser checks on a separate local production-preview origin verified legacy import, all four inputs sounding individually, silence with all inputs muted or Sum level at zero, live pointer/keyboard edits, double-click reset, and all five levels/cables surviving save/reload. Controls fit above the unchanged socket footer; a 390px phone canvas retained keyboard access without document overflow. No browser warnings/errors occurred.
 
-## Patch cable opacity — local change
+## Patch cable opacity — deployed 15 November 2026
 
 **More → Studio settings → Patch cable opacity** now adjusts connected cables from 0–100%, defaulting to 100%, with a percentage readout and native touch/mouse/keyboard slider. Both Classic and Braided styles fade as complete cables, including plugs. At zero, hidden cable hit areas no longer intercept controls; sockets still support rerouting. Pending connections remain fully visible. The validated browser preference survives patch switches and reloads independently of patch files, undo, and audio. Unavailable storage retains the current visit's choice and shows a notice.
 
-Validation: strict types, all **68 tests**, and the production build pass. Preference tests cover zero/intermediate/full opacity, invalid values, unavailable storage, and preservation of saved patch data. Isolated browser checks verified Classic/Braided fading, keyboard arrows/Home/End, nonzero live output at 0%, disabled invisible hit areas, visible pending rerouting/reconnection, reload and example-switch persistence, and a scrolling 390px settings dialog without horizontal overflow. No browser warnings/errors occurred. Deployment pending.
+Validation: strict types, all **68 tests**, and the production build pass. Preference tests cover zero/intermediate/full opacity, invalid values, unavailable storage, and preservation of saved patch data. Isolated browser checks verified Classic/Braided fading, keyboard arrows/Home/End, nonzero live output at 0%, disabled invisible hit areas, visible pending rerouting/reconnection, reload and example-switch persistence, and a scrolling 390px settings dialog without horizontal overflow. No browser warnings/errors occurred.
+
+## Combined Merger and cable-opacity release
+
+Published clean source commit `72e2800` as app version **`0.1.0+39.g72e2800`** at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** on 15 November 2026 (Cloudflare version `6b8df9bf-d293-4135-9354-dc410f1ada2e`). This includes both changes above and all prior committed work, including full sampled drum hits and the clean workspace. Final release checks passed strict types, all **68 tests**, formatting, production build, and deployment dry run. All twelve public release files match the local build byte for byte; worker/manifest update headers and the public API's 404 response pass.
+
+A fresh private browser loaded the current version and Copper currents with all five Merger controls, accepted independent input muting, and showed a silent output when both connected inputs were muted. The user independently checked the deployed release and confirmed it was working. The existing verification profile retained a much older offline copy, so fresh-profile verification was used without clearing saved work. The previous Cloudflare version is `51ea4edc-8133-4d25-a92a-fbf9346c15a2`. Existing installs can use **Refresh now** when idle, or close every Patchwork window and reopen after the update downloads.
 
 ## Full sampled hits through Drum kit — deployed 15 November 2026
 
