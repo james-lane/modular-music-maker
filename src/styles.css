@@ -1643,7 +1643,7 @@ svg {
   stroke-width: 1px;
 }
 .cable-plug-target {
-  --cable-color: var(--cable-target-color);
+  --cable-color: var(--cable-target-plug-color);
 }
 .pending-cable {
   fill: none;

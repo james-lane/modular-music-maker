@@ -4,9 +4,28 @@
  * geometry stay in styles.css; dimensions stay in domain/modules.ts.
  */
 
+/* Shared enclosure colours keep braided strands in step with the physical panel finishes.
+ * Socket/plug accents remain independent in the module registry.
+ */
+:root {
+  --enclosure-sequencer: #f2ead9;
+  --enclosure-oscillator: #e9bb65;
+  --enclosure-filter: #5b7461;
+  --enclosure-delay: #8ab8ca;
+  --enclosure-reverb: #946679;
+  --enclosure-lfo: #dda18c;
+  --enclosure-noise: #454b4e;
+  --enclosure-mixer: #ebede9;
+  --enclosure-output: #f3f0e6;
+  --enclosure-drum-machine: #eee8da;
+  --enclosure-keyboard: #3c3c3a;
+  --enclosure-pad-controller: #413c52;
+  --enclosure-merger: #345b5b;
+}
+
 /* Warm enamel and bakelite: a small, older note sequencer. */
 .module-sequencer {
-  --panel-face: #f2ead9;
+  --panel-face: var(--enclosure-sequencer);
   --panel-end: #dfd0b6;
   --panel-edge: #a89a81;
   --panel-ink: #514532;
@@ -47,7 +66,7 @@
 
 /* Ochre powder coat, dark fluted knobs and a cream waveform window. */
 .module-oscillator {
-  --panel-face: #e9bb65;
+  --panel-face: var(--enclosure-oscillator);
   --panel-end: #ce9c45;
   --panel-edge: #a77a36;
   --panel-ink: #49361e;
@@ -81,7 +100,7 @@
 
 /* A forest-green filter with ivory pointers and an inset frequency display. */
 .module-filter {
-  --panel-face: #5b7461;
+  --panel-face: var(--enclosure-filter);
   --panel-end: #3e584a;
   --panel-edge: #304f41;
   --panel-ink: #fff1d5;
@@ -109,7 +128,7 @@
 
 /* Blue cast-metal echo box, with chrome caps and a recessed blue display. */
 .module-delay {
-  --panel-face: #8ab8ca;
+  --panel-face: var(--enclosure-delay);
   --panel-end: #5896b1;
   --panel-edge: #3d7895;
   --panel-ink: #183d4e;
@@ -150,7 +169,7 @@
 
 /* A smaller plum effects pedal with cream knobs and a curved cast enclosure. */
 .module-reverb {
-  --panel-face: #946679;
+  --panel-face: var(--enclosure-reverb);
   --panel-end: #71495f;
   --panel-edge: #5b394d;
   --panel-ink: #fff0d9;
@@ -167,7 +186,7 @@
 
 /* Compact terracotta modulation unit. */
 .module-lfo {
-  --panel-face: #dda18c;
+  --panel-face: var(--enclosure-lfo);
   --panel-end: #c67964;
   --panel-edge: #a96551;
   --panel-ink: #512f28;
@@ -182,7 +201,7 @@
 
 /* Graphite noise generator: perforated steel grille and a machined dial. */
 .module-noise {
-  --panel-face: #454b4e;
+  --panel-face: var(--enclosure-noise);
   --panel-end: #2d3538;
   --panel-edge: #20292d;
   --panel-ink: #eee9dd;
@@ -224,7 +243,7 @@
 
 /* Brushed studio aluminium: a narrow two-channel strip with real faders. */
 .module-mixer {
-  --panel-face: #ebede9;
+  --panel-face: var(--enclosure-mixer);
   --panel-end: #c7ced0;
   --panel-edge: #a0acb2;
   --panel-ink: #39464e;
@@ -238,7 +257,7 @@
 
 /* Cream bench instrument, CRT screen and a red master dial. */
 .module-output {
-  --panel-face: #f3f0e6;
+  --panel-face: var(--enclosure-output);
   --panel-end: #d9d6c9;
   --panel-edge: #a8a696;
   --panel-ink: #4c493e;
@@ -269,7 +288,7 @@
 
 /* Cream drum computer, charcoal switch bed, orange latches and black rubber knobs. */
 .module-drum-machine {
-  --panel-face: #eee8da;
+  --panel-face: var(--enclosure-drum-machine);
   --panel-end: #d8cfbb;
   --panel-edge: #8e8d81;
   --panel-ink: #373b39;
@@ -348,7 +367,7 @@
 
 /* A dark electric keyboard held between two walnut cheeks. */
 .module-keyboard {
-  --panel-face: #3c3c3a;
+  --panel-face: var(--enclosure-keyboard);
   --panel-end: #292d2c;
   --panel-edge: #242a28;
   --panel-ink: #f3e6c9;
@@ -433,7 +452,7 @@
 
 /* Violet moulded controller housing and soft graphite rubber pads. */
 .module-pad-controller {
-  --panel-face: #413c52;
+  --panel-face: var(--enclosure-pad-controller);
   --panel-end: #2b2839;
   --panel-edge: #242131;
   --panel-ink: #f0e7ff;
@@ -648,7 +667,7 @@
 
 /* Petrol enamel summing box: a recessed routing plate and a single ivory level dial. */
 .module-merger {
-  --panel-face: #345b5b;
+  --panel-face: var(--enclosure-merger);
   --panel-end: #244444;
   --panel-edge: #173b3c;
   --panel-ink: #f1e8cf;

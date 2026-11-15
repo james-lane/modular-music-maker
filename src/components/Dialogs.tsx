@@ -104,8 +104,8 @@ export function SettingsDialog({
           </select>
         </label>
         <p id="cable-style-description">
-          Braided cables weave together the colours of both connected modules. This appearance
-          choice is remembered in this browser for all patches.
+          Braided cables weave together the enclosure colours of both connected modules. This
+          appearance choice is remembered in this browser for all patches.
         </p>
       </div>
       <button className="button primary full-width" style={{ marginTop: 20 }} onClick={onClose}>

@@ -22,9 +22,11 @@ Browser QA opened all twelve guides and verified related-guide navigation, Back,
 
 ## Hardware appearance
 
-**More → Studio settings → Patch cable style** now offers **Braided module colours** alongside the default **Classic colours**. Braided cables weave the two connected modules' registry accent colours into a static sleeve, with plugs matching their respective modules. The browser remembers the choice across patches and reloads independently of patch files, undo history, and audio. Unknown/unavailable storage falls back safely; a failed save keeps the choice for the current visit and shows a notice.
+**More → Studio settings → Patch cable style** now offers **Braided module colours** alongside the default **Classic colours**. Braided cables weave the two connected modules' enclosure colours into a static sleeve: cream/ochre for Sequencer → Oscillator, ochre/forest green for Oscillator → Filter, and so on. Shared CSS enclosure tokens supply both panel faces and strands; plug/socket accents remain independent. The browser remembers the choice across patches and reloads independently of patch files, undo history, and audio. Unknown/unavailable storage falls back safely; a failed save keeps the choice for the current visit and shows a notice.
 
 Cable appearance browser QA verified live output while switching styles, alignment after moving a connected module, double-click unplugging/reconnection, saved connections and braided styling after reload, and keyboard operation/Escape in the settings dialog. The settings fit a 390px phone viewport with no horizontal overflow. Checks used a separate local preview origin, preserving the user's active patch.
+
+The enclosure-colour correction was checked against the rendered panel face and strand colours for all four starter cables, confirming that strands match cream/ochre/forest-green/blue enclosures while plugs retain their independent accents. Live output, Classic/Braided switching, and reload persistence also passed, with no browser errors.
 
 The circuit board has no decorative instructional text; the former “Room for your next idea” note and its subtitle have been removed.
 

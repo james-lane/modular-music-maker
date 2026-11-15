@@ -46,8 +46,9 @@ export function PatchCable({
       style={
         {
           '--cable-color': braided ? sourceColor : classicColor,
-          '--cable-source-color': sourceColor,
-          '--cable-target-color': targetColor,
+          '--cable-source-color': `var(--enclosure-${fromModule.type})`,
+          '--cable-target-color': `var(--enclosure-${toModule.type})`,
+          '--cable-target-plug-color': targetColor,
         } as CSSProperties
       }
     >
