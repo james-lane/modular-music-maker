@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "concurrently -k -n web,server \"vite --host 127.0.0.1\" \"tsx watch server/index.ts\"",
     "build": "npm run typecheck && vite build",
+    "build:ci": "tsx scripts/ci-build.ts",
     "deploy": "npm run build && wrangler deploy",
     "preview": "vite preview --host 127.0.0.1 --port 4173 --strictPort",
     "start": "tsx server/index.ts",

@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Automatic Cloudflare deployment — prepared, connection pending
+
+Prepared Cloudflare Workers Builds for the existing `patchwork-studio` Worker and `james-lane/modular-music-maker` repository. The intended production trigger is every push to `main`, including documentation-only commits; other-branch builds/Previews stay disabled. `npm run build:ci` restores shallow Git history, requires a clean checkout, and runs formatting plus strict types, all tests and the production build before Cloudflare can deploy. `.node-version` selects Node 22. The deploy command is `npx wrangler deploy`; `npm run deploy` is retained for manual recovery only. App identity, static-only hosting, local Node API isolation and session-safe offline updates are unchanged.
+
+Activation is pending one-time permission to connect Cloudflare to this GitHub repository. Automatic approval review rejected selecting GitHub in the Cloudflare dashboard because it may create a repository access grant. Existing Wrangler and connected Cloudflare credentials also lack Workers CI API permissions. No GitHub connection, build credential, trigger, or automatic deployment has been enabled yet. The dashboard is open at the existing Worker's Builds settings; the source-side setup can be validated independently before that final connection.
+
 ## Snippet previews leave the main Play button available — deployed 15 November 2026
 
 Preview-only audio activity is now separate from the studio’s Play/Stop control. Pressing **Play snippet** while stopped keeps the main button’s Play label, icon and styling; clicking it or pressing Space starts the project while the preview continues. A preview during project playback leaves Stop available. Live instrument playing and microphone capture retain their existing Stop behavior. Preview audio still participates in idle suspension, audio-aware rendering and update-refresh guards; routing, recording exclusion and saved patches are unchanged.

@@ -44,7 +44,31 @@ Without explicit refresh, closing every client still applies the update naturall
 
 The production studio is **https://patchwork.jameslane.dev**, served by the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` points Workers Static Assets at `dist/`, with no application Worker script, bindings, database, paid services, or Node compatibility layer. It declares `patchwork.jameslane.dev` as a Custom Domain, allowing Cloudflare to manage its DNS record and HTTPS certificate. Separate `workers.dev` and preview URLs are disabled. Missing assets return 404; unknown API URLs are not rewritten to the app. `public/_headers` supplies update-cache headers plus the shared browser security baseline (same-origin scripts/connections, no framing, content-type protection, and same-origin microphone permission). Blob recording playback remains permitted; the Node production server uses the same baseline.
 
-Install dependencies with `npm ci` and authenticate with `npx wrangler login` if necessary. Run `npm run check` and `npm run format:check`, then `npm run deploy` to rebuild and publish. Validate an existing build without publishing using `npx wrangler deploy --dry-run`. GitHub holds the source and history; pushing a commit does not automatically deploy it. Wrangler credentials, `.dev.vars*`, and `.wrangler/` state are excluded from Git. The Node API is excluded from the hosted build, so the public site keeps patch/recording storage on the device.
+### Automatic deployment
+
+Connect the **existing** `patchwork-studio` Worker to the GitHub repository `james-lane/modular-music-maker` under **Settings → Builds → GitHub**. Authorize only this repository when GitHub offers repository selection. The connection is an account setting in Cloudflare, not a field in `wrangler.jsonc`. Activation needs the one-time GitHub access confirmation; see project status for whether it has been completed.
+
+Use these settings:
+
+| Setting                              | Value                              |
+| ------------------------------------ | ---------------------------------- |
+| Production branch                    | `main`                             |
+| Repository root                      | `/`                                |
+| Build command                        | `npm run build:ci`                 |
+| Deploy command                       | `npx wrangler deploy`              |
+| Builds for other branches / Previews | Disabled                           |
+| Included paths                       | All files, including documentation |
+| Node                                 | 22, from `.node-version`           |
+
+Cloudflare installs dependencies using the committed npm lockfile before the build command. Do not set `NODE_ENV=production` or omit development dependencies during installation: TypeScript, Vite, tests and Wrangler are build tools. Deployment authentication stays in Cloudflare's build-token storage; never put tokens in the repository or GitHub workflow files. No GitHub Actions deployment or local post-commit hook is needed.
+
+`scripts/ci-build.ts` restores full history with `git fetch --unshallow origin` only when required, then verifies the checkout is clean and runs `npm run format:check` and `npm run check`. This retains the shared commit-count/hash version calculation and runs the real HTTP tests before publication. Cloudflare only runs the deploy command after a successful build. GitHub pushes to `main` then publish to the existing custom domain automatically; local commits and other branches leave production unchanged. Documentation-only commits also produce a correctly versioned release. Failed builds leave the last successful deployment available.
+
+For initial verification, push a reviewed commit to `main`, watch its build in the Worker's **Deployments** tab, and confirm the hosted `/version.json` revision equals that GitHub commit with `dirty: false`. Check the installed update notice, public API 404 responses and offline playback. Do not run `npm run deploy` as well: that would create a second manual release. The existing session-safe offline update lifecycle remains in place.
+
+For manual recovery only, authenticate with `npx wrangler login` if needed, run the checks above, then use `npm run deploy`. `npx wrangler deploy --dry-run` validates packaging without publishing. Wrangler credentials, `.dev.vars*`, and `.wrangler/` state remain excluded from Git. The Node API is excluded from every hosted build.
+
+See [Workers Builds configuration](https://developers.cloudflare.com/workers/ci-cd/builds/configuration/) and the [build image](https://developers.cloudflare.com/workers/ci-cd/builds/build-image/) for Cloudflare's current settings and supported Node version files.
 
 Cloudflare documents free, unlimited static asset requests and no extra asset storage charge; Worker-script execution has separate pricing. No plan upgrade is needed: [billing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/), [asset configuration](https://developers.cloudflare.com/workers/static-assets/binding/), [custom domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/).
 

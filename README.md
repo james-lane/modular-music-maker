@@ -157,36 +157,31 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 
 The production studio runs at **https://patchwork.jameslane.dev** on the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` publishes only the built `dist/` assets and declares the custom domain; Cloudflare manages its DNS record and HTTPS certificate. The build has no remote fonts, samples, CDN scripts, account service, or cloud storage dependency. Cloudflare lists static asset requests as free and unlimited, with no additional asset-storage charge; this design does not invoke a Worker script or need a paid plan. See [Cloudflare's current limits and pricing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/). The optional local Node API stays on your computer.
 
-To publish an update from this checkout:
+Production releases use **Cloudflare Workers Builds** connected to `james-lane/modular-music-maker`, with `main` as the production branch. Once that one-time connection is enabled, each commit pushed to `main` is checked, built and deployed automatically. A local commit alone does not trigger Cloudflare; push reviewed work with `git push origin main`. Other branches do not publish production releases.
 
-```sh
-npm ci
-npx wrangler login
-npm run check
-npm run format:check
-npm run deploy
-```
+The build command is `npm run build:ci`; the deploy command is `npx wrangler deploy`, from the repository root. The CI build restores full Git history if the clone is shallow, requires a clean checkout, then runs formatting, strict types, all tests and the production build. Failed checks prevent publication. `.node-version` selects Node 22. See [setup and verification](docs/OFFLINE.md#automatic-deployment) for the one-time GitHub connection and build settings.
 
-Login is only needed when credentials are missing or expired. `npm run deploy` rebuilds the studio before uploading it; `npx wrangler deploy --dry-run` validates an existing build without publishing. Deployments are manual: pushing to GitHub alone does not publish an update. Credentials stay outside the repository. Existing open sessions retain their cached release until the user chooses **Refresh now** from an idle, sole window, or closes all Patchwork windows and reopens.
+For an explicit manual recovery deployment, use `npm ci`, `npx wrangler login` if needed, `npm run check`, `npm run format:check`, then `npm run deploy`. That command rebuilds before uploading; `npx wrangler deploy --dry-run` validates a build without publishing. Credentials stay outside the repository. Existing open sessions retain their cached release until the user chooses **Refresh now** from an idle, sole window, or closes all Patchwork windows and reopens.
 
 ## Commands
 
-| Command                | Purpose                                           |
-| ---------------------- | ------------------------------------------------- |
-| `npm run dev`          | Frontend and Node server with automatic reload    |
-| `npm run build`        | TypeScript check and production frontend build    |
-| `npm run preview`      | Serve the production/offline app at port 4173     |
-| `npm run deploy`       | Build and publish to patchwork.jameslane.dev      |
-| `npm start`            | Serve `dist/` and the local file API              |
-| `npm test`             | Domain validation and real HTTP/persistence tests |
-| `npm run typecheck`    | Strict TypeScript checking                        |
-| `npm run check`        | TypeScript, tests, and production build           |
-| `npm run format`       | Format tracked source and documentation           |
-| `npm run format:check` | Check formatting without editing                  |
+| Command                | Purpose                                             |
+| ---------------------- | --------------------------------------------------- |
+| `npm run dev`          | Frontend and Node server with automatic reload      |
+| `npm run build`        | TypeScript check and production frontend build      |
+| `npm run build:ci`     | Restore full Git history, validate and build for CI |
+| `npm run preview`      | Serve the production/offline app at port 4173       |
+| `npm run deploy`       | Build and publish to patchwork.jameslane.dev        |
+| `npm start`            | Serve `dist/` and the local file API                |
+| `npm test`             | Domain validation and real HTTP/persistence tests   |
+| `npm run typecheck`    | Strict TypeScript checking                          |
+| `npm run check`        | TypeScript, tests, and production build             |
+| `npm run format`       | Format tracked source and documentation             |
+| `npm run format:check` | Check formatting without editing                    |
 
 ## Configuration and architecture
 
-- The bottom-right badge shows the package version plus Git commit number, such as **v0.1.0+20**. Its accessible label/hover text includes the commit hash; **\*** marks uncommitted changes. Every commit (including documentation-only or empty commits) automatically gets a distinct full version on the next build, without version-bump commits or local Git hooks. A running development server also refreshes the badge after commits and checkouts. `package.json` owns the release series; `dist/version.json` records the exact build identity and is cached with the offline app. Use a full Git checkout; shallow builds fail with recovery guidance, and source archives are explicitly labelled `+source`. Publishing still uses the normal manual deployment command, and installed sessions show their own running release until updated.
+- The bottom-right badge shows the package version plus Git commit number, such as **v0.1.0+20**. Its accessible label/hover text includes the commit hash; **\*** marks uncommitted changes. Every commit (including documentation-only or empty commits) automatically gets a distinct full version on the next build, without version-bump commits or local Git hooks. A running development server also refreshes the badge after commits and checkouts. `package.json` owns the release series; `dist/version.json` records the exact build identity and is cached with the offline app. Use a full Git checkout; shallow builds fail with recovery guidance, and source archives are explicitly labelled `+source`. Workers Builds restores shallow checkout history before validating and publishing; installed sessions show their own running release until updated.
 - `index.html`: canonical production address, Open Graph, and Twitter/X large-image sharing cards. The locally bundled 1200×630 preview in `public/social/` shows the real studio interface. See [sharing previews](docs/SOCIAL_PREVIEWS.md) for refresh and verification steps.
 - `src/config.ts`: application limits, tempo range, workspace navigation, autosave, scheduler timing, scales, and root notes.
 - `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors. `src/domain/module-guides.ts` contains the guides and derives compatibility from the catalog sockets.
