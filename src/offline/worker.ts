@@ -10,7 +10,7 @@ const assetUrls = new Set(
 
 self.addEventListener('install', (event) => {
   // addAll is atomic: an incomplete download must never replace a working release.
-  // Keep the default waiting lifecycle; switching code during a take could lose it.
+  // Wait by default; only the idle studio's explicit update action may activate early.
   event.waitUntil(
     caches
       .open(CACHE_NAME)
@@ -23,7 +23,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // Activation only happens after the previous release has no open clients.
+      // Ordinary activation follows window closure; an explicit update reloads its sole client.
       const names = await caches.keys();
       await Promise.all(
         names
@@ -51,13 +51,34 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+async function completeRelease(): Promise<boolean> {
+  const cache = await caches.open(CACHE_NAME);
+  const entries = await Promise.all(PRECACHE_ASSETS.map((asset) => cache.match(asset)));
+  return entries.every(Boolean);
+}
+
 self.addEventListener('message', (event) => {
-  if (event.data?.type !== 'PATCHWORK_OFFLINE_STATUS' || !event.ports[0]) return;
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(CACHE_NAME);
-      const entries = await Promise.all(PRECACHE_ASSETS.map((asset) => cache.match(asset)));
-      event.ports[0].postMessage({ ready: entries.every(Boolean) });
-    })(),
-  );
+  const type = event.data?.type;
+  if (!event.ports[0]) return;
+  if (type === 'PATCHWORK_OFFLINE_STATUS') {
+    event.waitUntil(completeRelease().then((ready) => event.ports[0].postMessage({ ready })));
+  } else if (type === 'PATCHWORK_APPLY_UPDATE') {
+    event.waitUntil(
+      (async () => {
+        // Do not switch another window's worker underneath an unknown playing/recording session.
+        const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        const source = event.source;
+        if (!source || !('id' in source) || windows.length !== 1 || windows[0].id !== source.id) {
+          event.ports[0].postMessage({ ready: false, reason: 'other-windows' });
+          return;
+        }
+        if (!(await completeRelease())) {
+          event.ports[0].postMessage({ ready: false, reason: 'incomplete' });
+          return;
+        }
+        event.ports[0].postMessage({ ready: true });
+        await self.skipWaiting();
+      })(),
+    );
+  }
 });

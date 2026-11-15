@@ -16,6 +16,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const [drumStep, setDrumStep] = useState(-1);
   const [liveActive, setLiveActive] = useState(false);
   const [recording, setRecording] = useState(false);
+  // Remains true until the last chunk is safely stored, even after Record is stopped.
+  const [recordingPending, setRecordingPending] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [recordingVersion, setRecordingVersion] = useState(0);
   const recorder = useRef<MediaRecorder | null>(null);
@@ -175,6 +177,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
       stopRecording();
       return;
     }
+    if (recorder.current) return;
+    setRecordingPending(true);
     try {
       const format = preferredRecordingType();
       await engine.play(latest.current);
@@ -204,6 +208,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
           notifyRef.current('Browser storage is unavailable. Your take has been downloaded.');
         }
         if (recorder.current === next) recorder.current = null;
+        setRecordingPending(false);
       };
       next.onerror = () => {
         stopRecording();
@@ -215,6 +220,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
       setRecordingSeconds(0);
       setRecording(true);
     } catch (error) {
+      setRecordingPending(false);
       notifyRef.current(error instanceof Error ? error.message : 'Could not start recording.');
     }
   }, [engine, stopRecording]);
@@ -245,5 +251,6 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     toggleRecord,
     stopRecording,
     recordingVersion,
+    recordingPending,
   };
 }

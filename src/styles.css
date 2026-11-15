@@ -2327,3 +2327,60 @@ body,
     display: none;
   }
 }
+
+/* A downloaded release is offered without taking space away from the rack permanently. */
+.update-notice {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: calc(44px + env(safe-area-inset-bottom));
+  z-index: 40;
+  width: min(420px, calc(100% - 32px));
+  padding: 18px;
+  border: 1px solid #cdd5be;
+  border-radius: 10px;
+  background: var(--paper);
+  box-shadow: 0 5px 24px #30382c25;
+  color: var(--ink);
+  font-size: 13px;
+}
+.update-notice p,
+.offline-update p {
+  line-height: 1.6;
+  color: #68715e;
+  font-size: 12px;
+}
+.update-actions {
+  margin: 12px 0;
+}
+.update-actions p {
+  margin: 8px 0 0;
+}
+.update-later {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0;
+  font-size: 12px;
+  color: #68715e;
+}
+.offline-update {
+  margin-top: 24px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.offline-update h3 {
+  font-size: 15px;
+}
+@media (max-height: 450px) {
+  .update-notice {
+    bottom: calc(32px + env(safe-area-inset-bottom));
+    padding: 12px 16px;
+    max-height: calc(100dvh - 100px);
+    overflow-y: auto;
+  }
+  .update-notice p,
+  .update-actions {
+    margin: 6px 0;
+  }
+}

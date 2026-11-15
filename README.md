@@ -57,7 +57,9 @@ npm run preview
 
 Open **http://127.0.0.1:4173**, wait for readiness, then disconnect and reload. On an iPad, `127.0.0.1` refers to the iPad itself; use a hosted HTTPS address for installation. A plain HTTP LAN address is insufficient for offline installation.
 
-Connected visits check for updates. A complete new release waits until every Patchwork window is closed; it never reloads a session during playback or recording. Reopen the app to use the update. Keep the studio in the foreground while performing: mobile operating systems can suspend background audio. Device storage can be cleared or evicted, so keep patch exports and recording downloads as backups. **Use offline / install → Protect device storage** requests additional protection where supported.
+Connected visits, returning to the app, and periodic checks while visible look for updates. When a complete release is downloaded, **Patchwork has an update** offers **Refresh now** or **Later**. Refresh works inside a home-screen app, saves your latest patch, and waits until playback is stopped and any recording has finished saving. Close other Patchwork windows before refreshing. **Later** keeps the current session; **More → Use offline / install** retains **Refresh now** and **Check for updates**. You can also close every Patchwork window and reopen to apply an update. The app never reloads a performance automatically.
+
+Existing installs from before the refresh prompt need one full close-and-reopen cycle while connected to receive this feature. On iPad, close Patchwork from the app switcher and close any Safari tabs of the studio, then launch the home-screen icon again. Keep the studio in the foreground while performing: mobile operating systems can suspend background audio. Device storage can be cleared or evicted, so keep patch exports and recording downloads as backups. **Use offline / install → Protect device storage** requests additional protection where supported.
 
 See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, device testing, and Cloudflare hosting.
 
@@ -118,7 +120,7 @@ npm run format:check
 npm run deploy
 ```
 
-Login is only needed when credentials are missing or expired. `npm run deploy` rebuilds the studio before uploading it; `npx wrangler deploy --dry-run` validates an existing build without publishing. Deployments are manual: pushing to GitHub alone does not publish an update. Credentials stay outside the repository. Existing open sessions retain their cached release until all Patchwork windows close; reopen to use an update.
+Login is only needed when credentials are missing or expired. `npm run deploy` rebuilds the studio before uploading it; `npx wrangler deploy --dry-run` validates an existing build without publishing. Deployments are manual: pushing to GitHub alone does not publish an update. Credentials stay outside the repository. Existing open sessions retain their cached release until the user chooses **Refresh now** from an idle, sole window, or closes all Patchwork windows and reopens.
 
 ## Commands
 

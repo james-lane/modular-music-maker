@@ -81,6 +81,11 @@ export function useStudio() {
     return () => clearTimeout(timer);
   }, [project]);
 
+  const flush = useCallback(() => {
+    saveLocally(current.current);
+    setSaveStatus('saved');
+  }, []);
+
   // Persist the most recent edit on a tab close, even within the debounce window.
   useEffect(() => {
     const flush = () => {
@@ -110,6 +115,7 @@ export function useStudio() {
     redo,
     openProject,
     saveStatus,
+    flush,
     canUndo: past.current.length > 0,
     canRedo: future.current.length > 0,
   };

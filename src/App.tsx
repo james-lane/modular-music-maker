@@ -12,6 +12,7 @@ import { ModuleLibrary } from './components/ModuleLibrary';
 import { ModuleHelpDialog } from './components/ModuleHelpDialog';
 import { ExamplePatchesDialog } from './components/ExamplePatchesDialog';
 import { OfflineDialog, OfflineIndicator } from './components/OfflineDialog';
+import { UpdateNotice } from './components/UpdateNotice';
 import { Workspace } from './components/Workspace';
 import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
@@ -39,6 +40,16 @@ export default function App() {
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
   const audio = useAudio(project, notify);
+  const updateBlockedReason =
+    audio.recordingPending || audio.recording
+      ? 'Finish recording and wait for your take to save before refreshing.'
+      : audio.active || audio.starting
+        ? 'Stop playback before refreshing.'
+        : '';
+  const applyUpdate = () => {
+    if (updateBlockedReason || audio.engine.isActive) return;
+    void offline.applyUpdate(studio.flush);
+  };
   const [dialog, setDialog] = useState<StudioDialog>(studio.isFirstVisit ? 'examples' : null);
   const [guideType, setGuideType] = useState<ModuleType | null>(null);
   const [focused, setFocused] = useState(false);
@@ -73,6 +84,7 @@ export default function App() {
 
   useEffect(() => {
     const shortcuts = (event: KeyboardEvent) => {
+      if (offline.applying) return;
       const editing =
         event.target instanceof HTMLElement &&
         Boolean(
@@ -101,7 +113,7 @@ export default function App() {
     };
     window.addEventListener('keydown', shortcuts);
     return () => window.removeEventListener('keydown', shortcuts);
-  }, [audio, studio, save, dialog]);
+  }, [audio, studio, save, dialog, offline.applying]);
 
   const closeLibrary = () => {
     setLibraryOpen(false);
@@ -185,7 +197,7 @@ export default function App() {
 
   return (
     <div className={`studio-app ${focused ? 'workspace-focused' : ''}`}>
-      <div className="studio-toolbar">
+      <div className="studio-toolbar" inert={offline.applying}>
         <StudioHeader />
         <TransportBar
           project={project}
@@ -205,7 +217,7 @@ export default function App() {
           recordingCount={recordingCount}
         />
       </div>
-      <div className="studio-body">
+      <div className="studio-body" inert={offline.applying}>
         {libraryOpen && (
           <button
             className="library-dismiss"
@@ -239,7 +251,7 @@ export default function App() {
           onFocusToggle={() => setFocused((value) => !value)}
         />
       </div>
-      <footer className="status-bar">
+      <footer className="status-bar" inert={offline.applying}>
         <div>
           <span className={`status-led ${audio.active ? 'playing' : ''}`} />
           <span>
@@ -264,6 +276,7 @@ export default function App() {
           <span className="version-badge">v0.1</span>
         </div>
       </footer>
+      <UpdateNotice offline={offline} blockedReason={updateBlockedReason} onApply={applyUpdate} />
       {toast && (
         <div className="toast" role="status">
           <Check size={17} />
@@ -274,7 +287,14 @@ export default function App() {
         </div>
       )}
       {dialog === 'help' && <HelpDialog onClose={() => setDialog(null)} />}
-      {dialog === 'offline' && <OfflineDialog offline={offline} onClose={() => setDialog(null)} />}
+      {dialog === 'offline' && (
+        <OfflineDialog
+          offline={offline}
+          blockedReason={updateBlockedReason}
+          onApply={applyUpdate}
+          onClose={() => setDialog(null)}
+        />
+      )}
       {dialog === 'examples' && (
         <ExamplePatchesDialog onOpen={openProject} onClose={() => setDialog(null)} />
       )}

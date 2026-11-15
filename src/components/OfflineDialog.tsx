@@ -2,6 +2,7 @@ import { CheckCircle2, Download, RefreshCw, ShieldCheck, WifiOff } from 'lucide-
 import { useState } from 'react';
 import type { useOffline } from '../hooks/useOffline';
 import { Modal } from './Dialogs';
+import { UpdateActions } from './UpdateNotice';
 
 export type OfflineState = ReturnType<typeof useOffline>;
 
@@ -12,8 +13,9 @@ export function OfflineIndicator({
   offline: OfflineState;
   onOpen: () => void;
 }) {
-  const label =
-    offline.status === 'ready'
+  const label = offline.updateReady
+    ? 'Update ready'
+    : offline.status === 'ready'
       ? offline.online
         ? 'Offline ready'
         : 'Working offline'
@@ -31,9 +33,13 @@ export function OfflineIndicator({
 export function OfflineDialog({
   offline,
   onClose,
+  onApply,
+  blockedReason,
 }: {
   offline: OfflineState;
   onClose: () => void;
+  onApply: () => void;
+  blockedReason: string;
 }) {
   const [storageMessage, setStorageMessage] = useState('');
   const [requesting, setRequesting] = useState(false);
@@ -84,6 +90,45 @@ export function OfflineDialog({
           <RefreshCw size={15} /> Try offline setup again
         </button>
       )}
+      <section className="offline-update">
+        <h3>{offline.updateReady ? 'An update is ready' : 'App updates'}</h3>
+        {offline.updateReady ? (
+          <>
+            <p>
+              Refresh here to use it, including from a home-screen app. Your saved patches and takes
+              stay on this device.
+            </p>
+            <UpdateActions offline={offline} blockedReason={blockedReason} onApply={onApply} />
+          </>
+        ) : (
+          <p>
+            Updates download when connected. You choose when to refresh; playback and recording are
+            never interrupted automatically.
+          </p>
+        )}
+        <button
+          className="button"
+          disabled={
+            !offline.online ||
+            offline.status === 'unavailable' ||
+            offline.checking === 'checking' ||
+            offline.applying
+          }
+          onClick={() => void offline.checkUpdates()}
+        >
+          <RefreshCw size={15} />{' '}
+          {offline.checking === 'checking' ? 'Checking for updates…' : 'Check for updates'}
+        </button>
+        <p role="status">
+          {!offline.online
+            ? 'Reconnect to check for updates.'
+            : offline.checking === 'error'
+              ? 'Could not download an update. Your current studio is still available; try again when connected.'
+              : offline.checking === 'current' && !offline.updateReady
+                ? 'You’re using the latest available version.'
+                : ''}
+        </p>
+      </section>
       <div className="offline-instructions">
         <section>
           <h3>On iPad or iPhone</h3>
@@ -118,9 +163,8 @@ export function OfflineDialog({
         </section>
       </div>
       <p className="dialog-footnote">
-        {offline.updateReady
-          ? 'An update is ready. Close every Patchwork window and reopen to use it. Your saved work stays on this device.'
-          : 'Updates download when connected and take effect after every Patchwork window is closed. Keep the app open while playing or recording; iPadOS can pause audio in the background.'}
+        You can also close every Patchwork window and reopen to apply a downloaded update. Keep the
+        app open while playing or recording; iPadOS can pause audio in the background.
       </p>
     </Modal>
   );

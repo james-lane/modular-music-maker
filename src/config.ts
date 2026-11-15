@@ -8,7 +8,13 @@ export const CONFIG = {
     defaultCableStyle: 'classic',
   },
   autosaveDelayMs: 650,
-  offline: { statusTimeoutMs: 4000 },
+  offline: {
+    statusTimeoutMs: 4000,
+    activationTimeoutMs: 15000,
+    updateDownloadTimeoutMs: 30000,
+    updateCheckIntervalMs: 15 * 60 * 1000,
+    minCheckIntervalMs: 60 * 1000,
+  },
   localApi: { hosts: ['localhost', '127.0.0.1', '[::1]'], timeoutMs: 1500 },
   historyLimit: 60,
   canvas: {
