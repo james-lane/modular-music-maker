@@ -1,3 +1,5 @@
+import { CONFIG } from '../config';
+import { encodeSamplePcm } from './samples';
 import { DRUM_LANES, DRUM_STEP_COUNT, type DrumSound } from './instruments';
 import { createModule, createPerformanceProject, createProject } from './project';
 import type { Cable, ModuleType, Parameters, PatchModule, Project } from './types';
@@ -9,7 +11,7 @@ export interface ExamplePatch {
   description: string;
   tryThis: string;
   color: string;
-  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy' | 'ensemble';
+  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy' | 'ensemble' | 'pop';
   /** Factories supply fresh project/module/cable IDs and independent editable data every time. */
   create: () => Project;
 }
@@ -290,6 +292,203 @@ function createClockworkProject(): Project {
   };
 }
 
+/** Original, deterministic clap PCM makes the sampler useful on Play, offline and
+ * without microphone permission. Generating data here never creates an audio device.
+ */
+function popClap() {
+  const frames = new Float32Array(Math.round(CONFIG.samples.sampleRate * 0.18));
+  let seed = 73;
+  let previous = 0;
+  for (let frame = 0; frame < frames.length; frame++) {
+    const time = frame / CONFIG.samples.sampleRate;
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const noise = seed / 2147483648 - 1;
+    const burst = [0, 0.012, 0.024].reduce(
+      (sum, onset) => sum + (time >= onset ? Math.exp(-(time - onset) / 0.024) : 0),
+      0,
+    );
+    const edge = Math.min(1, frame / 24, (frames.length - 1 - frame) / 120);
+    frames[frame] = (noise - previous) * burst * edge * 0.22;
+    previous = noise;
+  }
+  return { name: 'Synthesized pop clap', pcm: encodeSamplePcm(frames) };
+}
+
+/** Five instrument rows run rhythm, bass, chords, hook, then live performance.
+ * All seventeen module types have a job; Switch chooses hook, keys, dry hook or duet.
+ * Quarter-note sequences share a two-bar I–V–vi–IV progression in C major.
+ */
+function createNeonProject(): Project {
+  const tempo = 116;
+  const eighth = 60 / tempo / 2;
+  const pads = instrument('pad-controller', -1600, -1120, { velocity: 0.75 });
+  const drums = instrument('drum-machine', -1220, -1120, { level: 0.54, decay: 0.65 });
+  drums.drumPattern = drumPattern({ kick: [0, 4, 8, 12], snare: [4, 12] });
+  const sampler = instrument('mic-sampler', -680, -1120, { level: 0.6 });
+  sampler.samples = { clip: popClap() };
+  const kit = instrument('drum-kit', -300, -1120, {
+    kick: 'tambourine',
+    snare: 'shaker',
+    clap: 'input',
+    'closed-hat': 'input',
+    length: 0.045,
+  });
+  const percussion = instrument('drum-machine', 140, -1120, { level: 0.42, decay: 0.7 });
+  percussion.drumPattern = drumPattern({
+    kick: [2, 10],
+    snare: [0, 3, 6, 8, 11, 14],
+    clap: [4, 12],
+    'closed-hat': [2, 6, 10, 14, 15],
+  });
+  const noise = instrument('noise', 680, -1120, { level: 0.17 });
+  const rhythmMix = instrument('mixer', 980, -1120, { a: 0.85, b: 0.75 });
+
+  const bassSequence = instrument('sequencer', -1600, -500, { rate: '1/4', gate: 0.7 });
+  bassSequence.steps = [0, 0, 4, 4, 5, 5, 3, 3];
+  const bass = instrument('oscillator', -1280, -500, {
+    waveform: 'sawtooth',
+    octave: -1,
+    level: 0.3,
+  });
+  const bassFilter = instrument('filter', -960, -500, { cutoff: 550, resonance: 0.8 });
+  const bassLfo = instrument('lfo', -640, -500, { rate: 0.2, depth: 140 });
+
+  const rootSequence = instrument('sequencer', -1600, -80, { rate: '1/4', gate: 0.76 });
+  rootSequence.steps = [0, 0, 4, 4, 5, 5, 3, 3];
+  const root = instrument('oscillator', -1280, -80, { waveform: 'triangle', level: 0.18 });
+  const thirdSequence = instrument('sequencer', -960, -80, { rate: '1/4', gate: 0.76 });
+  thirdSequence.steps = [2, 2, 6, 6, 7, 7, 5, 5];
+  const third = instrument('oscillator', -640, -80, { waveform: 'triangle', level: 0.16 });
+  const fifthSequence = instrument('sequencer', -320, -80, { rate: '1/4', gate: 0.76 });
+  fifthSequence.steps = [4, 4, 8, 8, 9, 9, 7, 7];
+  const fifth = instrument('oscillator', 0, -80, { waveform: 'triangle', level: 0.15 });
+  const chordMix = instrument('merger', 320, -80, { level: 0.7 });
+  const chordFilter = instrument('filter', 720, -80, { cutoff: 2800, resonance: 0.6 });
+  const chordRoom = instrument('reverb', 1040, -80, { mix: 0.18 });
+
+  const hookSequence = instrument('sequencer', -1600, 340, { rate: '1/4', gate: 0.48 });
+  hookSequence.steps = [9, 8, 8, 6, 7, 9, 7, 5];
+  const hookSaw = instrument('oscillator', -1280, 340, {
+    waveform: 'sawtooth',
+    detune: -6,
+    level: 0.14,
+  });
+  const hookTriangle = instrument('oscillator', -960, 340, {
+    waveform: 'triangle',
+    detune: 6,
+    level: 0.18,
+  });
+  const hookMix = instrument('mixer', -640, 340, { a: 0.55, b: 0.7 });
+  const hookFilter = instrument('filter', -360, 340, { cutoff: 3200, resonance: 0.8 });
+  const hookEcho = instrument('delay', -40, 340, { time: eighth * 1.5, feedback: 0.24, mix: 0.22 });
+  const hookLfo = instrument('lfo', 300, 340, { rate: 0.3, depth: 450 });
+
+  const keyboard = instrument('keyboard', -1600, 780, { velocity: 0.7 });
+  const liveVoice = instrument('oscillator', -1080, 780, { waveform: 'square', level: 0.18 });
+  const liveFilter = instrument('filter', -760, 780, { cutoff: 1800, resonance: 0.7 });
+  const liveEcho = instrument('delay', -440, 780, { time: eighth, feedback: 0.22, mix: 0.2 });
+  const duet = instrument('merger', -100, 780, { level: 0.85 });
+  const selector = instrument('switch', 300, 780);
+  const effects = instrument('xy-effects', 700, 780, { x: 0.2, y: -0.2, mix: 0.25 });
+
+  const voices = instrument('merger', 1320, -500, { level: 0.85, in1: 0.95, in2: 0.8, in3: 0.85 });
+  const room = instrument('reverb', 1720, -500, { mix: 0.1 });
+  const master = instrument('merger', 1320, -1120, { level: 0.85 });
+  const output = instrument('output', 1720, -1120, { level: 0.85 });
+  return {
+    ...createProject(true),
+    name: 'Neon chorus',
+    tempo,
+    rootNote: 'C',
+    scale: 'major',
+    modules: [
+      pads,
+      drums,
+      sampler,
+      kit,
+      percussion,
+      noise,
+      rhythmMix,
+      bassSequence,
+      bass,
+      bassFilter,
+      bassLfo,
+      rootSequence,
+      root,
+      thirdSequence,
+      third,
+      fifthSequence,
+      fifth,
+      chordMix,
+      chordFilter,
+      chordRoom,
+      hookSequence,
+      hookSaw,
+      hookTriangle,
+      hookMix,
+      hookFilter,
+      hookEcho,
+      hookLfo,
+      keyboard,
+      liveVoice,
+      liveFilter,
+      liveEcho,
+      duet,
+      selector,
+      effects,
+      voices,
+      room,
+      master,
+      output,
+    ],
+    cables: [
+      wire(pads, 'trigger', drums, 'trigger'),
+      // Direct sampler → kit wiring retriggers the saved clap independently on each backbeat.
+      wire(sampler, 'out', kit, 'clap'),
+      wire(noise, 'out', kit, 'closed-hat'),
+      wire(kit, 'kit', percussion, 'kit'),
+      wire(drums, 'out', rhythmMix, 'a'),
+      wire(percussion, 'out', rhythmMix, 'b'),
+      wire(bassSequence, 'pitch', bass, 'pitch'),
+      wire(bass, 'out', bassFilter, 'in'),
+      wire(bassLfo, 'out', bassFilter, 'cutoff'),
+      wire(bassFilter, 'out', voices, 'in1'),
+      wire(rootSequence, 'pitch', root, 'pitch'),
+      wire(thirdSequence, 'pitch', third, 'pitch'),
+      wire(fifthSequence, 'pitch', fifth, 'pitch'),
+      wire(root, 'out', chordMix, 'in1'),
+      wire(third, 'out', chordMix, 'in2'),
+      wire(fifth, 'out', chordMix, 'in3'),
+      wire(chordMix, 'out', chordFilter, 'in'),
+      wire(chordFilter, 'out', chordRoom, 'in'),
+      wire(chordRoom, 'out', voices, 'in2'),
+      wire(hookSequence, 'pitch', hookSaw, 'pitch'),
+      wire(hookSequence, 'pitch', hookTriangle, 'pitch'),
+      wire(hookSaw, 'out', hookMix, 'a'),
+      wire(hookTriangle, 'out', hookMix, 'b'),
+      wire(hookMix, 'out', hookFilter, 'in'),
+      wire(hookLfo, 'out', hookFilter, 'cutoff'),
+      wire(hookFilter, 'out', hookEcho, 'in'),
+      wire(keyboard, 'pitch', liveVoice, 'pitch'),
+      wire(liveVoice, 'out', liveFilter, 'in'),
+      wire(liveFilter, 'out', liveEcho, 'in'),
+      // Alternate hook / live keys / dry hook / both. The backing always keeps playing.
+      wire(hookEcho, 'out', duet, 'in1'),
+      wire(liveEcho, 'out', duet, 'in2'),
+      wire(hookEcho, 'out', selector, 'in1'),
+      wire(liveEcho, 'out', selector, 'in2'),
+      wire(hookMix, 'out', selector, 'in3'),
+      wire(duet, 'out', selector, 'in4'),
+      wire(selector, 'out', effects, 'in'),
+      wire(effects, 'out', voices, 'in3'),
+      wire(voices, 'out', room, 'in'),
+      wire(room, 'out', master, 'in1'),
+      wire(rhythmMix, 'out', master, 'in2'),
+      wire(master, 'out', output, 'in'),
+    ],
+  };
+}
+
 /** Curated, contrasting starting points. Keep copy and sound design together when adding examples. */
 export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
   {
@@ -363,5 +562,17 @@ export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
     color: '#537863',
     artwork: 'ensemble',
     create: createClockworkProject,
+  },
+  {
+    id: 'neon-chorus',
+    name: 'Neon chorus',
+    style: 'Pop · 38 modules',
+    description:
+      'A bright C-major pop arrangement at 116 BPM. Every module type, with layered chords, a synth hook and sampled claps.',
+    tryThis:
+      'Switch: 1 hook, 2 live keys, 3 dry hook, 4 duet. Choose 2 or 4 and play the Keyboard over the backing.',
+    color: '#ad627a',
+    artwork: 'pop',
+    create: createNeonProject,
   },
 ];

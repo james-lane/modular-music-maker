@@ -11,6 +11,7 @@ export type ModuleType =
   | 'xy-effects'
   | 'mixer'
   | 'merger'
+  | 'switch'
   | 'output'
   | 'drum-machine'
   | 'drum-kit'

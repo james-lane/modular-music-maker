@@ -26,8 +26,8 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 
 ## What works
 
-- A searchable module library with sixteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, filter, delay, reverb, XY Effects, mixer, merger, and output.
-- Seven contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
+- A searchable module library with seventeen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
+- Eight contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, trigger, and kit are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
@@ -73,17 +73,22 @@ See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, devi
 
 Open **More → Example patches**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically.
 
-| Patch            | Sound and approach                                                                     |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| Sunday circuits  | Warm C-minor sequenced melody at 108 BPM, with filtering and delay                     |
-| Pocket rhythm    | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads             |
-| Warehouse pulse  | Driving drums and a clipped F-minor bass line at 128 BPM                               |
-| Coastal static   | Ambient noise, slowly swept by an LFO through a filter and reverb                      |
-| Tiny arcade      | Two independent sequencers playing square/triangle voices in G at 152 BPM              |
-| Copper currents  | 94 BPM D-pentatonic dub with a hybrid Drum kit, Merger and hands-on XY Effects         |
-| Clockwork garden | A 23-module E-minor ensemble at 118 BPM with layered voices and rhythm/effect submixes |
+| Patch            | Sound and approach                                                                                             |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| Sunday circuits  | Warm C-minor sequenced melody at 108 BPM, with filtering and delay                                             |
+| Pocket rhythm    | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads                                     |
+| Warehouse pulse  | Driving drums and a clipped F-minor bass line at 128 BPM                                                       |
+| Coastal static   | Ambient noise, slowly swept by an LFO through a filter and reverb                                              |
+| Tiny arcade      | Two independent sequencers playing square/triangle voices in G at 152 BPM                                      |
+| Copper currents  | 94 BPM D-pentatonic dub with a hybrid Drum kit, Merger and hands-on XY Effects                                 |
+| Clockwork garden | A 23-module E-minor ensemble at 118 BPM with layered voices and rhythm/effect submixes                         |
+| Neon chorus      | Pop in C major at 116 BPM: 38 modules, every module type, chord progression, hook, sampled claps and live keys |
 
-**Clockwork garden** is the larger worked patch: two drum machines share a rhythm Mixer, three sequencers drive bass, lead, and answering bells, and one lead sequence fans out to two detuned oscillators. A second Mixer blends that pair; separate filters, LFOs, and eighth/dotted-eighth Delays shape the voices. One Merger gathers the melodies through Reverb, and another combines that bus with the dry rhythm. The four rows run top to bottom: rhythm, bass, layered lead, bells. Use Fit to see the whole patch, then zoom into a row. Try muting either lead Mixer fader to hear what each oscillator adds.
+**Neon chorus** is the largest example: 38 modules across five rows (rhythm, bass, chords, hook, live performance), using all seventeen module types. Five quarter-note sequencers play a two-bar C–G–Am–F progression, bass and a layered hook. Two drum machines combine a kick/snare beat with percussion, noise hats and a Mic sampler preloaded with an original synthesized clap. Everything is included locally; no microphone recording or permission is needed. The burgundy **Switch** selects **1** echoed hook, **2** live Keyboard, **3** dry hook, or **4** hook/keyboard duet, while the backing keeps playing. Choose 2 or 4 to play the keys; use the Pad controller for fills. Fit to see the whole studio, then zoom into a row.
+
+**Switch** is also available under **Add modules → Utility**. Connect up to four audio sources to IN 1–4 and route AUDIO OUT onward. Press a numbered ivory key to select one source, with a brief smooth changeover. An unpatched selection is silent. Tab and Enter/Space work on the keys; selection supports Undo/Redo and saves with the patch.
+
+**Clockwork garden** is another large worked patch: two drum machines share a rhythm Mixer, three sequencers drive bass, lead, and answering bells, and one lead sequence fans out to two detuned oscillators. A second Mixer blends that pair; separate filters, LFOs, and eighth/dotted-eighth Delays shape the voices. One Merger gathers the melodies through Reverb, and another combines that bus with the dry rhythm. The four rows run top to bottom: rhythm, bass, layered lead, bells. Use Fit to see the whole patch, then zoom into a row. Try muting either lead Mixer fader to hear what each oscillator adds.
 
 Coastal static is free-running: its LFO Rate controls the wash rather than the composition tempo. The other patches use the transport clock. Choose the same example again for a fresh original; your edited copies remain available in **More → My patches**. Returning visits restore the active saved patch without reopening the chooser.
 

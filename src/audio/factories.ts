@@ -248,6 +248,35 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     };
   },
 
+  switch(context) {
+    const output = context.createGain();
+    const inputs = Object.fromEntries(
+      MODULES.switch.ports
+        .filter((port) => port.direction === 'input')
+        .map((port) => {
+          const input = context.createGain();
+          // Start closed: an inactive input must never leak on graph creation.
+          input.gain.value = 0;
+          input.connect(output);
+          return [port.id, input];
+        }),
+    );
+    return {
+      inputs,
+      outputs: { out: output },
+      update(parameters) {
+        // Retargeting these gains preserves the graph, source clocks and effect tails.
+        // The shared smoothing time also keeps rapid changes continuous.
+        for (const [id, input] of Object.entries(inputs))
+          smooth(input.gain, id === `in${parameters.selected}` ? 1 : 0, context);
+      },
+      dispose() {
+        Object.values(inputs).forEach((input) => input.disconnect());
+        output.disconnect();
+      },
+    };
+  },
+
   output(context, masterBus) {
     const gain = context.createGain();
     gain.connect(masterBus);

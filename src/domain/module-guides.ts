@@ -486,6 +486,32 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       ],
     },
   },
+  switch: {
+    overview:
+      'Routes one of four audio inputs to a single output. Use the numbered keys to compare sounds or swap parts during a performance without moving cables.',
+    steps: [
+      'Connect instrument or effect audio outputs to IN 1–4, then connect AUDIO OUT to an effect, a Mixer, a Merger, or Output.',
+      'Press a numbered key to select that input. The illuminated key shows the saved selection; the small labels identify connected sources.',
+      'Use Tab to focus a key and Enter or Space to select it. Selecting an unpatched input gives silence.',
+    ],
+    controls: {
+      selected:
+        'Keys 1–4 select exactly one input. Changes crossfade briefly to reduce clicks, keeping upstream instruments and effects running. Selection is saved with the patch and supports Undo/Redo.',
+    },
+    tip: 'Patch the same sound directly into IN 1 and through Delay into IN 2 to compare dry and echoed versions. Inputs are audio only; pitch, modulation, trigger and kit cables cannot connect.',
+    example: {
+      title: 'Dry or echoed melody',
+      description:
+        'Press Play, then choose key 1 for the dry melody or key 2 for its echo. Keys 3 and 4 are unpatched and silent. Both audio paths keep running while you switch.',
+      connections: [
+        wire('sequencer', 'pitch', 'oscillator', 'pitch'),
+        wire('oscillator', 'out', 'switch', 'in1'),
+        wire('oscillator', 'out', 'delay', 'in'),
+        wire('delay', 'out', 'switch', 'in2'),
+        wire('switch', 'out', 'output', 'in'),
+      ],
+    },
+  },
   output: {
     overview:
       'The final stop for your patch. Audio connected here reaches your speakers and the recorder; its screen shows the live waveform.',

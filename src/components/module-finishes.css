@@ -22,6 +22,7 @@
   --enclosure-pad-controller: #413c52;
   --enclosure-drum-kit: #ac614c;
   --enclosure-merger: #345b5b;
+  --enclosure-switch: #6d3945;
   --enclosure-xy-effects: #bd7656;
 }
 
@@ -964,6 +965,111 @@
 }
 .module-merger .port-button:last-child {
   color: #e1ba77;
+}
+
+/* Burgundy bakelite selector: four latching ivory keys in a recessed metal cradle. */
+.module-switch {
+  --panel-face: var(--enclosure-switch);
+  --panel-end: #492b36;
+  --panel-edge: #30232b;
+  --panel-ink: #ffeed6;
+  --panel-muted: #e1c5bf;
+  --panel-rule: #97616b;
+  --panel-highlight: #ffd0bf33;
+  --legend-shadow: #30182299;
+  border-radius: 22px 22px 9px 9px;
+  background:
+    repeating-linear-gradient(90deg, #fff0 0 4px, #ffffff04 4px 5px),
+    linear-gradient(125deg, var(--panel-face), var(--panel-end));
+}
+.switch-console {
+  padding: 11px 9px;
+  border: 1px solid #261e25;
+  border-radius: 8px;
+  background: linear-gradient(#362d34, #493840);
+  box-shadow:
+    inset 0 3px 6px #160f1580,
+    0 1px 0 #f5d3c34d;
+}
+.switch-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 13px;
+  color: #f1d6bd;
+  font: 8px monospace;
+  letter-spacing: 1px;
+}
+.switch-legend strong {
+  font-size: 15px;
+}
+.switch-keys {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 5px;
+}
+.switch-keys button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  height: 97px;
+  padding: 8px 2px;
+  color: #513b36;
+  border: 1px solid #b9a68a;
+  border-radius: 4px 4px 8px 8px;
+  background: linear-gradient(100deg, #fff5df, #d8c6a6);
+  box-shadow:
+    inset 0 1px 0 #fff9ed,
+    0 5px 0 #9a8269,
+    0 8px 5px #160f1577;
+}
+.switch-keys button[aria-pressed='true'] {
+  transform: translateY(4px);
+  background: linear-gradient(#d4c0a0, #f0dfbf);
+  box-shadow:
+    inset 0 2px 4px #7e665442,
+    0 1px 0 #947962,
+    0 3px 3px #160f1577;
+}
+.switch-keys button:focus-visible {
+  outline: 2px solid #ffcd70;
+  outline-offset: 3px;
+}
+.switch-keys i {
+  width: 14px;
+  height: 4px;
+  border-radius: 3px;
+  background: #82755f;
+  box-shadow: inset 0 1px 2px #332b24;
+}
+.switch-keys [aria-pressed='true'] i {
+  background: #e79b42;
+  box-shadow:
+    0 0 5px #ffc47077,
+    inset 0 1px 0 #ffe0a0;
+}
+.switch-keys strong {
+  font:
+    23px Georgia,
+    serif;
+}
+.switch-keys span {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font: 7px monospace;
+}
+.switch-console p {
+  margin: 17px 0 0;
+  color: #d3b9a9;
+  font: 6px monospace;
+  letter-spacing: 0.6px;
+  text-align: center;
 }
 
 /* A terracotta sound cartridge: ribbed side grips, recessed selectors and ivory keys. */

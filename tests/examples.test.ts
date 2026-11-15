@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { EXAMPLE_PATCHES } from '../src/domain/examples';
+import { kitSamplerSources } from '../src/domain/instruments';
+import { decodeSamplePcm } from '../src/domain/samples';
 import { MODULES } from '../src/domain/modules';
 import type { Project } from '../src/domain/types';
 import { parseProject } from '../src/domain/validation';
@@ -19,9 +21,9 @@ function routingSignature(project: Project) {
   });
 }
 
-test('seven distinct examples are valid, fully connected and laid out without covering another module', () => {
-  assert.equal(EXAMPLE_PATCHES.length, 7);
-  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 7);
+test('eight distinct examples are valid, fully connected and laid out without covering another module', () => {
+  assert.equal(EXAMPLE_PATCHES.length, 8);
+  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 8);
   const signatures = new Set<string>();
   for (const example of EXAMPLE_PATCHES) {
     const project = example.create();
@@ -52,7 +54,7 @@ test('seven distinct examples are valid, fully connected and laid out without co
       }
     }
   }
-  assert.equal(signatures.size, 7, 'Each example teaches a different routing arrangement');
+  assert.equal(signatures.size, 8, 'Each example teaches a different routing arrangement');
 });
 
 test('opening and editing an example cannot change its recipe or another saved copy', () => {
@@ -73,6 +75,12 @@ test('opening and editing an example cannot change its recipe or another saved c
     }
     for (const module of edited.modules) {
       if ('level' in module.parameters) module.parameters.level = 0;
+      if (module.samples) {
+        for (const sample of Object.values(module.samples)) {
+          sample.name = 'Edited clip';
+          sample.pcm = 'AAAA';
+        }
+      }
       if (module.steps) module.steps.fill(-1);
       if (module.drumPattern) Object.values(module.drumPattern).forEach((lane) => lane.fill(false));
     }
@@ -83,6 +91,10 @@ test('opening and editing an example cannot change its recipe or another saved c
     assert.deepEqual(
       next.modules.map((module) => module.parameters),
       snapshot.modules.map((module) => module.parameters),
+    );
+    assert.deepEqual(
+      next.modules.map((module) => module.samples),
+      snapshot.modules.map((module) => module.samples),
     );
     assert.deepEqual(
       next.modules.map((module) => module.steps),
@@ -135,4 +147,52 @@ test('the ensemble layers a shared-pitch voice, independent rhythms, and separat
     false,
     'the example sounds on Play without microphone permission or a user recording',
   );
+});
+
+test('the final pop example is the largest, covers the whole catalog, and has a ready-to-play sampled backbeat', () => {
+  const example = EXAMPLE_PATCHES.at(-1)!;
+  assert.equal(example.id, 'neon-chorus');
+  const project = example.create();
+  assert.equal(project.modules.length, 38);
+  assert(
+    EXAMPLE_PATCHES.slice(0, -1).every(
+      (other) => other.create().modules.length < project.modules.length,
+    ),
+  );
+  assert.deepEqual(
+    [...new Set(project.modules.map((module) => module.type))].sort(),
+    Object.keys(MODULES).sort(),
+  );
+  assert.equal(project.scale, 'major');
+  const kit = project.modules.find((module) => module.type === 'drum-kit')!;
+  const sampler = project.modules.find((module) => module.type === 'mic-sampler')!;
+  const clip = sampler.samples!.clip;
+  const pcm = decodeSamplePcm(clip.pcm);
+  assert(
+    pcm.some((value) => Math.abs(value) > 0.1),
+    'the supplied synthetic clap contains audio',
+  );
+  assert.equal(pcm[0], 0);
+  assert.equal(pcm.at(-1), 0, 'clip ends smoothly');
+  assert.equal(kit.parameters.clap, 'input');
+  assert.equal(kitSamplerSources(project, kit).clap?.samples?.clip.pcm, clip.pcm);
+  const percussion = project.modules.find((module) =>
+    project.cables.some(
+      (cable) => cable.from.moduleId === kit.id && cable.to.moduleId === module.id,
+    ),
+  )!;
+  assert(percussion.drumPattern!.clap.some(Boolean), 'the sampler is actually triggered on Play');
+  const selector = project.modules.find((module) => module.type === 'switch')!;
+  assert.equal(selector.parameters.selected, 1);
+  assert.equal(project.cables.filter((cable) => cable.to.moduleId === selector.id).length, 4);
+  const sequences = project.modules.filter((module) => module.type === 'sequencer');
+  assert.equal(sequences.length, 5);
+  assert(sequences.every((module) => module.parameters.rate === '1/4'));
+  // Chord roots, thirds and fifths move together through I–V–vi–IV; the bass follows roots.
+  const [bass, root, third, fifth] = sequences;
+  assert.deepEqual(bass.steps, root.steps);
+  for (let step = 0; step < 8; step++) {
+    assert.equal(third.steps![step] - root.steps![step], 2);
+    assert.equal(fifth.steps![step] - root.steps![step], 4);
+  }
 });

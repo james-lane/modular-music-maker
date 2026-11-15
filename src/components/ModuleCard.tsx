@@ -16,6 +16,7 @@ import { KeyboardPanel } from './KeyboardPanel';
 import { PadControllerPanel } from './PadControllerPanel';
 import { MixerPanel } from './MixerPanel';
 import { MergerPanel } from './MergerPanel';
+import { SwitchPanel } from './SwitchPanel';
 import type { StepNoteChange } from './SequencerStep';
 import { SequencerPanel } from './SequencerPanel';
 import { XYEffectsPanel } from './XYEffectsPanel';
@@ -224,6 +225,9 @@ export function ModuleCard({
           </div>
         )}
         {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
+        {module.type === 'switch' && (
+          <SwitchPanel module={module} project={project} onParameter={onParameter} />
+        )}
         {module.type === 'merger' && (
           <MergerPanel module={module} project={project} onParameter={onParameter} />
         )}
@@ -233,7 +237,7 @@ export function ModuleCard({
             <span>{definition.subtitle.toUpperCase()}</span>
           </div>
         )}
-        {!['sequencer', 'mixer', 'xy-effects'].includes(module.type) && (
+        {!['sequencer', 'mixer', 'xy-effects', 'switch'].includes(module.type) && (
           <div className={`module-knobs ${definition.controls.length === 1 ? 'single-knob' : ''}`}>
             {definition.controls
               .filter(
