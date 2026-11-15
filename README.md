@@ -144,6 +144,7 @@ Login is only needed when credentials are missing or expired. `npm run deploy` r
 
 ## Configuration and architecture
 
+- The bottom-right badge shows the package version plus Git commit number, such as **v0.1.0+20**. Its accessible label/hover text includes the commit hash; **\*** marks uncommitted changes. Every commit (including documentation-only or empty commits) automatically gets a distinct full version on the next build, without version-bump commits or local Git hooks. A running development server also refreshes the badge after commits and checkouts. `package.json` owns the release series; `dist/version.json` records the exact build identity and is cached with the offline app. Use a full Git checkout; shallow builds fail with recovery guidance, and source archives are explicitly labelled `+source`. Publishing still uses the normal manual deployment command, and installed sessions show their own running release until updated.
 - `index.html`: canonical production address, Open Graph, and Twitter/X large-image sharing cards. The locally bundled 1200×630 preview in `public/social/` shows the real studio interface. See [sharing previews](docs/SOCIAL_PREVIEWS.md) for refresh and verification steps.
 - `src/config.ts`: application limits, tempo range, canvas size, autosave, scheduler timing, scales, and root notes.
 - `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors. `src/domain/module-guides.ts` contains the guides and derives compatibility from the catalog sockets.

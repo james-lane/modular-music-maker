@@ -1652,6 +1652,7 @@ svg {
   letter-spacing: 1px;
 }
 .version-badge {
+  white-space: nowrap;
   font-family: monospace;
   font-size: 7px;
   background: #e9ede0;
@@ -2325,8 +2326,7 @@ body,
     padding: 0 8px;
   }
   .status-cables,
-  .status-separator,
-  .version-badge {
+  .status-separator {
     display: none;
   }
 }

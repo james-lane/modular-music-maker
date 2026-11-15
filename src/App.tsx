@@ -1,6 +1,7 @@
 import { Cable, Check, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadRecordings } from './audio/recordings';
+import { AppVersion } from './components/AppVersion';
 import {
   ExportDialog,
   HelpDialog,
@@ -291,7 +292,7 @@ export default function App() {
           <span className="audio-spec">
             {audio.playing ? `${(audio.engine.sampleRate / 1000).toFixed(1)} kHz` : 'WEB AUDIO'}
           </span>
-          <span className="version-badge">v0.1</span>
+          <AppVersion />
         </div>
       </footer>
       <UpdateNotice offline={offline} blockedReason={updateBlockedReason} onApply={applyUpdate} />

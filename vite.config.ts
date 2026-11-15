@@ -1,9 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { offlineBuild } from './scripts/offline-build';
+import { appVersion } from './scripts/app-version';
 
 export default defineConfig({
-  plugins: [react(), offlineBuild()],
+  plugins: [react(), appVersion(), offlineBuild()],
   server: {
     host: '127.0.0.1',
     port: 5173,

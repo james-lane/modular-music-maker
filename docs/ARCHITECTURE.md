@@ -68,6 +68,12 @@ React controls / workspace
 | `server/app.ts`                           | Local Express API and production static serving                     |
 | `server/repository.ts`                    | Validated atomic filesystem persistence                             |
 
+## App versioning
+
+`scripts/app-version.ts` reads the release series from `package.json` and derives a SemVer build identity from Git: `0.1.0+20.gabcdef0`, with `.dirty` for tracked/staged edits or untracked files. The commit count advances on every commit; the hash distinguishes branches with equal counts. Detached HEAD and linked worktrees are supported. Ignored dependencies/build output do not mark a checkout dirty. Shallow histories are rejected because their counts are incomplete; source archives without Git receive an explicit `+source` identity. No timestamp, network request, generated source file, or Git hook is required.
+
+The Vite plugin supplies one snapshot to the typed `virtual:app-version` module and emitted `version.json`. `AppVersion` displays a compact `v0.1.0+20` badge in the bottom-right footer, including on phones, with `*` for local edits and the full identity in its title/accessibility label. Development watches source changes and Git's HEAD/index/branch refs (including atomic replacement) to refresh the module after commits or checkouts. Production metadata is fixed at build time, so cached/offline sessions identify the code actually running rather than the latest code on a server. The existing offline build includes the manifest and versioned bundle in the content digest, creating a distinct atomic release even for an otherwise empty commit. This identity is independent of `Project.version`, which remains the v1 patch schema.
+
 ## Link sharing
 
 `index.html` declares the canonical production URL, Open Graph website metadata, and Twitter/X `summary_large_image` metadata directly in the HTML head. Crawlers do not need React, JavaScript, the Node API, or a saved patch. Both card formats reference the same absolute HTTPS URL for a locally bundled 1200×630 JPEG showing the real studio, with matching image descriptions and Open Graph dimensions/type. The production build copies `public/social/` unchanged and includes it in the atomic offline release. Replace the versioned filename and metadata together when refreshing the artwork; see [sharing previews](SOCIAL_PREVIEWS.md).

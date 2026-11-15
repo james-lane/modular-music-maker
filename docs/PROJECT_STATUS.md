@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Automatic app versions
+
+The hard-coded `v0.1` footer has been replaced with a Git-derived version, visible at the bottom right on desktop, tablet, and phone. The package release series is combined with the commit count in the badge; its full accessible label/hover text also identifies the commit hash. `*` marks local edits. Every commit gets a distinct build identity automatically, including empty/documentation commits and branches with equal counts. No manual bump or Git hook is required. The development server refreshes the version after commits and branch changes. Production emits a matching `version.json`, bundled into the existing atomic offline release, so installed sessions identify the version actually running. Patch schema v1 is unchanged; publication remains manual.
+
+All 43 tests, strict types, the production build, and formatting pass. Versioning checks cover clean/dirty/staged/untracked/ignored files, deterministic rebuilds, successive commits, divergent branches, detached HEAD, linked worktrees, shallow-history rejection, explicit source archives, the built UI/manifest identity, and development refresh after a commit. Browser checks confirm the full accessible label and a visible badge without document overflow at 360×640 and 1194×834, with no browser warnings/errors. The production worker includes `version.json` in its complete release cache. This change is local and has not been deployed.
+
 ## Sharing previews
 
 The initial HTML now includes the canonical production URL, complete Open Graph website metadata, and Twitter/X large-image cards. Both use a locally bundled 1200×630 JPEG composed from the actual studio UI: the connected cream sequencer, ochre oscillator, forest-green filter, blue delay, and cream output. Matching title/description copy, image alt text, dimensions, and MIME type make the preview available without running JavaScript. The versioned image is included automatically in the atomic offline release; refresh instructions live in [sharing previews](SOCIAL_PREVIEWS.md). These source changes still need the normal production deployment before public links can use them.
