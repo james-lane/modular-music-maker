@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import { AudioEngine } from '../src/audio/engine';
 import { createModule, createProject, stepFrequency } from '../src/domain/project';
 import { DRUM_LANES, midiFrequency } from '../src/domain/instruments';
+import { encodeSamplePcm } from '../src/domain/samples';
 import { AUDIO_FACTORIES } from '../src/audio/factories';
 
 class Parameter {
@@ -26,6 +27,11 @@ class Node {
   gain = new Parameter();
   frequency = new Parameter();
   detune = new Parameter();
+  playbackRate = new Parameter();
+  buffer?: { duration: number };
+  onended: (() => void) | null = null;
+  starts: number[][] = [];
+  stops: number[] = [];
   threshold = new Parameter();
   knee = new Parameter();
   ratio = new Parameter();
@@ -38,8 +44,12 @@ class Node {
   disconnect() {
     this.connections.clear();
   }
-  start() {}
-  stop() {}
+  start(...args: number[]) {
+    this.starts.push(args);
+  }
+  stop(time = 0) {
+    this.stops.push(time);
+  }
 }
 class Context {
   currentTime = 0;
@@ -48,6 +58,16 @@ class Context {
   destination = new Node();
   gains: Node[] = [];
   oscillators: Node[] = [];
+  sources: Node[] = [];
+  recording = new Node();
+  createBuffer(_channels: number, length: number, rate: number) {
+    return { duration: length / rate, copyToChannel() {} };
+  }
+  createBufferSource() {
+    const source = new Node();
+    this.sources.push(source);
+    return source;
+  }
   closeCount = 0;
   createGain() {
     const node = new Node();
@@ -66,7 +86,7 @@ class Context {
     return new Node();
   }
   createMediaStreamDestination() {
-    return new Node();
+    return this.recording;
   }
   async resume() {
     assert.notEqual(this.state, 'closed');
@@ -307,6 +327,94 @@ test('keyboard last-note priority, held octave edits, release and Stop control t
     engine.noteOn(keyboard.id, 55, 1);
     await engine.stop();
     assert.equal(envelope.value, 0);
+  } finally {
+    await engine.dispose();
+  }
+});
+
+test('Play snippet restarts direct dry audio stopped or playing, bypassing Output and recording', async (t) => {
+  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
+  const context = new Context();
+  const engine = new AudioEngine(() => context.asAudioContext());
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.samples = { clip: { name: 'Tone', pcm: encodeSamplePcm(new Float32Array(96000)) } };
+  sampler.parameters = { ...sampler.parameters, trimStart: 0.25, trimEnd: 0.75, rate: 0.5 };
+  const output = createModule('output', 400, 0);
+  output.parameters.level = 0;
+  const project = { ...createProject(true), masterVolume: 0, modules: [sampler, output] };
+  const reaches = (source: Node, target: Node, seen = new Set<Node>()): boolean => {
+    if (source === target) return true;
+    if (seen.has(source)) return false;
+    seen.add(source);
+    return [...source.connections].some((node) => reaches(node, target, seen));
+  };
+  try {
+    await engine.activate(project);
+    engine.hitSample(sampler.id);
+    assert.equal(engine.isPlaying, false, 'preview does not start transport');
+    assert.equal(context.sources.length, 1, 'one dry hit, with no routed duplicate');
+    const first = context.sources[0];
+    assert.deepEqual(first.starts, [[0, 1]]);
+    assert.equal(first.playbackRate.value, 0.5);
+    assert.equal(first.stops.at(-1), 4);
+    assert(reaches(first, context.destination), 'unpatched preview reaches speakers');
+    assert(!reaches(first, context.recording), 'preview stays out of studio recording');
+    // Later trim/speed changes must not make idle protection cut short the current hit.
+    sampler.parameters.trimEnd = 0.3;
+    sampler.parameters.rate = 2;
+    engine.update(project);
+    assert.equal(engine.remainingTailSeconds(), 4);
+    context.currentTime = 0.1;
+    engine.hitSample(sampler.id);
+    assert.equal(context.sources.length, 2, 'each press creates a fresh playback');
+    assert(first.stops.at(-1)! < 0.12, 'retrigger retires the previous preview');
+    await engine.play(project);
+    engine.hitSample(sampler.id);
+    assert.equal(engine.isPlaying, true);
+    assert.equal(context.sources.length, 3);
+    assert(reaches(context.sources[2], context.destination), 'muted Output cannot mute preview');
+    assert(!reaches(context.sources[2], context.recording));
+    await engine.stop();
+    assert.equal(context.sources[2].connections.size, 0, 'Stop releases preview voices');
+    await engine.activate(project);
+    engine.hitSample(sampler.id);
+    assert.equal(context.sources.length, 4, 'preview works again after Stop');
+    sampler.samples = {};
+    engine.update(project);
+    assert.equal(context.sources[3].connections.size, 0, 'Clear releases preview voices');
+    engine.hitSample(sampler.id);
+    assert.equal(context.sources.length, 4, 'empty sampler stays silent');
+  } finally {
+    await engine.dispose();
+  }
+  assert(context.sources.every((node) => node.connections.size === 0));
+  assert.equal(context.state, 'closed');
+});
+
+test('sampler preview cleanup follows module/project lifetime while pad hits retain patch routing', async () => {
+  const context = new Context();
+  const engine = new AudioEngine(() => context.asAudioContext());
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.samples = { clip: { name: 'Tone', pcm: encodeSamplePcm(new Float32Array(24000)) } };
+  const project = { ...createProject(true), modules: [sampler] };
+  try {
+    await engine.activate(project);
+    engine.hitSample(sampler.id);
+    engine.hitDrum(sampler.id, 'kick', 1);
+    const [preview, pad] = context.sources;
+    const previewOutput = [...[...preview.connections][0].connections][0];
+    assert(previewOutput.connections.has(context.destination));
+    const routedOutput = [...[...pad.connections][0].connections][0];
+    assert.equal(routedOutput.connections.size, 0, 'pad hit remains at the unpatched AUDIO OUT');
+    engine.update({ ...project, modules: [] });
+    assert.equal(preview.connections.size, 0, 'removing module stops preview');
+    engine.update(project);
+    engine.hitSample(sampler.id);
+    engine.update({ ...project, id: crypto.randomUUID() });
+    assert.equal(context.sources[2].connections.size, 0, 'switching project stops preview');
+    engine.hitSample(sampler.id);
+    await engine.dispose();
+    assert.equal(context.sources[3].connections.size, 0, 'disposal stops preview');
   } finally {
     await engine.dispose();
   }

@@ -11,8 +11,12 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
   let buffer: AudioBuffer | undefined;
   let rate = 1;
   let trim: Parameters = {};
-  const voices = new Set<{ source: AudioBufferSourceNode; envelope: GainNode }>();
-  const disconnect = (voice: { source: AudioBufferSourceNode; envelope: GainNode }) => {
+  const voices = new Set<{ source: AudioBufferSourceNode; envelope: GainNode; end: number }>();
+  const disconnect = (voice: {
+    source: AudioBufferSourceNode;
+    envelope: GainNode;
+    end: number;
+  }) => {
     voice.source.onended = null;
     voice.source.disconnect();
     voice.envelope.disconnect();
@@ -76,12 +80,14 @@ export function createMicSampler(context: AudioContext): AudioRuntime {
       envelope.gain.linearRampToValueAtTime(0, start + duration);
       source.connect(envelope);
       envelope.connect(output);
-      const voice = { source, envelope };
+      const voice = { source, envelope, end: start + duration };
       voices.add(voice);
       source.onended = () => disconnect(voice);
       source.start(start, region.startSeconds);
       source.stop(start + duration);
     },
+    remainingTailSeconds: () =>
+      Math.max(0, ...[...voices].map((voice) => voice.end - context.currentTime)),
     silence,
     dispose() {
       silence();

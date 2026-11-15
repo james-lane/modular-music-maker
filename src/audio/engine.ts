@@ -28,6 +28,7 @@ export class AudioEngine {
   private recordingDestination?: MediaStreamAudioDestinationNode;
   private runtimes = new Map<string, AudioRuntime>();
   private project?: Project;
+  private samplePreview?: { moduleId: string; runtime: AudioRuntime };
   private graphSignature = '';
   private scheduler?: ReturnType<typeof setInterval>;
   private visualTimers = new Set<ReturnType<typeof setTimeout>>();
@@ -87,6 +88,7 @@ export class AudioEngine {
     this.visualTimers.forEach((timer) => clearTimeout(timer));
     this.visualTimers.clear();
     this.keyboardNotes.clear();
+    this.samplePreview?.runtime.silence?.();
     this.runtimes.forEach((runtime) => {
       runtime.silence?.();
       if (runtime.voice && this.context) {
@@ -99,7 +101,15 @@ export class AudioEngine {
   }
 
   update(project: Project) {
+    if (this.project?.id !== project.id) this.disposeSamplePreview();
     this.project = project;
+    if (this.samplePreview) {
+      const module = project.modules.find((item) => item.id === this.samplePreview?.moduleId);
+      if (module?.type === 'mic-sampler') {
+        this.samplePreview.runtime.update(module.parameters);
+        this.samplePreview.runtime.configureSample?.(module.samples?.clip);
+      } else this.disposeSamplePreview();
+    }
     if (!this.context || !this.master || !this.bus) return;
     const signature = JSON.stringify([
       project.modules.map((module) => [module.id, module.type]),
@@ -217,9 +227,25 @@ export class AudioEngine {
     } else this.runtimes.get(moduleId)?.trigger?.(sound, velocity, this.context.currentTime);
   }
 
+  /** Audition dry saved audio independently of Output routing, mute, and recording. */
   hitSample(moduleId: string) {
-    if (this.project?.modules.find((module) => module.id === moduleId)?.type === 'mic-sampler')
-      this.runtimes.get(moduleId)?.trigger?.('kick', 1, this.context?.currentTime ?? 0);
+    const module = this.project?.modules.find((item) => item.id === moduleId);
+    if (!this.context || module?.type !== 'mic-sampler' || !module.samples?.clip) return;
+    if (this.samplePreview?.moduleId !== moduleId) {
+      this.disposeSamplePreview();
+      const runtime = AUDIO_FACTORIES['mic-sampler'](this.context, this.context.destination);
+      runtime.outputs.out.connect(this.context.destination);
+      this.samplePreview = { moduleId, runtime };
+    }
+    const { runtime } = this.samplePreview;
+    runtime.update(module.parameters);
+    runtime.configureSample?.(module.samples.clip);
+    runtime.trigger?.('kick', 1, this.context.currentTime);
+  }
+
+  private disposeSamplePreview() {
+    this.samplePreview?.runtime.dispose();
+    this.samplePreview = undefined;
   }
 
   hitPad(controllerId: string, sound: DrumSound, velocity: number) {
@@ -299,6 +325,7 @@ export class AudioEngine {
   remainingTailSeconds(): number {
     return Math.max(
       0,
+      this.samplePreview?.runtime.remainingTailSeconds?.() ?? 0,
       ...[...this.runtimes.values()].map((runtime) => runtime.remainingTailSeconds?.() ?? 0),
     );
   }
@@ -329,6 +356,7 @@ export class AudioEngine {
     this.keyboardNotes.clear();
     this.runtimes.forEach((runtime) => runtime.dispose());
     this.runtimes.clear();
+    this.disposeSamplePreview();
     this.graphSignature = '';
     this.context = undefined;
     this.master = undefined;

@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Mic sampler direct preview — 15 November 2026
+
+**Play snippet** now restarts a direct dry preview on every press, whether studio playback is stopped or running. No cable or Output module is required, and Output level/master mute cannot silence it. The preview uses the saved trim, Speed and sampler Level, bypasses patch effects/master volume, and is excluded from studio recordings. Pad and Drum kit hits keep their normal patch routing. A separate engine-owned sampler runtime prevents duplicate dry/routed hits; Stop, Clear/replacement, module removal, patch switching and disposal clean it up. Outstanding sampler end times protect an already playing long preview from later trim/rate edits shortening its idle allowance. Saved patch format is unchanged.
+
+Validation: strict types, all **107 automated tests**, production build, formatting and diff checks pass. New engine regressions cover repeated stopped/running previews, direct destination routing with Output/master at zero, recording exclusion, trim/Speed offsets, long-hit idle protection, Stop/restart, Clear, removal/project-switch/disposal and unchanged pad routing. Isolated production Chromium measured audible previews with silent studio recording-bus audio, verified no doubled source when cabled to Output, captured a test microphone signal and auditioned it without an Output module, then restored and played that saved capture after an offline reload. The preview remains reachable at 390px with no document overflow; no browser errors occurred. Physical iPad/Safari audio remains an on-device check.
+
 ## Large-patch navigation: first performance fixes — deployed 15 November 2026
 
 Neon chorus retains all **38 modules / 41 cables**, its exact musical recipe and all physical finishes. Ordinary rack navigation now transforms a shared instrument/cable surface, with memoized instrument/control and cable boundaries. Compact patches keep a stable content origin, avoiding a whole-rack redraw when the camera crosses a tile boundary. Dispersed patches retain a floating origin; extremely spread-out imports use per-panel screen placement to preserve full-range Fit and keyboard recovery. Graphics-layer hints are bounded by drawing span/distance rather than applied to an unbounded world surface. Braided spans are computed before rebasing so rounding cannot invalidate cached strand paths.

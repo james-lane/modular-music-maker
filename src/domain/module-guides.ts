@@ -62,7 +62,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Press Record mic and allow microphone access. Use HTTPS or localhost. Speak, clap, or make a sound; press Finish or let the four-second limit finish the capture.',
       'Connect AUDIO OUT to an effect, Mixer, Merger, or Output AUDIO IN. The microphone is never monitored live.',
-      'Press Play snippet to hear it, even with the transport stopped. Connect Pad controller TRIGGER OUT to TRIGGER IN to retrigger it from any pad.',
+      'Press Play snippet to hear a direct dry preview, with studio playback stopped or running. No Output connection is needed. Connect Pad controller TRIGGER OUT to TRIGGER IN to retrigger it from any pad.',
     ],
     controls: {
       level: 'Sets the saved snippet’s output volume without changing the recording.',
@@ -86,7 +86,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Play snippet / Clear',
         description:
-          'Play the selected part once through connected cables; each hit restarts it. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
+          'Play snippet restarts a direct dry preview of the selected part each time, using trim, Speed, and Level. It works while the studio is stopped or playing, without cables and even with Output muted. It bypasses patch effects and master volume and is excluded from studio recordings. Pad hits use connected cables. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
       },
     ],
     tip: 'Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence this recording, connect AUDIO OUT directly to a Drum kit IN socket, select its Audio input voice, and link KIT OUT to Drum machine KIT IN. Each drum hit plays the full trimmed clip independently, with overlaps; no manual sampler playback is needed. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',
