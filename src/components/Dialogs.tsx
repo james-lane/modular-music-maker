@@ -17,19 +17,24 @@ import { ROOT_NOTES } from '../config';
 import { deleteRecording, loadRecordings, type Recording } from '../audio/recordings';
 import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
 import type { Project } from '../domain/types';
+import { isCableStyle, type CableStyle } from '../domain/preferences';
 
 /** Also exposes composition controls that move out of the compact phone toolbar. */
 export function SettingsDialog({
   project,
   onChange,
+  cableStyle,
+  onCableStyleChange,
   onClose,
 }: {
   project: Project;
   onChange: (changes: Partial<Project>) => void;
+  cableStyle: CableStyle;
+  onCableStyleChange: (style: CableStyle) => void;
   onClose: () => void;
 }) {
   return (
-    <Modal title="Find your own feel." eyebrow="COMPOSITION SETTINGS" onClose={onClose}>
+    <Modal title="Find your own feel." eyebrow="STUDIO SETTINGS" onClose={onClose}>
       <p className="dialog-intro">
         A few small changes can take your patch somewhere completely different.
       </p>
@@ -84,6 +89,25 @@ export function SettingsDialog({
       <p className="dialog-footnote">
         The eight-step pattern repeats independently of the time signature.
       </p>
+      <div className="appearance-settings composition-form">
+        <label>
+          Patch cable style
+          <select
+            value={cableStyle}
+            aria-describedby="cable-style-description"
+            onChange={(event) => {
+              if (isCableStyle(event.target.value)) onCableStyleChange(event.target.value);
+            }}
+          >
+            <option value="classic">Classic colours</option>
+            <option value="braided">Braided module colours</option>
+          </select>
+        </label>
+        <p id="cable-style-description">
+          Braided cables weave together the colours of both connected modules. This appearance
+          choice is remembered in this browser for all patches.
+        </p>
+      </div>
       <button className="button primary full-width" style={{ marginTop: 20 }} onClick={onClose}>
         <Check size={16} /> Back to the studio
       </button>

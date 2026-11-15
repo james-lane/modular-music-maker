@@ -29,10 +29,11 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Drag modules from the library, or add them using the **+** buttons. Move panels by dragging their headers.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, and trigger are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
+- Choose **More → Studio settings → Patch cable style → Braided module colours** to weave together both connected modules' accent colours, with matching plugs at each end. **Classic colours** remains the default. The choice is remembered in this browser across patches and reloads.
 - Individual hardware finishes: walnut keyboard cheeks, a violet rubber-pad controller, coloured effects enclosures, ivory/chrome knobs, and a compact silver mixer with vertical faders. Module dimensions vary to suit the instrument.
 - Hardware-style knobs respond to vertical dragging, arrow keys, Home/End, and double-click reset. Hold Shift for finer dragging.
 - Eight editable sequencer steps. Click to advance the scale degree, right-click to insert a rest.
-- Tempo, root note, scale, time signature, master volume, mute, live waveform, and level meters. The **More → Composition settings** panel keeps all settings available on narrow screens.
+- Tempo, root note, scale, time signature, master volume, mute, live waveform, and level meters. The **More → Studio settings** panel keeps all settings available on narrow screens.
 - Zoom, pan, fit-to-view, undo, redo, and a responsive module drawer on small screens.
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
 - Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.

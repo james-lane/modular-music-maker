@@ -248,7 +248,7 @@ export function TransportBar({
                   onSettings();
                 }}
               >
-                <SlidersHorizontal size={15} /> Composition settings
+                <SlidersHorizontal size={15} /> Studio settings
               </button>
               <button
                 onClick={() => {

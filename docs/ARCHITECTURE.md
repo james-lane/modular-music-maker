@@ -33,6 +33,7 @@ React controls / workspace
 | `src/components/ExamplePatchesDialog.tsx` | First-visit and reusable example patch chooser                      |
 | `src/domain/validation.ts`                | Shared Zod validation for every data boundary                       |
 | `src/domain/storage.ts`                   | Browser patch library, optional server sync, downloads              |
+| `src/domain/preferences.ts`               | Validated browser-only cable appearance preference                  |
 | `src/audio/factories.ts`                  | Audio node creation, parameter updates, disposal                    |
 | `src/audio/engine.ts`                     | Context lifecycle, graph topology, note scheduling, analysis        |
 | `src/audio/drums.ts`                      | Synthesized kit recipes, scheduled one-shot ownership and cleanup   |
@@ -47,6 +48,8 @@ React controls / workspace
 | `src/components/StudioHeader.tsx`         | Studio navigation and dialog entry points                           |
 | `src/components/TransportBar.tsx`         | Playback, composition settings, save/export controls                |
 | `src/components/Workspace.tsx`            | Canvas geometry, drag preview, sockets, SVG cables, zoom/pan        |
+| `src/components/PatchCable.tsx`           | Classic/braided cable rendering and endpoint-coloured plugs         |
+| `src/components/cable-geometry.ts`        | Cable curves and distance-based over/under braid geometry           |
 | `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls               |
 | `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters    |
 | `src/components/MergerPanel.tsx`          | Four-input cable-occupancy diagram for the summing module           |
@@ -117,5 +120,9 @@ Node persists each validated UUID to `.data/<id>.json` using a unique temporary 
 ## Canvas and styling invariants
 
 Modules use registry dimensions in an 1800×1200 stage. Zoom scales the stage and a matching scroll spacer. Dragging previews local coordinates and commits one history entry on release. Drop positions snap to a configurable grid and stay within bounds. Cabling uses registry socket positions and a CSS footer inset; update `socketPosition()` if socket geometry changes.
+
+**More → Studio settings** includes a browser-wide cable style choice. Classic preserves the existing signal/source colours. Braided uses both endpoint modules' registry accent colours for two interwoven strands, with each plug matching its module. `cable-geometry.ts` samples the existing cubic curve and alternates strand depth at crossings; distance-based phase keeps the weave density consistent on horizontal, vertical, and long cables. Geometry is memoized by endpoint coordinates/style, so playback and unrelated parameter edits do not regenerate it. Cable hit areas and socket geometry are unchanged; the pending cable stays neutral until both endpoints are known. The weave is static and adds no animation.
+
+`domain/preferences.ts` validates the stored cable style and falls back to Classic for missing, unknown, or inaccessible browser storage. The separate localStorage key and default live in `CONFIG.appearance`. Saving failure retains the choice for the current visit and shows a notice. Appearance is not part of Project v1, patch exports, undo history, or audio graph identity; opening/importing another patch preserves the browser preference.
 
 The visual direction is a collection of distinct physical instruments, as explicitly requested by the user. Surfaces may differ in colour, material, size, silhouette, and controls. Enclosures include walnut-trimmed charcoal, violet polymer, ochre/green/blue/plum enamel, graphite, aged cream, and brushed aluminium. Instrument surfaces use CSS gradients, layered borders/shadows, fixed tick rings, rotating knob markers, metallic socket rings, and panel screws. SVG traces and cables avoid image assets. Actual waveform/level displays read the analyser. Performance layouts live in `components/instruments.css`; module finish palettes and material details live in `components/module-finishes.css`. Shared panel/knob mechanics read inheritable CSS custom properties declared on `.module-panel` in `styles.css`. The mixer has real vertical native range inputs, with channel values and persistence identical to the original knobs. Selected utility/effect widths are smaller, so old saved positions remain valid. Painted rails and decorative wood cheeks do not change the structural border box; cable math remains unchanged. Wide performance modules use registry dimensions like every other module. New modules added from the library are scrolled into view. Keep the hardware feel for modules; keep application chrome restrained.

@@ -10,20 +10,16 @@ import {
   RotateCw,
   X,
 } from 'lucide-react';
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type DragEvent,
-  type PointerEvent,
-} from 'react';
+import { useEffect, useRef, useState, type DragEvent, type PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
 import { MODULES } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
+import type { CableStyle } from '../domain/preferences';
 import { ModuleCard } from './ModuleCard';
+import { PatchCable } from './PatchCable';
+import { cablePath } from './cable-geometry';
 import type { LiveControls } from '../audio/live';
 
 interface Props {
@@ -41,6 +37,7 @@ interface Props {
   undo: () => void;
   redo: () => void;
   saveStatus: 'saving' | 'saved' | 'error';
+  cableStyle: CableStyle;
 }
 
 export function socketPosition(module: PatchModule, portId: string) {
@@ -68,6 +65,7 @@ export function Workspace({
   undo,
   redo,
   saveStatus,
+  cableStyle,
 }: Props) {
   const viewport = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState<number>(() =>
@@ -240,11 +238,6 @@ export function Workspace({
     const module = createModule(type, position.x, position.y);
     commit((current) => ({ ...current, modules: [...current.modules, module] }));
     setSelected(module.id);
-  };
-
-  const pathFor = (from: { x: number; y: number }, to: { x: number; y: number }) => {
-    const sag = Math.min(200, 70 + Math.abs(to.x - from.x) * 0.15 + Math.abs(to.y - from.y) * 0.1);
-    return `M${from.x},${from.y} C${from.x},${from.y + sag} ${to.x},${to.y + sag} ${to.x},${to.y}`;
   };
 
   const fit = () => {
@@ -471,52 +464,26 @@ export function Workspace({
                   (module) => module.id === cable.from.moduleId,
                 );
                 const toModule = displayModules.find((module) => module.id === cable.to.moduleId);
-                if (!fromModule || !toModule) return null;
+                const signal = getPort(project, cable.from)?.signal;
+                if (!fromModule || !toModule || !signal) return null;
                 const from = socketPosition(fromModule, cable.from.portId);
                 const to = socketPosition(toModule, cable.to.portId);
-                const signal = getPort(project, cable.from)?.signal;
                 return (
-                  <g
+                  <PatchCable
                     key={cable.id}
-                    className={`patch-cable signal-${signal}`}
-                    style={
-                      {
-                        '--cable-color':
-                          signal === 'pitch'
-                            ? '#c89a52'
-                            : signal === 'control'
-                              ? '#9385b7'
-                              : signal === 'trigger'
-                                ? '#b9788f'
-                                : MODULES[fromModule.type].color,
-                      } as CSSProperties
+                    from={from}
+                    to={to}
+                    fromModule={fromModule}
+                    toModule={toModule}
+                    signal={signal}
+                    cableStyle={cableStyle}
+                    onUnplug={() =>
+                      commit((current) => ({
+                        ...current,
+                        cables: current.cables.filter((item) => item.id !== cable.id),
+                      }))
                     }
-                  >
-                    <path
-                      className="cable-hit"
-                      d={pathFor(from, to)}
-                      onDoubleClick={() =>
-                        commit((current) => ({
-                          ...current,
-                          cables: current.cables.filter((item) => item.id !== cable.id),
-                        }))
-                      }
-                    >
-                      <title>Double-click to unplug this cable</title>
-                    </path>
-                    <path className="cable-body" d={pathFor(from, to)} />
-                    <path className="cable-highlight" d={pathFor(from, to)} />
-                    {[from, to].map((position, index) => (
-                      <g
-                        key={index}
-                        className="cable-plug"
-                        transform={`translate(${position.x},${position.y})`}
-                      >
-                        <rect x="-6" y="-9" width="12" height="23" rx="4" />
-                        <path d="M-4 4H4M-4 7H4" />
-                      </g>
-                    ))}
-                  </g>
+                  />
                 );
               })}
               {pending &&
@@ -526,7 +493,7 @@ export function Workspace({
                   return (
                     <path
                       className="pending-cable"
-                      d={pathFor(socketPosition(module, pending.portId), pointer)}
+                      d={cablePath(socketPosition(module, pending.portId), pointer)}
                     />
                   );
                 })()}

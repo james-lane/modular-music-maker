@@ -16,6 +16,7 @@ import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
 import { TransportBar } from './components/TransportBar';
 import { MODULES } from './domain/modules';
+import { loadCableStyle, saveCableStyle, type CableStyle } from './domain/preferences';
 import { createModule, createProject } from './domain/project';
 import { saveLocally, saveToServer } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
@@ -40,6 +41,7 @@ export default function App() {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [recordingCount, setRecordingCount] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [cableStyle, setCableStyle] = useState(loadCableStyle);
   const importInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -207,6 +209,7 @@ export default function App() {
           drumStep={audio.drumStep}
           live={audio.live}
           audioActive={audio.active}
+          cableStyle={cableStyle}
         />
         <button className="mobile-library-toggle button" onClick={() => setLibraryOpen(true)}>
           <Menu size={16} /> Add modules
@@ -260,6 +263,12 @@ export default function App() {
           project={project}
           onClose={() => setDialog(null)}
           onChange={(changes) => commit((current) => ({ ...current, ...changes }))}
+          cableStyle={cableStyle}
+          onCableStyleChange={(style: CableStyle) => {
+            setCableStyle(style);
+            if (!saveCableStyle(style))
+              notify('Cable style changed for this visit. Browser storage is unavailable.');
+          }}
         />
       )}
       {dialog === 'patches' && (

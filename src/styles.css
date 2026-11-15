@@ -1583,6 +1583,11 @@ svg {
 
 /* Cables sit above panels; only the wide invisible cable path intercepts double-clicks. */
 .patch-cables {
+  --cable-pitch-color: #c89a52;
+  --cable-control-color: #9385b7;
+  --cable-trigger-color: #b9788f;
+  --cable-braid-core: #34342f;
+  --cable-braid-width: 3.4px;
   position: absolute;
   inset: 0;
   pointer-events: none;
@@ -1610,6 +1615,23 @@ svg {
   stroke-linecap: round;
   transform: translateY(-1.5px);
 }
+.braided .cable-body {
+  stroke: var(--cable-braid-core);
+}
+.cable-braid path {
+  stroke-width: var(--cable-braid-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.braid-source {
+  stroke: var(--cable-source-color);
+}
+.braid-target {
+  stroke: var(--cable-target-color);
+}
+.braid-under {
+  filter: brightness(0.75);
+}
 .cable-plug rect {
   fill: var(--cable-color);
   stroke: #333c2935;
@@ -1619,6 +1641,9 @@ svg {
 .cable-plug path {
   stroke: #0000001c;
   stroke-width: 1px;
+}
+.cable-plug-target {
+  --cable-color: var(--cable-target-color);
 }
 .pending-cable {
   fill: none;
@@ -2016,6 +2041,19 @@ svg {
   accent-color: #7f9465;
   margin: 12px 0 0;
   width: 100%;
+}
+.appearance-settings {
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 22px;
+  padding-top: 22px;
+  border-top: 1px solid #e1e6d6;
+}
+.appearance-settings p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #879477;
 }
 .file-type {
   font-family: monospace;

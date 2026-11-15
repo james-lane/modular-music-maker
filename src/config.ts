@@ -3,6 +3,10 @@ export const CONFIG = {
   name: 'Patchwork',
   storageKey: 'patchwork.projects.v1',
   activeProjectKey: 'patchwork.active.v1',
+  appearance: {
+    cableStyleKey: 'patchwork.cable-style.v1',
+    defaultCableStyle: 'classic',
+  },
   autosaveDelayMs: 650,
   historyLimit: 60,
   canvas: { width: 1800, height: 1200, grid: 20, minZoom: 0.45, maxZoom: 1.4, defaultZoom: 0.9 },
