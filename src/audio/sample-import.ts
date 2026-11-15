@@ -1,20 +1,21 @@
 import { CONFIG } from '../config';
 import { encodeSamplePcm } from '../domain/samples';
 import type { DrumSample } from '../domain/types';
+import { readSampleAudio } from './sample-reader';
 
 /** Offline contexts decode/resample silently; importing never wakes the studio audio device. */
 export async function importDrumSample(file: File): Promise<DrumSample> {
-  if (file.size > CONFIG.samples.maxFileBytes)
-    throw new Error('Choose an audio file smaller than 20 MB.');
-  return decodeAudioSample(await file.arrayBuffer(), file.name, false);
+  const { mono, sampleRate } = await readSampleAudio(file);
+  const buffer = new AudioBuffer({ numberOfChannels: 1, length: mono.length, sampleRate });
+  buffer.copyToChannel(mono, 0);
+  return encodeAudioSample(buffer, file.name);
 }
 
-/** Recorder containers can include encoder padding: trim captures to the shared PCM limit. */
-export async function decodeAudioSample(
-  bytes: ArrayBuffer,
-  name: string,
-  trim: boolean,
-): Promise<DrumSample> {
+/** Only internally captured, time-limited microphone blobs use this compatibility
+ * decoder. Untrusted file imports must go through the bounded sample reader above.
+ * Recorder containers may add encoder padding, so captures trim to the PCM limit.
+ */
+export async function decodeMicrophoneSample(bytes: ArrayBuffer): Promise<DrumSample> {
   const decoder = new OfflineAudioContext(1, 1, CONFIG.samples.sampleRate);
   let decoded: AudioBuffer;
   try {
@@ -24,14 +25,17 @@ export async function decodeAudioSample(
       'This audio file could not be read. Try WAV, MP3, or another browser-supported format.',
     );
   }
-  if (!trim && decoded.duration > CONFIG.samples.maxSeconds)
-    throw new Error(
-      `Choose a sample no longer than ${CONFIG.samples.maxSeconds} seconds. Trim it first, then import it again.`,
-    );
+  return encodeAudioSample(decoded, 'Mic snippet');
+}
+
+async function encodeAudioSample(decoded: AudioBuffer, name: string): Promise<DrumSample> {
   if (!decoded.length) throw new Error('This audio file is empty.');
   const renderer = new OfflineAudioContext(
     1,
-    Math.min(decoded.length, CONFIG.samples.maxSeconds * CONFIG.samples.sampleRate),
+    Math.min(
+      Math.ceil(decoded.duration * CONFIG.samples.sampleRate),
+      CONFIG.samples.maxSeconds * CONFIG.samples.sampleRate,
+    ),
     CONFIG.samples.sampleRate,
   );
   const source = renderer.createBufferSource();

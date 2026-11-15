@@ -1,6 +1,15 @@
 /** Product and behavior defaults live here, rather than being scattered through the UI. */
 export const CONFIG = {
   name: 'Patchwork',
+  // Keep public/_headers in sync; HTTP tests compare its baseline with these values.
+  securityHeaders: {
+    'Content-Security-Policy':
+      "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'microphone=(self), camera=(), geolocation=()',
+  },
   storageKey: 'patchwork.projects.v1',
   activeProjectKey: 'patchwork.active.v1',
   appearance: {
@@ -19,7 +28,11 @@ export const CONFIG = {
     updateCheckIntervalMs: 15 * 60 * 1000,
     minCheckIntervalMs: 60 * 1000,
   },
-  localApi: { hosts: ['localhost', '127.0.0.1', '[::1]'], timeoutMs: 1500 },
+  localApi: {
+    hosts: ['localhost', '127.0.0.1', '[::1]'],
+    developmentPort: 5173,
+    timeoutMs: 1500,
+  },
   historyLimit: 60,
   historyGroupDelayMs: 700,
   moduleLibrary: { dragThresholdPx: 6 },
@@ -74,6 +87,10 @@ export const CONFIG = {
     sampleRate: 24000,
     maxSeconds: 4,
     maxFileBytes: 20 * 1024 * 1024,
+    maxImportChannels: 8,
+    maxImportSampleRate: 192000,
+    maxImportDecodedBytes: 16 * 1024 * 1024,
+    importTimeoutMs: 15000,
     maxEncodedLength: 256000,
     maxProjectEncodedLength: 1024000,
   },

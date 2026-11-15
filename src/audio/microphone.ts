@@ -1,7 +1,7 @@
 import { CONFIG } from '../config';
 import type { DrumSample } from '../domain/types';
 import { preferredRecordingType } from './recordings';
-import { decodeAudioSample } from './sample-import';
+import { decodeMicrophoneSample } from './sample-import';
 
 export type CapturePhase = 'idle' | 'requesting' | 'recording' | 'processing';
 interface CaptureDependencies {
@@ -22,7 +22,7 @@ const defaults: CaptureDependencies = {
   },
   format: () => preferredRecordingType().mimeType,
   createRecorder: (stream, mimeType) => new MediaRecorder(stream, { mimeType }),
-  decode: (bytes) => decodeAudioSample(bytes, 'Mic snippet', true),
+  decode: decodeMicrophoneSample,
 };
 
 /** One capture owner, independent of transport and speaker output. Cancellation invalidates

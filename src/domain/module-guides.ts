@@ -122,7 +122,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Load / Replace / Remove sample',
         description:
-          'Choose browser-supported audio such as WAV or MP3, up to four seconds and 20 MB per file. Samples are converted to mono at 24 kHz and embedded in the patch for saving, export, and offline use. A patch holds about sixteen seconds of samples in total. Remove deletes that voice’s stored sample and restores its original sound; switching sound modes retains it for later.',
+          'Choose a short WAV, MP3, M4A, Ogg, WebM, or FLAC, up to four seconds and 20 MB per file. Compressed-format support depends on your browser; if it cannot read the file, convert it to PCM WAV. Unusually large multichannel clips may need converting to mono first. Samples are converted to mono at 24 kHz and embedded in the patch for saving, export, and offline use. A patch holds about sixteen seconds of samples in total. Remove deletes that voice’s stored sample and restores its original sound; switching sound modes retains it for later.',
       },
       {
         label: 'Voice audition buttons',

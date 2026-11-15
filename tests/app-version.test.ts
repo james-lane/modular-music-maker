@@ -130,28 +130,33 @@ test('linked worktrees resolve their own commit and development refreshes after 
     plugins: [appVersion()],
     server: { host: '127.0.0.1', port: 0 },
   });
-  t.after(() => server.close());
-  await server.listen();
-  const before = await server.transformRequest('/main.js');
-  assert.ok(before?.code.includes('virtual:app-version'));
-  const address = server.httpServer?.address();
-  assert.ok(address && typeof address === 'object');
-  const versionUrl = `http://127.0.0.1:${address.port}/@id/__x00__virtual:app-version`;
-  const initial = await fetch(versionUrl).then((response) => response.text());
-  assert.ok(initial.includes(readAppVersion(worktree).version));
-  git(worktree, 'commit', '--allow-empty', '-m', 'New worktree commit');
-  const expected = readAppVersion(worktree);
-  assert.notEqual(expected.revision, readAppVersion(root).revision);
-  // Allow slower CI machines to observe Git's atomic ref replacement.
-  let updated = '';
-  for (let attempt = 0; attempt < 50; attempt++) {
-    updated = await fetch(versionUrl).then((response) => response.text());
-    if (updated.includes(expected.version)) break;
-    await new Promise((resolve) => setTimeout(resolve, 100));
+  // Fixture hooks remove their directories first. Close the watcher before those
+  // hooks run, otherwise Vite can recreate cache files during recursive removal.
+  try {
+    await server.listen();
+    const before = await server.transformRequest('/main.js');
+    assert.ok(before?.code.includes('virtual:app-version'));
+    const address = server.httpServer?.address();
+    assert.ok(address && typeof address === 'object');
+    const versionUrl = `http://127.0.0.1:${address.port}/@id/__x00__virtual:app-version`;
+    const initial = await fetch(versionUrl).then((response) => response.text());
+    assert.ok(initial.includes(readAppVersion(worktree).version));
+    git(worktree, 'commit', '--allow-empty', '-m', 'New worktree commit');
+    const expected = readAppVersion(worktree);
+    assert.notEqual(expected.revision, readAppVersion(root).revision);
+    // Allow slower CI machines to observe Git's atomic ref replacement.
+    let updated = '';
+    for (let attempt = 0; attempt < 50; attempt++) {
+      updated = await fetch(versionUrl).then((response) => response.text());
+      if (updated.includes(expected.version)) break;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert.ok(updated.includes(expected.version));
+    assert.equal(
+      JSON.parse(await readFile(path.join(worktree, 'package.json'), 'utf8')).version,
+      '0.1.0',
+    );
+  } finally {
+    await server.close();
   }
-  assert.ok(updated.includes(expected.version));
-  assert.equal(
-    JSON.parse(await readFile(path.join(worktree, 'package.json'), 'utf8')).version,
-    '0.1.0',
-  );
 });

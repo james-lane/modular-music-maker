@@ -3,6 +3,7 @@ import express from 'express';
 import path from 'node:path';
 import { ZodError } from 'zod';
 import { ProjectRepository } from './repository';
+import { localAccess } from './local-access';
 
 /** The API is intentionally local-first and unauthenticated. Keep the listener on loopback.
  * Add identity and ownership checks before exposing this Node service on a public network.
@@ -11,6 +12,11 @@ export function createApp(dataDirectory = path.resolve(process.env.PATCHWORK_DAT
   const app = express();
   const repository = new ProjectRepository(dataDirectory);
   app.disable('x-powered-by');
+  app.use((_request, response, next) => {
+    response.set(CONFIG.securityHeaders);
+    next();
+  });
+  app.use(localAccess);
   app.use(express.json({ limit: CONFIG.maxPatchBytes }));
   app.get('/api/health', (_request, response) =>
     response.json({ status: 'ok', application: 'patchwork' }),
