@@ -49,6 +49,7 @@ React controls / workspace
 | `src/components/Workspace.tsx`            | Canvas geometry, drag preview, sockets, SVG cables, zoom/pan        |
 | `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls               |
 | `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters    |
+| `src/components/MergerPanel.tsx`          | Four-input cable-occupancy diagram for the summing module           |
 | `src/components/module-finishes.css`      | Individual enclosure palettes, materials, knob finishes, and faders |
 | `src/components/Knob.tsx`                 | Logarithmic/linear parameter editing and keyboard controls          |
 | `src/components/Scope.tsx`                | Animation-frame waveform and RMS display                            |
@@ -71,6 +72,8 @@ No AudioContext, AudioNode, React state, object URL, or recording blob is serial
 
 The current model allows fan-out from an output, one cable per input, and at most one Output module. Mixer has separate A/B inputs. Empty patches may contain no output and therefore produce no audible signal. Removing a module removes its cables in the same edit.
 
+Merger adds four independent audio inputs (`in1`–`in4`) and one audio output (`out`) using the ordinary v1 module/parameter shape. It can receive instruments, effect returns, or other mergers; normal input-occupancy and cycle rules still apply. It cannot accept pitch, trigger, or modulation cables. The original Mixer remains a separate two-channel module with independent gain controls, preserving all existing saves.
+
 ## Audio lifecycle
 
 `useAudio` owns exactly one `AudioEngine`. A user Play/Record or live instrument gesture creates and resumes the context. Stop suspends it. Live gestures can resume the audio device without starting the transport; after the final held key or hit, an idle timer allows a configured three-second effect tail, then suspends it. The UI distinguishes transport playback from an active audio device. Unmount stops recording, disconnects owned nodes, and closes the context. Engine disposal detaches references and resets graph identity synchronously before closing the old context asynchronously, allowing safe reuse during development Fast Refresh. Hook transport state is reconciled when effects restart. StrictMode double mounting is intentionally not used around live context ownership.
@@ -78,6 +81,8 @@ The current model allows fan-out from an output, one cable per input, and at mos
 Topology is identified by module IDs/types and cables. Moving panels and editing parameters does **not** recreate the graph. A topology edit disposes the previous runtime graph and creates a new one. This simple first implementation can produce a transient on rewiring; future versions may crossfade graph replacements.
 
 Each factory returns named input/output endpoints, an `update` function, a `dispose` function, and optionally a pitched voice. Audio/control cables connect native AudioNode or AudioParam endpoints. Pitch cables are event routes from sequencers or live keyboards to oscillator voices. Trigger cables route pad sound/velocity events to drum runtimes; neither event type becomes a native AudioNode connection. An unsequenced oscillator sustains the patch root note; a sequenced oscillator follows its pitch cable and gate envelope.
+
+The Merger factory derives its inputs from the registry. Each socket owns a separate unity-gain node feeding a shared sum gain, whose `level` is smoothed and defaults to 0.5. Separate nodes preserve independent paths even when the same source is patched to multiple inputs; Web Audio would collapse duplicate connections to a shared endpoint. Levels are summed without automatic normalization, so attaching a cable does not rebalance existing sources. Disposal disconnects every input and the sum. The routing plate indicates cable occupancy, not audio metering; the Output module shows the real signal. Merger styling is in `module-finishes.css` and its footprint remains registry-driven.
 
 The scheduler wakes every 25 ms and queues notes/hits 120 ms ahead using `AudioContext.currentTime`. Its shared tick is now one sixteenth-note. Drum machines advance every tick; melodic sequencers advance every second tick, preserving their original eighth-note timing. Visual step updates use separate timers aligned to the audio clock. Both pattern lengths repeat independently of the displayed time signature; 3/4 and 6/8 currently share three quarter-note beat groups. Tempo edits affect the next scheduling window, so a short already-queued segment may retain the old tempo.
 

@@ -32,6 +32,8 @@ export function Waveform({
   if (type === 'pad-controller')
     path =
       'M18 3H48V21H18ZM60 3H90V21H60ZM102 3H132V21H102ZM144 3H174V21H144ZM18 31H48V49H18ZM60 31H90V49H60ZM102 31H132V49H102ZM144 31H174V49H144Z';
+  if (type === 'merger')
+    path = 'M8 6H52L96 26H176M8 19H52L96 26M8 33H52L96 26M8 46H52L96 26M165 17L178 26L165 35';
   return (
     <svg viewBox="0 0 192 52" fill="none" aria-hidden="true">
       <path

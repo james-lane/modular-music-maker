@@ -645,3 +645,111 @@
   font: 8px monospace;
   color: var(--panel-muted);
 }
+
+/* Petrol enamel summing box: a recessed routing plate and a single ivory level dial. */
+.module-merger {
+  --panel-face: #345b5b;
+  --panel-end: #244444;
+  --panel-edge: #173b3c;
+  --panel-ink: #f1e8cf;
+  --panel-muted: #c0d0c5;
+  --panel-rule: #66817b;
+  --panel-highlight: #b9ded138;
+  --legend-shadow: #102f2eaa;
+  --knob-ridge: #c6b99e;
+  --knob-ridge-light: #f6ecd5;
+  --knob-highlight: #fff9e7;
+  --knob-face: #e8dcc3;
+  --knob-shade: #beaf91;
+  --knob-border: #ad9d7e;
+  --knob-pointer: #4a4132;
+  border-radius: 10px;
+  background:
+    radial-gradient(#ffffff08 0.7px, transparent 0.7px) 0 0 / 3px 3px,
+    linear-gradient(125deg, var(--panel-face), var(--panel-end));
+}
+.merger-routing {
+  border: 1px solid #122f30;
+  border-radius: 5px;
+  padding: 9px 10px 6px;
+  background: linear-gradient(#1d3a3b, #244343);
+  box-shadow:
+    inset 0 2px 4px #0b232477,
+    0 1px 0 #a8c9ba4d;
+}
+.merger-routing-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #cdd9c4;
+  font: 7px monospace;
+  letter-spacing: 1.2px;
+  margin-bottom: 9px;
+}
+.merger-routing-title strong {
+  color: #e1ba77;
+  font: 13px monospace;
+  letter-spacing: 0;
+}
+.merger-routing-inputs {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.merger-routing-inputs > span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-direction: column;
+  color: #9fb8ad;
+  font: 7px monospace;
+}
+.merger-routing-inputs small {
+  font: 6px monospace;
+  color: #8aa79b;
+}
+.merger-routing-inputs i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #425b50;
+  box-shadow:
+    inset 0 1px 2px #081e1bb3,
+    0 1px 0 #78988b4a;
+}
+.merger-routing-inputs .wired i {
+  background: #e1ba77;
+  box-shadow:
+    0 0 4px #e1ba7750,
+    inset 0 1px 1px #fff5c880;
+}
+.merger-routing-inputs .wired,
+.merger-routing-inputs .wired small {
+  color: #e1ba77;
+}
+.merger-bus-line {
+  position: relative;
+  margin: 5px 14px 0;
+  height: 9px;
+  border: 1px solid #63847a;
+  border-top: 0;
+}
+.merger-bus-line i {
+  position: absolute;
+  left: 50%;
+  height: 5px;
+  top: 8px;
+  border-left: 1px solid #63847a;
+}
+.merger-routing p {
+  margin: 8px 0 0;
+  text-align: center;
+  color: #b1c6ba;
+  font: 7px monospace;
+}
+.module-merger .module-knobs {
+  margin-top: 10px;
+}
+.module-merger .port-button:last-child {
+  color: #e1ba77;
+}

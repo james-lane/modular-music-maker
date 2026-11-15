@@ -309,7 +309,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       a: 'Sets the gain of the signal connected to IN A.',
       b: 'Sets the gain of the signal connected to IN B.',
     },
-    tip: 'Each input accepts one cable. Use another Mixer when you need to combine more than two sources.',
+    tip: 'Each input accepts one cable. Use a Merger for up to four sources, or chain Mixers when you need separate channel faders.',
     example: {
       title: 'Blend a beat and a synth',
       description: 'Balance the two instruments before sending them to the speakers.',
@@ -320,11 +320,46 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       ],
     },
   },
+  merger: {
+    overview:
+      'Sums up to four audio signals into one output. Combine instruments, parallel effects, or submixes before an Output or another effect.',
+    steps: [
+      'Connect instrument or effect audio outputs to IN 1, IN 2, IN 3, or IN 4. Each input takes one cable; unused inputs stay silent.',
+      'Connect SUM OUT to Output AUDIO IN, or route it through an effect first.',
+      'Press Play or play a connected live instrument. Adjust Sum level to set the combined volume.',
+    ],
+    controls: {
+      level:
+        'Sets the gain of the whole sum. It starts at 50% to leave room for several sources. Zero silences the output; it does not erase your cables.',
+    },
+    extraControls: [
+      {
+        label: 'Routing plate',
+        description:
+          'Shows which inputs have cables attached. The amber indicators mean wired, rather than measuring audio level.',
+      },
+    ],
+    tip: 'Adding inputs can make the sum louder. Balance instruments at their source, or use a Mixer for individual faders. Connect SUM OUT to another Merger input when you need more than four sources. Pitch, modulation, and trigger cables need their own compatible modules.',
+    example: {
+      title: 'Combine a band and an echo return',
+      description:
+        'Blend a synth, drums, filtered noise, and an echoed copy of the synth. Lower Noise level for a subtle texture, and set Delay Mix to 100% for an echo-only return.',
+      connections: [
+        wire('oscillator', 'out', 'merger', 'in1'),
+        wire('drum-machine', 'out', 'merger', 'in2'),
+        wire('noise', 'out', 'filter', 'in'),
+        wire('filter', 'out', 'merger', 'in3'),
+        wire('oscillator', 'out', 'delay', 'in'),
+        wire('delay', 'out', 'merger', 'in4'),
+        wire('merger', 'out', 'output', 'in'),
+      ],
+    },
+  },
   output: {
     overview:
       'The final stop for your patch. Audio connected here reaches your speakers and the recorder; its screen shows the live waveform.',
     steps: [
-      'Connect an instrument, effect, or Mixer AUDIO OUT to AUDIO IN.',
+      'Connect an instrument, effect, Mixer, or Merger audio output to AUDIO IN.',
       'Press Play, or play a connected live Keyboard or Pad controller.',
       'Adjust Output level and the top-bar master volume. Use Record to capture the routed sound.',
     ],
@@ -335,7 +370,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
         description: 'Show the actual signal arriving at the output while audio is active.',
       },
     ],
-    tip: 'There is one Output per patch and one cable per input. Combine multiple instruments in a Mixer before connecting them here.',
+    tip: 'There is one Output per patch and one cable per input. Combine multiple instruments in a Mixer or Merger before connecting them here.',
     example: {
       title: 'Hear two instruments together',
       description: 'The Mixer combines the sources so they can share a single Output input.',

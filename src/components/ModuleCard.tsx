@@ -13,6 +13,7 @@ import { DrumMachinePanel } from './DrumMachinePanel';
 import { KeyboardPanel } from './KeyboardPanel';
 import { PadControllerPanel } from './PadControllerPanel';
 import { MixerPanel } from './MixerPanel';
+import { MergerPanel } from './MergerPanel';
 
 interface Props {
   module: PatchModule;
@@ -213,6 +214,7 @@ export function ModuleCard({
           </div>
         )}
         {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
+        {module.type === 'merger' && <MergerPanel module={module} project={project} />}
         {['noise', 'lfo', 'reverb'].includes(module.type) && (
           <div className="trace-display">
             <Waveform type={module.type} />

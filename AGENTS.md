@@ -8,7 +8,7 @@ Patchwork is a modular music-making website using **TypeScript on Node.js**. Use
 
 The user explicitly wants a collection of different physical instruments. Modules may have different colours, materials, sizes, silhouettes, and control styles. Do not return to one uniform panel with a different accent stripe. Keep the skeuomorphic detail: convincing enclosure depth, material texture, screws, recessed sockets, legible printed labels, and tactile controls.
 
-Current examples include a cream/charcoal drum computer, walnut-sided dark keyboard, violet polymer pad controller, ochre oscillator, forest-green filter, blue echo box, plum reverb, graphite noise generator, and a narrow brushed-metal mixer with faders. Surface palettes and refinements live in `src/components/module-finishes.css`; shared mechanics remain in `src/styles.css`. Keep dimensions in the module registry and preserve socket geometry.
+Current examples include a cream/charcoal drum computer, walnut-sided dark keyboard, violet polymer pad controller, ochre oscillator, forest-green filter, blue echo box, plum reverb, graphite noise generator, a narrow brushed-metal mixer with faders, and a petrol-teal four-input Merger with an ivory level dial. Surface palettes and refinements live in `src/components/module-finishes.css`; shared mechanics remain in `src/styles.css`. Keep dimensions in the module registry and preserve socket geometry.
 
 ## Read before changing code
 

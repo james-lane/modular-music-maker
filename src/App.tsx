@@ -107,7 +107,7 @@ export default function App() {
       definition.maxInstances &&
       project.modules.filter((module) => module.type === type).length >= definition.maxInstances
     ) {
-      notify('Your patch already has an Output module. Connect a Mixer to combine sounds.');
+      notify('Your patch already has an Output module. Use a Merger or Mixer to combine sounds.');
       return;
     }
     // Find an unoccupied rack slot. Modules added with + should never cover an existing one.

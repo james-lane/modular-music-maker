@@ -24,7 +24,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 
 ## What works
 
-- A searchable module library with twelve working modules: drum machine, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, and output.
+- A searchable module library with thirteen working modules: drum machine, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, mixer, merger, and output.
 - Five contrasting example patches in **Examples** (also available under **More → Example patches**). The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Drag modules from the library, or add them using the **+** buttons. Move panels by dragging their headers.
@@ -62,6 +62,12 @@ Use **Examples → Pocket rhythm** for the connected performance example. Your c
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 
 Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns retain their eight eighth-notes. Both repeat independently of the time-signature display. No physical MIDI device support is included yet.
+
+## Merge several sounds
+
+Add **Merger** from **Utility** in the module library. Connect up to four instrument or effect audio outputs to **IN 1–IN 4**, then connect **SUM OUT → Output AUDIO IN** (or another effect). Its **Sum level** knob controls the combined volume and starts at 50%. Empty inputs are silent; the amber indicators show attached cables. The teal metal enclosure and ivory dial give it its own hardware identity.
+
+For more than four sources, connect one Merger's SUM OUT to another Merger input. Adding sources adds their levels, so balance them using their own controls; use the two-channel **Mixer** when you want separate faders. Pitch, modulation, and trigger signals retain their existing socket types: route a Keyboard through an Oscillator, or pads through a Drum machine, before merging their audio. The Merger's **?** guide includes a four-input example with an echo return.
 
 ## Saving and privacy
 

@@ -218,6 +218,27 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
       { id: 'b', label: 'Channel B', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
     ],
   },
+  merger: {
+    type: 'merger',
+    name: 'Merger',
+    subtitle: 'Four sounds. One destination.',
+    description: 'Merge four audio inputs into one output.',
+    category: 'Utility',
+    color: '#5a9290',
+    code: 'SUM–04',
+    width: 320,
+    height: 336,
+    ports: [
+      { id: 'in1', label: 'IN 1', direction: 'input', signal: 'audio' },
+      { id: 'in2', label: 'IN 2', direction: 'input', signal: 'audio' },
+      { id: 'in3', label: 'IN 3', direction: 'input', signal: 'audio' },
+      { id: 'in4', label: 'IN 4', direction: 'input', signal: 'audio' },
+      { id: 'out', label: 'SUM OUT', direction: 'output', signal: 'audio' },
+    ],
+    controls: [
+      { id: 'level', label: 'Sum level', min: 0, max: 1, step: 0.01, default: 0.5, unit: '%' },
+    ],
+  },
   output: {
     type: 'output',
     name: 'Output',

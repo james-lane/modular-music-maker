@@ -2,6 +2,7 @@ import { CONFIG } from '../config';
 import type { ModuleType, Parameters } from '../domain/types';
 import type { DrumSound } from '../domain/instruments';
 import { createDrumRuntime } from './drums';
+import { MODULES } from '../domain/modules';
 
 export interface AudioRuntime {
   inputs: Record<string, AudioNode | AudioParam>;
@@ -188,6 +189,34 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
       },
       dispose() {
         [a, b, output].forEach((node) => node.disconnect());
+      },
+    };
+  },
+
+  merger(context) {
+    const sum = context.createGain();
+    sum.gain.value = 0;
+    // Each socket gets its own node. Reusing one node for every input would collapse
+    // two cables from the same source into a single Web Audio connection.
+    const inputs = Object.fromEntries(
+      MODULES.merger.ports
+        .filter((port) => port.direction === 'input')
+        .map((port) => {
+          const input = context.createGain();
+          input.connect(sum);
+          return [port.id, input];
+        }),
+    );
+    return {
+      inputs,
+      outputs: { out: sum },
+      update(parameters) {
+        // A fixed level preserves existing balances when another input is plugged in.
+        smooth(sum.gain, value(parameters, 'level'), context);
+      },
+      dispose() {
+        Object.values(inputs).forEach((input) => input.disconnect());
+        sum.disconnect();
       },
     };
   },

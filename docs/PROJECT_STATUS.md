@@ -1,10 +1,10 @@
 # Project status
 
-Last updated: **14 November 2026**.
+Last updated: **15 November 2026**.
 
 ## Implemented foundation
 
-Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes twelve functioning modules, including a 16-step drum machine, 25-key keyboard, and 16-pad controller, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
+Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local persistence API. It includes thirteen functioning modules, including a 16-step drum machine, 25-key keyboard, 16-pad controller, and four-input audio Merger, a connected starter composition, a hardware-inspired panel design, patch cables, drag/drop and movement, composition controls, undo/redo, browser autosave, optional Node saves, JSON backups/import, live recording, recording playback/download, and keyboard-accessible controls.
 
 The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture.
 
@@ -16,7 +16,7 @@ Browser QA verified first-visit display, all five examples producing a live outp
 
 ## Module guides
 
-Each of the twelve library modules has a question-mark button opening a guide with setup steps, control explanations, socket-compatible modules, a tip, and a worked patch example. Compatible modules can be explored inside the same modal, with Back navigation. Guides are read-only and retain the original library search/category and mobile drawer state. Compatibility derives from the registry; worked examples use actual port IDs and are checked by the patch validator.
+Each library module has a question-mark button opening a guide with setup steps, control explanations, socket-compatible modules, a tip, and a worked patch example. Compatible modules can be explored inside the same modal, with Back navigation. Guides are read-only and retain the original library search/category and mobile drawer state. Compatibility derives from the registry; worked examples use actual port IDs and are checked by the patch validator.
 
 Browser QA opened all twelve guides and verified related-guide navigation, Back, Escape, focus returning to the help button, retained library search, and a scrolling 390px phone layout without horizontal overflow. The patch stayed unchanged and playback stayed stopped throughout guide browsing; no browser errors were reported.
 
@@ -24,12 +24,16 @@ Browser QA opened all twelve guides and verified related-guide navigation, Back,
 
 The circuit board has no decorative instructional text; the former “Room for your next idea” note and its subtitle have been removed.
 
+The new **Merger** is a petrol-teal summing box with four audio inputs, a SUM OUT socket, an ivory Sum level knob, and amber cable-occupancy indicators. It sums without automatic normalization and can chain into another Merger. It uses the ordinary v1 parameter model, preserving existing Mixer modules and saved patches. Its guide includes compatibility information and a four-source example with an echo return.
+
+Merger browser QA verified adding, moving with cables attached, all four inputs sounding individually, their combined output, silence at zero level, incompatible modulation rejection, unplug/reconnect, removal/undo with audio disposal/recovery, export/import, saved level and connections after reload, and a scrolling 390px phone guide without horizontal overflow. A merged take was recorded, played back, downloaded, and decoded as stereo Opus at 48 kHz; its measured RMS was approximately −21.5 dBFS. Tests used a separate local preview origin, leaving the user's active patch intact. No browser errors occurred during verification.
+
 The user prefers individually designed instruments with different materials, colours, sizes, silhouettes, and controls. The current set includes a cream/charcoal drum computer, walnut-sided keyboard, violet pad enclosure, ochre oscillator, green filter, blue delay, plum reverb, terracotta LFO, graphite noise source, and a compact brushed-aluminium mixer with faders. Output has a cream laboratory enclosure and red master dial. Colours and material details are configurable in `components/module-finishes.css`; dimensions remain registry-driven. Selected modules are narrower, preserving previously valid saved positions. Browser QA verified the contrasting finishes across the catalog, control/socket spacing, live playback, and the mixer faders using both dragging and arrow keys; fader values persisted across saving and reload.
 
 ## Validation
 
 - Strict TypeScript checking and a production Vite build.
-- Twenty-three automated tests covering starter round trips, all registry defaults, musical pitch conversion, routing invariants, untrusted import data, cycles/dangling cables, atomic file persistence, corrupt neighboring files, real HTTP API validation, drum pattern validation/muting, controller event routing, backward-compatible v1 loading, all sixteen drum recipes, source disposal, hat choking, held-note priority/release, octave edits, and rebuilding disposed audio engines during development reload, guide control coverage, signal-specific compatibility guidance, valid wiring for every guide example, and distinct/fully connected/non-overlapping example patches with independent copies.
+- Twenty-five automated tests covering starter round trips, all registry defaults, musical pitch conversion, routing invariants, untrusted import data, cycles/dangling cables, atomic file persistence, corrupt neighboring files, real HTTP API validation, drum pattern validation/muting, controller event routing, backward-compatible v1 loading, all sixteen drum recipes, source disposal, hat choking, held-note priority/release, octave edits, and rebuilding disposed audio engines during development reload, guide control coverage, signal-specific compatibility guidance, valid wiring for every guide example, distinct/fully connected/non-overlapping example patches with independent copies, and Merger input independence/chaining/saved levels/signal rejection/node disposal.
 - Browser verification: live playback/analysis, keyboard knob changes, recording/save/reopen/download, Node saving, library drag-and-drop, module movement, modulation routing, incompatible-socket rejection, undo/redo, composition settings across reload, and desktop/390px phone layouts. The downloaded take was verified as stereo Opus at 48 kHz. New-instrument browser checks also verified live keyboard/pad audio with the drum pattern muted, note release, recording/reopening the live performance, and drum pattern/keyboard-octave persistence through a page reload. No browser errors occurred in the final verification run. See Git history for later validation updates.
 
 ## Known boundaries
