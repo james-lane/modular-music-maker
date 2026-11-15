@@ -2,6 +2,10 @@
 
 Last updated: **15 November 2026**.
 
+## Installed app name — local change
+
+Desktop installation metadata now uses **Patchwork** for both the manifest name and short name. The document title and explicit HTML application name also use Patchwork, covering page-title fallbacks. Apple's web-app title already used the short name. Sharing previews retain their existing tagline; the stable app ID, scope, start URL, and patch data are unchanged. Production build and formatting checks pass, and the built HTML/manifest were checked for the short name. This fix is local and has not been deployed.
+
 ## Touch controls and assignable XY Effects — local changes
 
 App text now suppresses selection and WebKit touch callouts, including labels outside module panels. Patch-name/search inputs retain native editing, caret selection, and paste. Keyboard keys support finger, pen, and mouse swipes across white and raised black keys, independently per pointer. Leaving the bed releases that finger's note; re-entry plays again. Shared held pitches are retained until their final owner releases. Cancellation, lost capture, focus/window loss, hidden documents, and unmount preserve note-off cleanup.

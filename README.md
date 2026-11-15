@@ -45,6 +45,8 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 
 ## Use offline or install on iPad
 
+The installed app name is **Patchwork** on desktop and mobile. The browser title and installation metadata use this short name; sharing previews retain the “a playground for sound” tagline.
+
 Open the production app while connected and wait for **Offline ready** in the bottom bar. The app saves all its code, styles, icons, examples, and guides on the device. Instruments synthesize sound locally, so playback, live keys/pads, editing, saving, recording, and import/export remain available without a connection.
 
 On iPad or iPhone, open the hosted HTTPS address in **Safari → Share → Add to Home Screen → Add**. Leave **Open as Web App** enabled if shown. Launch the new home-screen icon once while online and wait for **Offline ready** there before switching to Airplane Mode. Installation may use a separate library from the browser tab; export/import patches to transfer existing work. Desktop/Android users can use their browser's Install app, Add to Home Screen, or Add to Dock option. Installation is optional for offline browser-tab use.

@@ -14,6 +14,8 @@ The manifest declares standalone display, a stable root identity/start URL, and 
 
 ## Build and cache lifecycle
 
+The manifest's `name` and `short_name`, HTML `application-name`, Apple web-app title, and document title all use **Patchwork**. This supplies the short name both to manifest-based desktop installs and to installers using the page title as a fallback. Social-card titles retain the tagline independently. Keep the manifest identity, start URL, and scope stable when changing display names.
+
 `scripts/offline-build.ts` runs after Vite writes its production files. It derives a precache list from the actual output rather than maintaining a second list of chunks. The revision includes asset paths/content and worker source, so changes produce a new release cache. It compiles `src/offline/worker.ts` to a classic `/service-worker.js`; `tsconfig.worker.json` checks the source against WebWorker types separately from window code. No new package dependency is needed.
 
 App versions are generated automatically from `package.json` and the current Git commit, including its history count and hash. The bottom-right badge abbreviates the full identity in its accessible label/hover text; `*` means the build contains uncommitted changes. The emitted `version.json` and UI bundle share the same build snapshot and enter the same atomic cache. Every commit therefore produces a distinct version/cache even when app source is unchanged. An installed or offline app continues to display its running release until the normal update lifecycle activates a newer one. Build from full Git history; a shallow checkout must run `git fetch --unshallow` first. An exported source archive without Git is explicitly labelled `+source`.
