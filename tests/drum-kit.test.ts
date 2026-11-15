@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { CONFIG } from '../src/config';
-import { connectedDrumKit, drumLiveTailMs, drumVoiceLabel } from '../src/domain/instruments';
+import {
+  connectedDrumKit,
+  drumLiveTailMs,
+  drumVoiceLabel,
+  kitSamplerSources,
+} from '../src/domain/instruments';
 import { compatiblePorts } from '../src/domain/module-guides';
 import { connectionError, createModule, createPerformanceProject } from '../src/domain/project';
 import { decodeSamplePcm, encodeSamplePcm, isValidSamplePcm } from '../src/domain/samples';
@@ -128,4 +133,32 @@ test('live idle timing leaves room for long tuned samples and external input env
   kit.parameters.kick = 'input';
   kit.parameters.length = 2;
   assert.equal(drumLiveTailMs(project), CONFIG.audio.liveTailMs + 3000);
+});
+
+test('only direct sampler cables supply kit clips, with combined trim/speed/Tone live timing', () => {
+  const { project, drums, kit } = kitPatch();
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.samples = { clip: { name: 'Long', pcm: encodeSamplePcm(new Float32Array(96000)) } };
+  sampler.parameters = { ...sampler.parameters, trimStart: 0.25, trimEnd: 0.75, rate: 0.5 };
+  project.modules.push(sampler);
+  project.cables.push({
+    id: crypto.randomUUID(),
+    from: { moduleId: sampler.id, portId: 'out' },
+    to: { moduleId: kit.id, portId: 'kick' },
+  });
+  kit.parameters.kick = 'input';
+  drums.parameters.tone = -12;
+  drums.parameters.decay = 0.3;
+  assert.equal(kitSamplerSources(project, kit).kick, sampler);
+  assert.equal(drumLiveTailMs(project), CONFIG.audio.liveTailMs + 8000);
+  const saved = parseProject(JSON.parse(JSON.stringify(project)));
+  assert.equal(
+    kitSamplerSources(
+      saved,
+      saved.modules.find((module) => module.id === kit.id),
+    ).kick?.id,
+    sampler.id,
+  );
+  project.cables = project.cables.filter((cable) => cable.from.moduleId !== sampler.id);
+  assert.deepEqual(kitSamplerSources(project, kit), {});
 });

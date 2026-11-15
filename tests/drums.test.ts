@@ -8,12 +8,15 @@ import { DRUM_SOUNDS } from '../src/domain/instruments';
 /** A small ownership spy, not an audio implementation. Browser QA verifies actual sound. */
 class Parameter {
   value = 0;
-  setValueAtTime(value: number) {
+  events: { value: number; time: number; kind: string }[] = [];
+  setValueAtTime(value: number, time = 0) {
+    this.events.push({ value, time, kind: 'set' });
     assert.ok(Number.isFinite(value));
     this.value = value;
   }
-  linearRampToValueAtTime(value: number) {
-    this.setValueAtTime(value);
+  linearRampToValueAtTime(value: number, time = 0) {
+    this.events.push({ value, time, kind: 'ramp' });
+    this.value = value;
   }
   exponentialRampToValueAtTime(value: number) {
     assert.ok(value > 0);
@@ -31,6 +34,8 @@ class Node {
   connections = new Set<Node>();
   stops: (number | undefined)[] = [];
   started = false;
+  startTime = 0;
+  offset = 0;
   onended?: () => void;
   connect(target: Node) {
     this.connections.add(target);
@@ -39,7 +44,9 @@ class Node {
     if (target) assert.ok(this.connections.delete(target), 'specific input connection must exist');
     else this.connections.clear();
   }
-  start() {
+  start(time = 0, offset = 0) {
+    this.startTime = time;
+    this.offset = offset;
     this.started = true;
   }
   stop(time?: number) {
@@ -148,5 +155,102 @@ test('external voice hits own their input connections and Stop tolerates late so
   sources.forEach((source) => source.onended?.());
   assert.equal(input.connections.size, 0);
   assert.ok(nodes.every((node) => node.connections.size === 0));
+  runtime.dispose();
+});
+
+test('sampler kit inputs trigger eight complete overlapping hits without playing the sampler bus', () => {
+  const { context, nodes } = audioSpy();
+  const runtime = createDrumRuntime(context);
+  const kit = createModule('drum-kit', 0, 0);
+  kit.parameters.kick = 'input';
+  kit.parameters.length = 0.03;
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.samples = {
+    clip: { name: 'Four seconds', pcm: encodeSamplePcm(new Float32Array(96000)) },
+  };
+  sampler.parameters.level = 0.5;
+  runtime.update({ level: 0.5, tone: 0, decay: 1 });
+  runtime.configureKit!(kit, { kick: sampler });
+  for (let index = 0; index < 8; index++) runtime.trigger!('kick', 1, index / 4);
+  const voices = nodes.filter((node) => node.started);
+  assert.equal(voices.length, 8);
+  assert.equal(new Set(voices).size, 8);
+  for (const voice of voices) {
+    assert.deepEqual(voice.stops, [voice.startTime + 4]);
+    assert.equal(voice.offset, 0);
+  }
+  const input = runtime.inputs['kit-kick'] as unknown as Node;
+  assert.equal(input.connections.size, 0, 'sampled hits do not gate the running input bus');
+  assert.equal(runtime.remainingTailSeconds?.(), 5.75);
+  runtime.silence!();
+  assert(voices.every((voice) => voice.stops.includes(undefined)));
+  assert.equal(runtime.remainingTailSeconds?.(), 0);
+  runtime.dispose();
+  assert(nodes.every((node) => !node.connections.size));
+});
+
+test('sample trim, speed, level and drum Tone apply per hit; Decay fades without truncating voices', () => {
+  const { context, nodes } = audioSpy();
+  const runtime = createDrumRuntime(context);
+  const kit = createModule('drum-kit', 0, 0);
+  kit.parameters.kick = 'input';
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.samples = { clip: { name: 'Clip', pcm: encodeSamplePcm(new Float32Array(96000)) } };
+  sampler.parameters = {
+    ...sampler.parameters,
+    trimStart: 0.25,
+    trimEnd: 0.75,
+    rate: 0.5,
+    level: 0.4,
+  };
+  runtime.configureKit!(kit, { kick: sampler });
+  runtime.update({ level: 0.7, tone: -12, decay: 0.3 });
+  const before = nodes.length;
+  runtime.trigger!('kick', 0.5, 1);
+  const hit = nodes.slice(before),
+    player = hit.find((node) => node.started)!;
+  assert.equal(player.offset, 1);
+  assert.equal(player.playbackRate.value, 0.25);
+  assert.deepEqual(player.stops, [9]);
+  const envelope = hit.find((node) =>
+    node.gain.events.some((event) => event.kind === 'ramp' && event.value === 0.2),
+  )!;
+  assert(envelope);
+  const lowDecayHold = envelope.gain.events
+    .filter((event) => event.value === 0.2 && event.kind === 'set')
+    .at(-1)!.time;
+  runtime.update({ level: 0.7, tone: -12, decay: 1 });
+  const next = nodes.length;
+  runtime.trigger!('kick', 0.5, 1);
+  const natural = nodes.slice(next);
+  assert.deepEqual(natural.find((node) => node.started)!.stops, [9]);
+  assert(
+    natural
+      .find((node) => !node.started)!
+      .gain.events.some(
+        (event) => event.value === 0.2 && event.kind === 'set' && event.time > lowDecayHold,
+      ),
+  );
+  assert.deepEqual(player.stops, [9], 'the later hit leaves the earlier one playing');
+  const callbacks = nodes.filter((node) => node.started).map((node) => node.onended);
+  runtime.dispose();
+  callbacks.forEach((callback) => callback?.());
+  assert(nodes.every((node) => !node.connections.size));
+});
+
+test('empty linked samplers stay silent and imported samples also keep full source duration', () => {
+  const { context, nodes } = audioSpy();
+  const runtime = createDrumRuntime(context);
+  const kit = createModule('drum-kit', 0, 0);
+  kit.parameters.kick = 'input';
+  runtime.configureKit!(kit, { kick: createModule('mic-sampler', 0, 0) });
+  runtime.trigger!('kick', 1, 0);
+  assert.equal(nodes.filter((node) => node.started).length, 0);
+  kit.parameters.kick = 'sample';
+  kit.samples = { kick: { name: 'Imported', pcm: encodeSamplePcm(new Float32Array(96000)) } };
+  runtime.configureKit!(kit);
+  runtime.update({ level: 0.7, tone: 0, decay: 0.3 });
+  runtime.trigger!('kick', 1, 0);
+  assert.deepEqual(nodes.find((node) => node.started)!.stops, [4]);
   runtime.dispose();
 });

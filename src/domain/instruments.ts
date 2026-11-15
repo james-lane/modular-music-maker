@@ -36,6 +36,29 @@ export function connectedDrumKit(project: Project, drumId: string): PatchModule 
   );
 }
 
+export type KitSamplerSources = Partial<Record<DrumLane, PatchModule>>;
+
+/** A direct sampler cable supplies its saved clip per hit, not a running audio stream.
+ * Effects and other audio sources retain the normal live-input envelope contract.
+ */
+export function kitSamplerSources(
+  project: Project,
+  kit: PatchModule | undefined,
+): KitSamplerSources {
+  const sources: KitSamplerSources = {};
+  if (!kit) return sources;
+  for (const lane of DRUM_LANES) {
+    const cable = project.cables.find(
+      (item) => item.to.moduleId === kit.id && item.to.portId === lane,
+    );
+    const sampler = project.modules.find(
+      (module) => module.id === cable?.from.moduleId && module.type === 'mic-sampler',
+    );
+    if (sampler && cable?.from.portId === 'out') sources[lane] = sampler;
+  }
+  return sources;
+}
+
 export function drumVoiceLabel(kit: PatchModule | undefined, lane: DrumLane): string {
   const source = kit?.parameters[lane] ?? lane;
   if (source === 'sample') return kit?.samples?.[lane]?.name ?? 'No sample';
@@ -48,15 +71,21 @@ export function drumLiveTailMs(project: Project): number {
   for (const drums of project.modules.filter((module) => module.type === 'drum-machine')) {
     const kit = connectedDrumKit(project, drums.id);
     if (!kit) continue;
+    const samplers = kitSamplerSources(project, kit);
     for (const lane of DRUM_LANES) {
       const source = kit.parameters[lane];
       const pcm = kit.samples?.[lane]?.pcm;
-      const duration =
-        source === 'sample' && pcm
-          ? (Math.floor((pcm.length * 3) / 8) /
-              CONFIG.samples.sampleRate /
-              2 ** (Number(drums.parameters.tone) / 12)) *
-            Math.min(1, Number(drums.parameters.decay))
+      const sampler = source === 'input' ? samplers[lane] : undefined;
+      const clip = sampler?.samples?.clip;
+      const pitch = 2 ** (Number(drums.parameters.tone) / 12);
+      const duration = sampler
+        ? clip
+          ? sampleRegion(clip.pcm, sampler.parameters).duration /
+            Number(sampler.parameters.rate) /
+            pitch
+          : 0
+        : source === 'sample' && pcm
+          ? sampleRegion(pcm).duration / pitch
           : source === 'input'
             ? Number(kit.parameters.length) * Number(drums.parameters.decay)
             : 0;

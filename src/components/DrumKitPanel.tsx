@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { importDrumSample } from '../audio/sample-import';
 import type { LiveControls } from '../audio/live';
-import { DRUM_LANES, DRUM_SOUNDS, type DrumLane } from '../domain/instruments';
+import { DRUM_LANES, DRUM_SOUNDS, kitSamplerSources, type DrumLane } from '../domain/instruments';
 import type { DrumSample, PatchModule, Project } from '../domain/types';
 
 export function DrumKitPanel({
@@ -26,6 +26,7 @@ export function DrumKitPanel({
     },
     [],
   );
+  const samplers = kitSamplerSources(project, module);
   const connected = project.cables.some(
     (cable) => cable.from.moduleId === module.id && cable.from.portId === 'kit',
   );
@@ -60,6 +61,7 @@ export function DrumKitPanel({
         {DRUM_LANES.map((lane, index) => {
           const source = String(module.parameters[lane]);
           const sample = module.samples?.[lane];
+          const sampler = samplers[lane];
           const inputConnected = project.cables.some(
             (cable) => cable.to.moduleId === module.id && cable.to.portId === lane,
           );
@@ -128,7 +130,11 @@ export function DrumKitPanel({
                 ) : (
                   <small>
                     {source === 'input'
-                      ? `${inputConnected ? '● Patched' : '○ Connect a source'} to IN ${index + 1}`
+                      ? sampler
+                        ? sampler.samples?.clip
+                          ? `● Sampler: ${sampler.samples.clip.name}`
+                          : '○ Record a clip in the connected sampler'
+                        : `${inputConnected ? '● Patched' : '○ Connect a source'} to IN ${index + 1}`
                       : 'INTERNAL PERCUSSION'}
                   </small>
                 )}

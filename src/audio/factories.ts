@@ -1,6 +1,6 @@
 import { CONFIG } from '../config';
 import type { DrumSample, ModuleType, Parameters, PatchModule } from '../domain/types';
-import type { DrumSound } from '../domain/instruments';
+import type { DrumSound, KitSamplerSources } from '../domain/instruments';
 import { createDrumRuntime } from './drums';
 import { MODULES } from '../domain/modules';
 import { createMicSampler } from './mic-sampler';
@@ -15,8 +15,9 @@ export interface AudioRuntime {
   voice?: { frequency: AudioParam; envelope: AudioParam };
   trigger?: (sound: DrumSound, velocity: number, time: number) => void;
   silence?: () => void;
+  remainingTailSeconds?: () => number;
   configureSample?: (sample: DrumSample | undefined) => void;
-  configureKit?: (kit: PatchModule | undefined) => void;
+  configureKit?: (kit: PatchModule | undefined, samplers?: KitSamplerSources) => void;
 }
 
 type Factory = (context: AudioContext, masterBus: AudioNode) => AudioRuntime;

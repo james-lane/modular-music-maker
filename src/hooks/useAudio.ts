@@ -81,12 +81,18 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const scheduleIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
     if (heldKeys.current.size || engine.isPlaying) return;
-    idleTimer.current = setTimeout(() => {
-      if (!heldKeys.current.size && !engine.isPlaying) {
-        void engine.stop();
-        setLiveActive(false);
-      }
-    }, drumLiveTailMs(latest.current));
+    idleTimer.current = setTimeout(
+      () => {
+        if (!heldKeys.current.size && !engine.isPlaying) {
+          void engine.stop();
+          setLiveActive(false);
+        }
+      },
+      Math.max(
+        drumLiveTailMs(latest.current),
+        engine.remainingTailSeconds() * 1000 + CONFIG.audio.liveTailMs,
+      ),
+    );
   }, [engine]);
 
   const activateLive = useCallback(

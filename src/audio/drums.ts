@@ -1,6 +1,11 @@
 import { CONFIG } from '../config';
-import { DRUM_LANES, DRUM_SOUNDS, type DrumSound } from '../domain/instruments';
-import { decodeSamplePcm } from '../domain/samples';
+import {
+  DRUM_LANES,
+  DRUM_SOUNDS,
+  type DrumSound,
+  type KitSamplerSources,
+} from '../domain/instruments';
+import { decodeSamplePcm, sampleRegion } from '../domain/samples';
 import type { Parameters, PatchModule } from '../domain/types';
 import type { AudioRuntime } from './factories';
 
@@ -71,6 +76,7 @@ interface ActiveHit {
   sound: DrumSound;
   sources: AudioScheduledSourceNode[];
   nodes: AudioNode[];
+  endTime?: number;
   inputConnection?: { input: AudioNode; gain: GainNode };
 }
 
@@ -86,6 +92,7 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
   const inputs = Object.fromEntries(DRUM_LANES.map((lane) => [lane, context.createGain()]));
   const silentBuffer = context.createBuffer(1, 1, context.sampleRate);
   let kit: PatchModule | undefined;
+  let samplers: KitSamplerSources = {};
   const sampleBuffers = new Map<string, { pcm: string; buffer: AudioBuffer }>();
   const active = new Set<ActiveHit>();
   let parameters: Parameters = { tone: 0, decay: 0.8, level: 0.7 };
@@ -104,10 +111,14 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
 
   return {
     inputs: Object.fromEntries(DRUM_LANES.map((lane) => [`kit-${lane}`, inputs[lane]])),
-    configureKit(next) {
+    configureKit(next, nextSamplers = {}) {
       kit = next;
+      samplers = nextSamplers;
       for (const lane of DRUM_LANES) {
-        const sample = next?.samples?.[lane];
+        const sample =
+          next?.parameters[lane] === 'input' && nextSamplers[lane]
+            ? nextSamplers[lane]?.samples?.clip
+            : next?.samples?.[lane];
         if (!sample) sampleBuffers.delete(lane);
         else if (sampleBuffers.get(lane)?.pcm !== sample.pcm) {
           const data = decodeSamplePcm(sample.pcm);
@@ -129,11 +140,14 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
     trigger(sound, velocity, when) {
       // Lane identity stays stable in patterns and the first four pads. Resolve once,
       // so choosing a sound never recursively remaps another lane or rewrites a pattern.
-      const isLane = DRUM_LANES.some((lane) => lane === sound);
-      const source = isLane ? (kit?.parameters[sound] ?? sound) : sound;
+      const lane = DRUM_LANES.find((lane) => lane === sound);
+      const source = lane ? (kit?.parameters[lane] ?? lane) : sound;
+      const sampler = source === 'input' && lane ? samplers[lane] : undefined;
       const builtIn = DRUM_SOUNDS.find((item) => item.id === source)?.id;
       const recipe = builtIn ? DRUM_RECIPES[builtIn] : undefined;
-      const sample = source === 'sample' ? sampleBuffers.get(sound)?.buffer : undefined;
+      const sample = source === 'sample' || sampler ? sampleBuffers.get(sound)?.buffer : undefined;
+      // An empty linked sampler must stay silent, even if its audio bus is connected.
+      if (sampler && !sample) return;
       if (!recipe && !sample && source !== 'input') return;
       // Like a real kit, a closed hat cuts the open hat short. Bound overlap under rapid playing.
       if (source === 'closed-hat')
@@ -162,25 +176,52 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
         );
         gain.connect(output);
         hit.nodes.push(gain);
-        return { gain, end: Math.max(end, start + bursts * 0.012 + 0.01) };
+        const finalEnd = Math.max(end, start + bursts * 0.012 + 0.01);
+        hit.endTime = Math.max(hit.endTime ?? 0, finalEnd + 0.01);
+        return { gain, end: finalEnd };
       };
 
-      if (sample || source === 'input') {
+      if (sample) {
+        // Saved sounds are independent one-shots, never gates over the sampler's live bus.
+        // Decay shapes only their tail: it must not shorten the source or steal another hit.
         const player = context.createBufferSource();
-        const duration = sample ? sample.duration / pitch : Number(kit?.parameters.length ?? 0.3);
-        const { gain, end } = envelope(duration, 1);
-        if (sample) {
-          player.buffer = sample;
-          player.playbackRate.value = pitch;
-        } else {
-          const input = inputs[sound];
-          input.connect(gain);
-          hit.inputConnection = { input, gain };
-          // A silent looping source gives external-input hits audio-clock cleanup, even
-          // in background tabs. It contributes no signal; the connected input is heard.
-          player.buffer = silentBuffer;
-          player.loop = true;
-        }
+        const gain = context.createGain();
+        const clip = sampler?.samples?.clip;
+        const region =
+          clip && sampler
+            ? sampleRegion(clip.pcm, sampler.parameters)
+            : { startSeconds: 0, duration: sample.duration };
+        const rate = pitch * (sampler ? Number(sampler.parameters.rate) : 1);
+        const duration = region.duration / rate;
+        const end = start + duration;
+        const edge = Math.min(CONFIG.audio.samplerFadeSeconds, duration / 2);
+        const release = Math.min(
+          duration - edge,
+          Math.max(edge, duration * (1 - Math.min(1, decay))),
+        );
+        const level = strength * (sampler ? Number(sampler.parameters.level) : 1);
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(level, start + edge);
+        gain.gain.setValueAtTime(level, end - release);
+        gain.gain.linearRampToValueAtTime(0, end);
+        gain.connect(output);
+        player.buffer = sample;
+        player.playbackRate.value = rate;
+        player.connect(gain);
+        hit.sources.push(player);
+        hit.nodes.push(player, gain);
+        hit.endTime = end;
+        player.start(start, region.startSeconds);
+        player.stop(end);
+      } else if (source === 'input') {
+        const player = context.createBufferSource();
+        const { gain, end } = envelope(Number(kit?.parameters.length ?? 0.3), 1);
+        const input = inputs[sound];
+        input.connect(gain);
+        hit.inputConnection = { input, gain };
+        // A silent looping source gives ordinary live-input gates audio-clock cleanup.
+        player.buffer = silentBuffer;
+        player.loop = true;
         player.connect(gain);
         hit.sources.push(player);
         hit.nodes.push(player);
@@ -229,6 +270,9 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
           if (--remaining === 0) clean(hit);
         };
       });
+    },
+    remainingTailSeconds() {
+      return Math.max(0, ...[...active].map((hit) => (hit.endTime ?? 0) - context.currentTime));
     },
     silence() {
       [...active].forEach(stopHit);

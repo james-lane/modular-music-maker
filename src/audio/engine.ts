@@ -3,6 +3,7 @@ import { stepFrequency } from '../domain/project';
 import {
   controllerTargets,
   connectedDrumKit,
+  kitSamplerSources,
   DRUM_LANES,
   drumHitsAtStep,
   midiFrequency,
@@ -138,7 +139,10 @@ export class AudioEngine {
       const runtime = this.runtimes.get(module.id)!;
       runtime.update(module.parameters);
       runtime.configureSample?.(module.samples?.clip);
-      runtime.configureKit?.(connectedDrumKit(project, module.id));
+      if (runtime.configureKit) {
+        const kit = connectedDrumKit(project, module.id);
+        runtime.configureKit(kit, kitSamplerSources(project, kit));
+      }
       if (
         runtime.voice &&
         !project.cables.some(
@@ -283,6 +287,13 @@ export class AudioEngine {
       this.nextStepTime += tickSeconds;
       this.stepIndex++;
     }
+  }
+
+  remainingTailSeconds(): number {
+    return Math.max(
+      0,
+      ...[...this.runtimes.values()].map((runtime) => runtime.remainingTailSeconds?.() ?? 0),
+    );
   }
 
   readWaveform(data: Uint8Array<ArrayBuffer>) {
