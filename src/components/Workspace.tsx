@@ -28,6 +28,7 @@ import { MODULES } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { DrumSample, Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
+import { ModuleDrag } from './module-drag';
 import { WorkspaceModule } from './WorkspaceModule';
 import { PatchCable } from './PatchCable';
 import { cablePath } from './cable-geometry';
@@ -113,22 +114,12 @@ export function Workspace({
   const [dragPreview, setDragPreview] = useState<{ id: string; x: number; y: number } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [handMode, setHandMode] = useState(false);
-  const drag = useRef<{
-    id: string;
-    offsetX: number;
-    offsetY: number;
-    moduleX: number;
-    moduleY: number;
-    clientX: number;
-    clientY: number;
-    x: number;
-    y: number;
-  } | null>(null);
-  const pan = useRef<Point | null>(null);
+  const [drag] = useState(() => new ModuleDrag());
+  const pan = useRef<(Point & { pointerId: number }) | null>(null);
   const gestures = useWorkspaceGestures(
     viewport,
     () => {
-      drag.current = null;
+      drag.cancel();
       pan.current = null;
       setDragPreview(null);
     },
@@ -150,7 +141,7 @@ export function Workspace({
   };
   // Opening a patch frames its saved world positions, including negative/distant ones.
   useLayoutEffect(() => {
-    drag.current = null;
+    drag.cancel();
     pan.current = null;
     setDragPreview(null);
     setPending(null);
@@ -158,7 +149,7 @@ export function Workspace({
   }, [project.id]);
   // Restoring a snapshot also abandons transient wiring/movement from the old graph.
   useLayoutEffect(() => {
-    drag.current = null;
+    drag.cancel();
     pan.current = null;
     setDragPreview(null);
     setPending(null);
@@ -268,36 +259,26 @@ export function Workspace({
 
   const startModuleDrag = useCallback(
     (module: PatchModule, event: PointerEvent<HTMLElement>) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 || drag.current || !viewport.current) return;
       event.stopPropagation();
-      event.currentTarget.setPointerCapture(event.pointerId);
-      const point = screenToWorld(event.clientX, event.clientY);
-      drag.current = {
-        id: module.id,
-        offsetX: point.x - module.x,
-        offsetY: point.y - module.y,
-        clientX: event.clientX,
-        clientY: event.clientY,
-        moduleX: module.x,
-        moduleY: module.y,
-        x: module.x,
-        y: module.y,
-      };
+      event.preventDefault();
+      // Capture on the stable rack, not the panel whose position/origin changes.
+      // Descendant controls keep their own capture for knobs, keys and pads.
+      viewport.current.setPointerCapture(event.pointerId);
+      viewport.current.focus({ preventScroll: true });
+      drag.start(module, event, screenToWorld(event.clientX, event.clientY));
       setDragPreview({ id: module.id, x: module.x, y: module.y });
       setSelected(module.id);
     },
-    [screenToWorld],
+    [screenToWorld, drag],
   );
   const moduleRemoved = useCallback((id: string) => {
     setPending((current) => (current?.moduleId === id ? null : current));
   }, []);
-  const moveModule = (clientX: number, clientY: number) => {
-    const current = drag.current;
-    if (!current) return;
-    const point = screenToWorld(clientX, clientY);
-    const position = snapPosition(point.x - current.offsetX, point.y - current.offsetY);
-    Object.assign(current, position, { clientX, clientY });
-    setDragPreview({ id: current.id, ...position });
+  const moveModule = (clientX: number, clientY: number, pointerId = drag.current?.pointerId) => {
+    if (pointerId === undefined) return;
+    const position = drag.move({ pointerId, clientX, clientY }, screenToWorld(clientX, clientY));
+    if (position) setDragPreview({ id: position.id, x: position.x, y: position.y });
   };
   const portClick = useCallback(
     (endpoint: Endpoint) => {
@@ -344,18 +325,17 @@ export function Workspace({
   );
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (pan.current) {
+    if (pan.current?.pointerId === event.pointerId) {
       panByScreen(pan.current.x - event.clientX, pan.current.y - event.clientY);
-      pan.current = { x: event.clientX, y: event.clientY };
+      pan.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
     }
-    if (drag.current) moveModule(event.clientX, event.clientY);
+    if (drag.current) moveModule(event.clientX, event.clientY, event.pointerId);
     if (pending) {
       cablePointer.current = { x: event.clientX, y: event.clientY };
       setPointer(screenToWorld(event.clientX, event.clientY));
     }
   };
-  const finishDrag = () => {
-    const position = drag.current;
+  const saveDrag = (position: ModuleDrag['current']) => {
     if (position && (position.x !== position.moduleX || position.y !== position.moduleY))
       commit((current) => ({
         ...current,
@@ -363,9 +343,17 @@ export function Workspace({
           module.id === position.id ? { ...module, x: position.x, y: position.y } : module,
         ),
       }));
-    drag.current = null;
-    setDragPreview(null);
-    pan.current = null;
+    if (!drag.current) setDragPreview(null);
+  };
+  const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (drag.current?.pointerId === event.pointerId)
+      saveDrag(drag.release(event, screenToWorld(event.clientX, event.clientY)));
+    if (pan.current?.pointerId === event.pointerId) pan.current = null;
+  };
+  const cancelPointer = (event: PointerEvent<HTMLDivElement>) => {
+    drag.cancel(event.pointerId);
+    if (!drag.current) setDragPreview(null);
+    if (pan.current?.pointerId === event.pointerId) pan.current = null;
   };
 
   const dropPosition = (type: ModuleType, clientX: number, clientY: number) => {
@@ -572,20 +560,21 @@ export function Workspace({
         }}
         onPointerDownCapture={gestures.onPointerDownCapture}
         onPointerMoveCapture={gestures.onPointerMoveCapture}
-        onPointerUpCapture={gestures.endTouch}
+        onPointerUpCapture={(event) => {
+          gestures.endTouch(event);
+          // Finalize before a descendant can consume the release event.
+          finishDrag(event);
+        }}
         onPointerCancelCapture={gestures.endTouch}
         onClickCapture={gestures.onClickCapture}
         onPointerMove={onPointerMove}
-        onPointerUp={finishDrag}
-        onPointerCancel={() => {
-          drag.current = null;
-          pan.current = null;
-          setDragPreview(null);
-        }}
-        onLostPointerCapture={() => {
-          drag.current = null;
-          pan.current = null;
-          setDragPreview(null);
+        onPointerCancel={cancelPointer}
+        onLostPointerCapture={(event) => {
+          // Knob/key/pad capture-loss bubbles through the rack too. It must not
+          // cancel a module move or pan owned by a different surface/pointer.
+          if (event.target !== event.currentTarget) return;
+          saveDrag(drag.lostCapture(event.pointerId, event.buttons));
+          if (pan.current?.pointerId === event.pointerId) pan.current = null;
         }}
         onPointerDown={(event) => {
           if (
@@ -597,6 +586,7 @@ export function Workspace({
               pan.current = {
                 x: event.clientX,
                 y: event.clientY,
+                pointerId: event.pointerId,
               };
               event.currentTarget.setPointerCapture(event.pointerId);
             }
@@ -614,7 +604,7 @@ export function Workspace({
         onKeyDown={(event) => {
           if (event.key === 'Escape') {
             setPending(null);
-            drag.current = null;
+            drag.cancel();
             pan.current = null;
             setDragPreview(null);
           }
