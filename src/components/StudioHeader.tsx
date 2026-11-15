@@ -1,7 +1,15 @@
 import { AudioLines, CircleHelp, FolderOpen, Headphones, LayoutGrid } from 'lucide-react';
 
 export type StudioDialog =
-  'examples' | 'patches' | 'recordings' | 'help' | 'module-help' | 'export' | 'settings' | null;
+  | 'examples'
+  | 'patches'
+  | 'recordings'
+  | 'help'
+  | 'module-help'
+  | 'export'
+  | 'settings'
+  | 'offline'
+  | null;
 
 interface Props {
   dialog: StudioDialog;

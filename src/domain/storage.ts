@@ -33,10 +33,32 @@ export function saveLocally(project: Project): void {
   localStorage.setItem(CONFIG.activeProjectKey, project.id);
 }
 
-/** Browser saving is always available on static hosting; Node adds file-backed persistence.
- * Failure to reach Node is an expected offline case, never presented as a server save.
+/** Public/static installs never probe or send patches to an API. The unauthenticated
+ * file adapter is only eligible on loopback, after identifying the Patchwork server.
  */
+async function localServerAvailable(): Promise<boolean> {
+  if (!navigator.onLine || !CONFIG.localApi.hosts.some((host) => host === window.location.hostname))
+    return false;
+  try {
+    const response = await fetch('/api/health', {
+      signal: AbortSignal.timeout(CONFIG.localApi.timeoutMs),
+    });
+    if (!response.ok) return false;
+    const health: unknown = await response.json();
+    return (
+      typeof health === 'object' &&
+      health !== null &&
+      'application' in health &&
+      health.application === 'patchwork'
+    );
+  } catch {
+    return false;
+  }
+}
+
+/** Browser saving owns the core flow; a reachable local Node server adds a file copy. */
 export async function saveToServer(project: Project): Promise<boolean> {
+  if (!(await localServerAvailable())) return false;
   try {
     const response = await fetch(`/api/projects/${project.id}`, {
       method: 'PUT',
@@ -53,6 +75,7 @@ export async function saveToServer(project: Project): Promise<boolean> {
 export async function listAllProjects(): Promise<Project[]> {
   const projects = new Map(loadProjects().map((project) => [project.id, project]));
   try {
+    if (!(await localServerAvailable())) return [...projects.values()].sort(newestFirst);
     const response = await fetch('/api/projects', { signal: AbortSignal.timeout(3000) });
     if (response.ok) {
       const raw: unknown = await response.json();
@@ -66,8 +89,10 @@ export async function listAllProjects(): Promise<Project[]> {
   } catch {
     /* Offline and static deployments use the browser library. */
   }
-  return [...projects.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  return [...projects.values()].sort(newestFirst);
 }
+
+const newestFirst = (a: Project, b: Project) => b.updatedAt.localeCompare(a.updatedAt);
 
 export function downloadFile(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);

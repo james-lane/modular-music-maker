@@ -76,7 +76,9 @@ svg {
 }
 .studio-app {
   height: 100dvh;
-  min-height: 620px;
+  min-height: min(620px, 100dvh);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1669,6 +1671,48 @@ svg {
   display: flex;
   align-items: center;
   gap: 9px;
+}
+.offline-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 3px;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.offline-readiness {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 17px;
+  margin-bottom: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+.offline-readiness.ready {
+  background: #f0f3e8;
+  border-color: #d9e1cb;
+}
+.offline-readiness strong,
+.offline-instructions h3 {
+  font-size: 13px;
+}
+.offline-readiness p,
+.offline-instructions p {
+  font-size: 12px;
+  line-height: 1.7;
+  margin: 7px 0 0;
+}
+.offline-instructions section {
+  margin: 22px 0;
+}
+.offline-instructions h3 {
+  margin: 0;
+}
+.offline-instructions .button {
+  margin-top: 12px;
 }
 .status-led {
   width: 5px;

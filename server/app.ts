@@ -25,7 +25,16 @@ export function createApp(dataDirectory = path.resolve(process.env.PATCHWORK_DAT
   app.use('/api', (_request, response) =>
     response.status(404).json({ error: 'Unknown API endpoint.' }),
   );
-  app.use(express.static(path.resolve('dist')));
+  app.use(
+    express.static(path.resolve('dist'), {
+      setHeaders(response, file) {
+        if (
+          ['service-worker.js', 'index.html', 'manifest.webmanifest'].includes(path.basename(file))
+        )
+          response.setHeader('Cache-Control', 'no-cache');
+      },
+    }),
+  );
   app.use(
     (
       error: unknown,

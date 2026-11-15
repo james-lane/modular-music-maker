@@ -398,7 +398,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '04',
             'Keep a little magic',
-            'Your patch saves automatically in this browser. Save patch also syncs to the local Node server when available. Export backs up a patch; Record captures the actual sound for playback and download.',
+            'Your patch saves automatically on this device. Export backs up a patch; Record captures the sound for playback and download. Open More → Use offline / install to save the studio for use without a connection.',
           ],
         ].map(([number, title, description]) => (
           <div key={number}>

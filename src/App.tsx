@@ -11,6 +11,7 @@ import {
 import { ModuleLibrary } from './components/ModuleLibrary';
 import { ModuleHelpDialog } from './components/ModuleHelpDialog';
 import { ExamplePatchesDialog } from './components/ExamplePatchesDialog';
+import { OfflineDialog, OfflineIndicator } from './components/OfflineDialog';
 import { Workspace } from './components/Workspace';
 import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
@@ -23,9 +24,11 @@ import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
 import { useAudio } from './hooks/useAudio';
 import { useStudio } from './hooks/useStudio';
+import { useOffline } from './hooks/useOffline';
 
 export default function App() {
   const studio = useStudio();
+  const offline = useOffline();
   const { project, commit } = studio;
   const [toast, setToast] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -188,6 +191,7 @@ export default function App() {
         onImport={() => importInput.current?.click()}
         onExamples={() => setDialog('examples')}
         onSettings={() => setDialog('settings')}
+        onOffline={() => setDialog('offline')}
       />
       <div className="studio-body">
         <ModuleLibrary
@@ -236,6 +240,7 @@ export default function App() {
           Made for exploring. <span>There’s no wrong way to play.</span>
         </p>
         <div>
+          <OfflineIndicator offline={offline} onOpen={() => setDialog('offline')} />
           <span className="audio-spec">
             {audio.playing ? `${(audio.engine.sampleRate / 1000).toFixed(1)} kHz` : 'WEB AUDIO'}
           </span>
@@ -252,6 +257,7 @@ export default function App() {
         </div>
       )}
       {dialog === 'help' && <HelpDialog onClose={() => setDialog(null)} />}
+      {dialog === 'offline' && <OfflineDialog offline={offline} onClose={() => setDialog(null)} />}
       {dialog === 'examples' && (
         <ExamplePatchesDialog onOpen={openProject} onClose={() => setDialog(null)} />
       )}

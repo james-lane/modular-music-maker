@@ -37,6 +37,26 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 - Zoom, pan, fit-to-view, undo, redo, and a responsive module drawer on small screens.
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
 - Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.
+- Install on an iPad/iPhone home screen, Android, or desktop and use the complete studio offline after its first download. **More → Use offline / install** shows readiness and installation steps.
+
+## Use offline or install on iPad
+
+Open the production app while connected and wait for **Offline ready** in the bottom bar. The app saves all its code, styles, icons, examples, and guides on the device. Instruments synthesize sound locally, so playback, live keys/pads, editing, saving, recording, and import/export remain available without a connection.
+
+On iPad or iPhone, open the hosted HTTPS address in **Safari → Share → Add to Home Screen → Add**. Leave **Open as Web App** enabled if shown. Launch the new home-screen icon once while online and wait for **Offline ready** there before switching to Airplane Mode. Installation may use a separate library from the browser tab; export/import patches to transfer existing work. Desktop/Android users can use their browser's Install app, Add to Home Screen, or Add to Dock option. Installation is optional for offline browser-tab use.
+
+The first download needs HTTPS (or localhost for testing). The Vite development server does not install an offline copy. Test the built app locally with:
+
+```sh
+npm run build
+npm run preview
+```
+
+Open **http://127.0.0.1:4173**, wait for readiness, then disconnect and reload. On an iPad, `127.0.0.1` refers to the iPad itself; use a hosted HTTPS address for installation. A plain HTTP LAN address is insufficient for offline installation.
+
+Connected visits check for updates. A complete new release waits until every Patchwork window is closed; it never reloads a session during playback or recording. Reopen the app to use the update. Keep the studio in the foreground while performing: mobile operating systems can suspend background audio. Device storage can be cleared or evicted, so keep patch exports and recording downloads as backups. **Use offline / install → Protect device storage** requests additional protection where supported.
+
+See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, device testing, and future Cloudflare hosting.
 
 ## Choose a starting point
 
@@ -79,7 +99,11 @@ For more than four sources, connect one Merger's SUM OUT to another Merger input
 
 Browser data belongs to the current origin and browser profile. The local preview and a hosted website have separate libraries. Clearing site data removes browser saves. Export patches and download recordings you want to keep.
 
-The frontend can also be hosted as static files from `dist/`; it retains browser saving and recording. The optional Node file API is only available when running the Node server. Static hosting does not run Node. Recording format is selected from the browser's supported WebM/Opus, Ogg/Opus, or MP4 formats. Takes are limited to 10 minutes by a configurable default.
+The frontend can also be hosted as static files from `dist/`; it retains browser saving, recording, and offline installation. Public installs make no patch API requests. The optional Node file API is only used on loopback after identifying a running Patchwork server, and is skipped immediately when offline. Static hosting does not run Node. Recording format is selected from the browser's supported WebM/Opus, Ogg/Opus, or MP4 formats. Takes are limited to 10 minutes by a configurable default.
+
+## Future Cloudflare hosting
+
+`wrangler.jsonc` prepares an **assets-only Cloudflare Workers** deployment of `dist/`. The build has no remote fonts, samples, CDN scripts, account service, or cloud storage dependency. Cloudflare currently lists static asset requests as free and unlimited, with no additional asset-storage charge; this design does not invoke a Worker script or need a paid plan. Check [Cloudflare's current limits and pricing](https://developers.cloudflare.com/workers/static-assets/billing-and-limitations/) before deployment. No deployment has been made. The optional local Node API stays on your computer.
 
 ## Commands
 
@@ -87,6 +111,7 @@ The frontend can also be hosted as static files from `dist/`; it retains browser
 | ---------------------- | ------------------------------------------------- |
 | `npm run dev`          | Frontend and Node server with automatic reload    |
 | `npm run build`        | TypeScript check and production frontend build    |
+| `npm run preview`      | Serve the production/offline app at port 4173     |
 | `npm start`            | Serve `dist/` and the local file API              |
 | `npm test`             | Domain validation and real HTTP/persistence tests |
 | `npm run typecheck`    | Strict TypeScript checking                        |

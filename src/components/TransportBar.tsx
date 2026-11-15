@@ -10,6 +10,7 @@ import {
   SlidersHorizontal,
   Volume2,
   VolumeX,
+  WifiOff,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CONFIG, ROOT_NOTES } from '../config';
@@ -28,6 +29,7 @@ interface Props {
   onImport: () => void;
   onExamples: () => void;
   onSettings: () => void;
+  onOffline: () => void;
 }
 
 /** Composition controls own temporary input text; the domain only receives valid values. */
@@ -42,6 +44,7 @@ export function TransportBar({
   onImport,
   onExamples,
   onSettings,
+  onOffline,
 }: Props) {
   const [tempoDraft, setTempoDraft] = useState(String(project.tempo));
   const [moreOpen, setMoreOpen] = useState(false);
@@ -242,6 +245,14 @@ export function TransportBar({
           <>
             <div className="menu-dismiss" onClick={() => setMoreOpen(false)} />
             <div className="more-menu">
+              <button
+                onClick={() => {
+                  setMoreOpen(false);
+                  onOffline();
+                }}
+              >
+                <WifiOff size={15} /> Use offline / install
+              </button>
               <button
                 onClick={() => {
                   setMoreOpen(false);

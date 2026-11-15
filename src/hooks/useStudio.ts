@@ -90,8 +90,16 @@ export function useStudio() {
         /* Visible save status handles storage errors. */
       }
     };
+    // iPadOS may suspend a home-screen app without a pagehide event.
+    const visibilityChanged = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
     window.addEventListener('pagehide', flush);
-    return () => window.removeEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', visibilityChanged);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', visibilityChanged);
+    };
   }, []);
 
   return {

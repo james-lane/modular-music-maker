@@ -46,7 +46,7 @@ Name runtime endpoints exactly like registry port IDs. Control inputs may be Aud
 
 For summing modules, give each input its own node before connecting to a shared sum (see Merger). Mapping several socket IDs to one AudioNode can collapse two cables from the same source into one connection. Keep input count/IDs in the registry and derive runtime endpoints and connection indicators from it.
 
-Start source nodes once, retain ownership, and stop/disconnect them in `dispose()`. Disconnect every internal feedback connection. Prefer smoothed parameter changes. Avoid fetching resources inside a synchronous factory; define a loading lifecycle first if adding samples or AudioWorklets.
+Start source nodes once, retain ownership, and stop/disconnect them in `dispose()`. Disconnect every internal feedback connection. Prefer smoothed parameter changes. Avoid fetching resources inside a synchronous factory; define a loading lifecycle first if adding samples or AudioWorklets. The complete studio must work offline: bundle any new resources into the production output so the generated precache includes them, and verify them after an offline reload.
 
 ## 4. Add specialized controls only if needed
 

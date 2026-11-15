@@ -44,6 +44,10 @@ React controls / workspace
 | `src/components/DrumMachinePanel.tsx`     | Drum pattern switches and voice audition                            |
 | `src/audio/recordings.ts`                 | Recording MIME selection and IndexedDB blob storage                 |
 | `src/hooks/useStudio.ts`                  | Patch edits, grouped undo/redo, autosave                            |
+| `src/hooks/useOffline.ts`                 | Production worker registration, verified readiness, update status   |
+| `src/offline/worker.ts`                   | Complete release caching and uninterrupted update lifecycle         |
+| `scripts/offline-build.ts`                | Generate release assets and revision from production output         |
+| `src/components/OfflineDialog.tsx`        | Readiness, installation guidance, storage protection                |
 | `src/hooks/useAudio.ts`                   | Transport, recording lifecycle, React/audio bridge                  |
 | `src/components/StudioHeader.tsx`         | Studio navigation and dialog entry points                           |
 | `src/components/TransportBar.tsx`         | Playback, composition settings, save/export controls                |
@@ -113,7 +117,15 @@ The _Pocket rhythm_ example connects Keyboard → Oscillator, Pad controller →
 
 MediaRecorder receives the engine's MediaStreamAudioDestinationNode stream, so no microphone/device permission is needed. MIME format is negotiated per browser. Chunks are assembled into a Blob and saved in IndexedDB after Stop recording. If storage fails, a direct download is offered automatically. Object URLs used for previews/downloads are revoked. Ten minutes is the configurable take limit. Downloads retain the supported native recording format; WAV export is future work.
 
-Patches autosave to browser localStorage after 650 ms and flush on pagehide. A manual Save also calls the Node API; the confirmation distinguishes successful server saving from browser-only saving. The patch library merges local and server copies by ID/update time. Browser quota failure remains visible. Recordings and patches are origin-specific and are not synchronized between local/hosted previews.
+Patches autosave to browser localStorage after 650 ms and flush on pagehide or hidden visibility (including mobile suspension). A manual Save optionally calls the Node API only when online on a known loopback hostname and after a Patchwork health response; the confirmation distinguishes successful server saving from browser-only saving. Public/static installs never attempt API calls. The library merges local and eligible server copies by ID/update time. Browser quota failure remains visible. Recordings and patches are origin-specific and are not synchronized between local/hosted previews or necessarily between Safari and a home-screen installation.
+
+## Offline application lifecycle
+
+Production builds include a standalone manifest, device icons, and a generated service worker. Its asset list and content revision derive from the complete Vite output. Atomic installation caches one complete release; cache-first requests cover only enumerated GET assets and root navigations. All resources are bundled locally. API calls and recording data never enter the app-shell cache. Patch saving, synthesis, and IndexedDB recording work independently of connectivity.
+
+`useOffline` registers only in production on secure origins, checks readiness through the active worker, and exposes status in the footer and installation dialog. Updates wait for all old clients to close; they never auto-reload a playing/recording session. Activation removes only outdated Patchwork app-shell caches. The dialog can request persistent storage without promising browser approval. Safe-area padding and bounded viewport height support installed tablet/phone windows. See [offline design](OFFLINE.md) for installation, limitations, and device QA.
+
+`wrangler.jsonc` prepares an assets-only Cloudflare Workers deployment of `dist/`, excluding the local Node API. There is no Worker script, hosted database, or cloud sync dependency. No deployment has occurred.
 
 Node persists each validated UUID to `.data/<id>.json` using a unique temporary file and atomic rename. A corrupt stored patch is skipped during listing. This is a single-user local adapter, not a database or multi-user synchronization system. Request JSON is bounded to 256 KB. The service listens on `127.0.0.1`; it is not ready for unauthenticated public access.
 
