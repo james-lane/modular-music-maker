@@ -13,7 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
-import { ROOT_NOTES } from '../config';
+import { CONFIG, ROOT_NOTES } from '../config';
 import { deleteRecording, loadRecordings, type Recording } from '../audio/recordings';
 import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
 import type { Project } from '../domain/types';
@@ -25,12 +25,16 @@ export function SettingsDialog({
   onChange,
   cableStyle,
   onCableStyleChange,
+  cableOpacity,
+  onCableOpacityChange,
   onClose,
 }: {
   project: Project;
   onChange: (changes: Partial<Project>) => void;
   cableStyle: CableStyle;
   onCableStyleChange: (style: CableStyle) => void;
+  cableOpacity: number;
+  onCableOpacityChange: (opacity: number) => void;
   onClose: () => void;
 }) {
   return (
@@ -106,6 +110,23 @@ export function SettingsDialog({
         <p id="cable-style-description">
           Braided cables weave together the enclosure colours of both connected modules. This
           appearance choice is remembered in this browser for all patches.
+        </p>
+        <label>
+          Patch cable opacity · {Math.round(cableOpacity * 100)}%
+          <input
+            type="range"
+            min={CONFIG.appearance.cableOpacity.min}
+            max={CONFIG.appearance.cableOpacity.max}
+            step={CONFIG.appearance.cableOpacity.step}
+            value={cableOpacity}
+            aria-valuetext={`${Math.round(cableOpacity * 100)}%`}
+            aria-describedby="cable-opacity-description"
+            onChange={(event) => onCableOpacityChange(Number(event.target.value))}
+          />
+        </label>
+        <p id="cable-opacity-description">
+          Fade connected cables to see the controls beneath them, or hide them at 0%. New cables
+          stay visible while connecting. Remembered in this browser for all patches.
         </p>
       </div>
       <button className="button primary full-width" style={{ marginTop: 20 }} onClick={onClose}>

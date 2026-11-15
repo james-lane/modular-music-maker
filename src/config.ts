@@ -6,6 +6,8 @@ export const CONFIG = {
   appearance: {
     cableStyleKey: 'patchwork.cable-style.v1',
     defaultCableStyle: 'classic',
+    cableOpacityKey: 'patchwork.cable-opacity.v1',
+    cableOpacity: { min: 0, max: 1, step: 0.01, default: 1 },
   },
   autosaveDelayMs: 650,
   offline: {

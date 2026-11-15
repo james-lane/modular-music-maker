@@ -20,7 +20,13 @@ import { CONFIG } from './config';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
 import { TransportBar } from './components/TransportBar';
 import { MODULES } from './domain/modules';
-import { loadCableStyle, saveCableStyle, type CableStyle } from './domain/preferences';
+import {
+  loadCableOpacity,
+  loadCableStyle,
+  saveCableOpacity,
+  saveCableStyle,
+  type CableStyle,
+} from './domain/preferences';
 import { createModule, createProject } from './domain/project';
 import { findOpenPosition, type Point } from './domain/workspace';
 import { saveLocally, saveToServer } from './domain/storage';
@@ -81,6 +87,7 @@ export default function App() {
   const [recordingCount, setRecordingCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [cableStyle, setCableStyle] = useState(loadCableStyle);
+  const [cableOpacity, setCableOpacity] = useState(loadCableOpacity);
   const importInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -253,6 +260,7 @@ export default function App() {
           live={audio.live}
           audioActive={playback.active}
           cableStyle={cableStyle}
+          cableOpacity={cableOpacity}
           libraryDrag={libraryDrag}
           onLibraryDragFinish={finishLibraryDrag}
           onViewCentreChange={viewCentreChanged}
@@ -320,6 +328,12 @@ export default function App() {
           onClose={() => setDialog(null)}
           onChange={(changes) => commit((current) => ({ ...current, ...changes }))}
           cableStyle={cableStyle}
+          cableOpacity={cableOpacity}
+          onCableOpacityChange={(opacity) => {
+            setCableOpacity(opacity);
+            if (!saveCableOpacity(opacity))
+              notify('Cable opacity changed for this visit. Browser storage is unavailable.');
+          }}
           onCableStyleChange={(style: CableStyle) => {
             setCableStyle(style);
             if (!saveCableStyle(style))

@@ -12,6 +12,7 @@ interface Props {
   toModule: PatchModule;
   signal: SignalType;
   cableStyle: CableStyle;
+  cableOpacity: number;
   onUnplug: () => void;
 }
 
@@ -22,6 +23,7 @@ export function PatchCable({
   toModule,
   signal,
   cableStyle,
+  cableOpacity,
   onUnplug,
 }: Props) {
   const sourceColor = MODULES[fromModule.type].color;
@@ -55,6 +57,7 @@ export function PatchCable({
       className={`patch-cable signal-${signal}${braided ? ' braided' : ''}`}
       style={
         {
+          opacity: cableOpacity,
           '--cable-color': braided ? sourceColor : classicColor,
           '--cable-source-color': `var(--enclosure-${fromModule.type})`,
           '--cable-target-color': `var(--enclosure-${toModule.type})`,
@@ -62,7 +65,13 @@ export function PatchCable({
         } as CSSProperties
       }
     >
-      <path className="cable-hit" d={path} onDoubleClick={onUnplug}>
+      <path
+        className="cable-hit"
+        d={path}
+        // Hidden cables must not intercept controls underneath their hit areas.
+        style={cableOpacity === 0 ? { pointerEvents: 'none' } : undefined}
+        onDoubleClick={onUnplug}
+      >
         <title>
           {MODULES[fromModule.type].name} → {MODULES[toModule.type].name} · {signal} · Double-click
           to unplug this cable

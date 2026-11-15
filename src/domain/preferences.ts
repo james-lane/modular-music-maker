@@ -25,3 +25,33 @@ export function saveCableStyle(style: CableStyle): boolean {
     return false;
   }
 }
+
+export function isCableOpacity(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    value >= CONFIG.appearance.cableOpacity.min &&
+    value <= CONFIG.appearance.cableOpacity.max
+  );
+}
+
+export function loadCableOpacity(): number {
+  try {
+    const saved = localStorage.getItem(CONFIG.appearance.cableOpacityKey);
+    const value: unknown = saved === null ? null : JSON.parse(saved);
+    if (isCableOpacity(value)) return value;
+  } catch {
+    // Invalid or unavailable storage falls back without blocking the studio.
+  }
+  return CONFIG.appearance.cableOpacity.default;
+}
+
+export function saveCableOpacity(opacity: number): boolean {
+  if (!isCableOpacity(opacity)) return false;
+  try {
+    localStorage.setItem(CONFIG.appearance.cableOpacityKey, JSON.stringify(opacity));
+    return true;
+  } catch {
+    return false;
+  }
+}

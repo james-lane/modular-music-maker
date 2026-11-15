@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Patch cable opacity — local change
+
+**More → Studio settings → Patch cable opacity** now adjusts connected cables from 0–100%, defaulting to 100%, with a percentage readout and native touch/mouse/keyboard slider. Both Classic and Braided styles fade as complete cables, including plugs. At zero, hidden cable hit areas no longer intercept controls; sockets still support rerouting. Pending connections remain fully visible. The validated browser preference survives patch switches and reloads independently of patch files, undo, and audio. Unavailable storage retains the current visit's choice and shows a notice.
+
+Validation: strict types, all **68 tests**, and the production build pass. Preference tests cover zero/intermediate/full opacity, invalid values, unavailable storage, and preservation of saved patch data. Isolated browser checks verified Classic/Braided fading, keyboard arrows/Home/End, nonzero live output at 0%, disabled invisible hit areas, visible pending rerouting/reconnection, reload and example-switch persistence, and a scrolling 390px settings dialog without horizontal overflow. No browser warnings/errors occurred. Deployment pending.
+
 ## Full sampled hits through Drum kit — deployed 15 November 2026
 
 A direct **Mic sampler AUDIO OUT → Drum kit IN 1–IN 4 → Drum machine KIT IN** chain now plays the sampler’s saved clip on each drum hit when that voice is set to **Audio input**. No Play snippet press or timing is required. Each hit owns an independent source and plays the complete trimmed region; later hits overlap rather than restarting or cutting it. Sampler Speed/Level and drum Tone/Level apply. Drum machine Decay still shapes each sampled tail: 1× or above preserves the natural tail, lower values fade earlier, and neither changes the source’s end time. Imported Drum kit samples now follow the same full-length/overlapping policy. Ordinary Noise/Oscillator/effect audio inputs retain their existing live gate, shaped by Input decay × drum Decay. For sample effects, route after the drum machine. The kit displays the directly linked sampler clip name (or prompts for a recording).

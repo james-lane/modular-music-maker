@@ -53,6 +53,7 @@ interface Props {
   redo: () => void;
   saveStatus: 'saving' | 'saved' | 'error';
   cableStyle: CableStyle;
+  cableOpacity: number;
   libraryDrag: ModuleLibraryDrag | null;
   onLibraryDragFinish: (added: boolean) => void;
   onViewCentreChange: (point: Point) => void;
@@ -90,6 +91,7 @@ export function Workspace({
   redo,
   saveStatus,
   cableStyle,
+  cableOpacity,
   libraryDrag,
   onLibraryDragFinish,
   onViewCentreChange,
@@ -718,6 +720,7 @@ export function Workspace({
                       toModule={toModule}
                       signal={signal}
                       cableStyle={cableStyle}
+                      cableOpacity={cableOpacity}
                       onUnplug={() =>
                         commit((current) => ({
                           ...current,
