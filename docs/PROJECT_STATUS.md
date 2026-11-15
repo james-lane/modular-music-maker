@@ -2,11 +2,13 @@
 
 Last updated: **15 November 2026**.
 
-## Snippet previews leave the main Play button available — 15 November 2026
+## Snippet previews leave the main Play button available — deployed 15 November 2026
 
 Preview-only audio activity is now separate from the studio’s Play/Stop control. Pressing **Play snippet** while stopped keeps the main button’s Play label, icon and styling; clicking it or pressing Space starts the project while the preview continues. A preview during project playback leaves Stop available. Live instrument playing and microphone capture retain their existing Stop behavior. Preview audio still participates in idle suspension, audio-aware rendering and update-refresh guards; routing, recording exclusion and saved patches are unchanged.
 
 Validation: all **107 tests**, strict types, production build, formatting and diff checks pass. Isolated production Chromium verified three repeated audible previews with Play unchanged and no active transport beat, project start by click and Space during preview, preview retriggering during project playback, Stop, automatic idle suspension, live drum audition and microphone capture Stop controls, saved-snippet playback after an offline reload, and 390px layout without overflow. Speaker audio remained nonzero while the studio recording bus stayed silent during dry previews. No browser errors occurred.
+
+Published source commit `d1be732` as clean app version **`0.1.0+53.gd1be732`** at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** (Cloudflare version `b17d8dc1-9eee-46da-9d94-8c2c9413e0c7`). All fifteen release files match the clean build; update-cache headers and public Node API isolation pass. The hosted browser repeated the Play-label/click/Space, audible-preview, live-drum/microphone Stop, idle-suspension, offline and phone checks without errors. The previous Cloudflare release is `20b64707-21ee-4209-b085-94fb475e7474`. Existing sessions can choose **Refresh now** when the complete update is ready, or close all Patchwork windows and reopen.
 
 ## Mic sampler direct preview — deployed 15 November 2026
 
