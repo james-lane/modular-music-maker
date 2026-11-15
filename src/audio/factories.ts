@@ -1,8 +1,9 @@
 import { CONFIG } from '../config';
-import type { ModuleType, Parameters, PatchModule } from '../domain/types';
+import type { DrumSample, ModuleType, Parameters, PatchModule } from '../domain/types';
 import type { DrumSound } from '../domain/instruments';
 import { createDrumRuntime } from './drums';
 import { MODULES } from '../domain/modules';
+import { createMicSampler } from './mic-sampler';
 import { createXYEffects } from './xy-effects';
 
 export interface AudioRuntime {
@@ -14,6 +15,7 @@ export interface AudioRuntime {
   voice?: { frequency: AudioParam; envelope: AudioParam };
   trigger?: (sound: DrumSound, velocity: number, time: number) => void;
   silence?: () => void;
+  configureSample?: (sample: DrumSample | undefined) => void;
   configureKit?: (kit: PatchModule | undefined) => void;
 }
 
@@ -28,6 +30,7 @@ const smooth = (parameter: AudioParam, target: number, context: AudioContext) =>
  */
 export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
   'xy-effects': createXYEffects,
+  'mic-sampler': createMicSampler,
   'drum-machine': createDrumRuntime,
   'drum-kit': (context) => {
     // Four independent buses carry external audio. The KIT route assigns their voices;

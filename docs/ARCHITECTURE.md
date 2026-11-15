@@ -21,55 +21,59 @@ React controls / workspace
 
 ## Source map
 
-| Area                                      | Responsibility                                                      |
-| ----------------------------------------- | ------------------------------------------------------------------- |
-| `src/config.ts`                           | Shared product defaults, limits, scale tables                       |
-| `src/domain/types.ts`                     | Serializable model and catalog interfaces                           |
-| `src/domain/module-guides.ts`             | Teaching copy, example wiring, and derived socket compatibility     |
-| `src/components/ModuleHelpDialog.tsx`     | Library field-guide modal with related-guide navigation             |
-| `src/domain/modules.ts`                   | Declarative module registry                                         |
-| `src/domain/project.ts`                   | Starter patch, module creation, connection invariants, pitch math   |
-| `src/domain/examples.ts`                  | Six example recipes, catalog copy, and independent copy factories   |
-| `src/components/ExamplePatchesDialog.tsx` | First-visit and reusable example patch chooser                      |
-| `src/domain/validation.ts`                | Shared Zod validation for every data boundary                       |
-| `src/domain/storage.ts`                   | Browser patch library, optional server sync, downloads              |
-| `src/domain/preferences.ts`               | Validated browser-only cable appearance preference                  |
-| `src/audio/factories.ts`                  | Audio node creation, parameter updates, disposal                    |
-| `src/audio/engine.ts`                     | Context lifecycle, graph topology, note scheduling, analysis        |
-| `src/domain/samples.ts`                   | Portable PCM conversion and validation                              |
-| `src/audio/sample-import.ts`              | Silent browser decoding/downmixing of imported percussion samples   |
-| `src/components/DrumKitPanel.tsx`         | Voice selectors, local sample import, and routed audition           |
-| `src/audio/drums.ts`                      | Synthesized kit recipes, scheduled one-shot ownership and cleanup   |
-| `src/audio/live.ts`                       | Ephemeral keyboard/pad gesture contract                             |
-| `src/domain/instruments.ts`               | Drum identities/patterns, shortcuts and chromatic pitch helpers     |
-| `src/components/KeyboardPanel.tsx`        | Piano key gestures, focus and note release                          |
-| `src/components/XYEffectsPanel.tsx`       | Assignable corner selectors, XY gestures and accessible axes        |
-| `src/domain/xy-effects.ts`                | Corner/effect identities and bounded continuous blend weights       |
-| `src/audio/xy-effects.ts`                 | Fixed parallel effects graph, crossfaded buses and disposal         |
-| `src/components/PadControllerPanel.tsx`   | Live pad layout, keyboard shortcuts and feedback                    |
-| `src/components/DrumMachinePanel.tsx`     | Drum pattern switches and voice audition                            |
-| `src/audio/recordings.ts`                 | Recording MIME selection and IndexedDB blob storage                 |
-| `src/hooks/useStudio.ts`                  | Patch edits, grouped undo/redo, autosave                            |
-| `src/hooks/useOffline.ts`                 | Production worker registration, verified readiness, update status   |
-| `src/offline/worker.ts`                   | Complete release caching and uninterrupted update lifecycle         |
-| `scripts/offline-build.ts`                | Generate release assets and revision from production output         |
-| `src/components/OfflineDialog.tsx`        | Readiness, updates, installation guidance, storage protection       |
-| `src/components/UpdateNotice.tsx`         | Dismissible update notice and explicit refresh controls             |
-| `src/hooks/useAudio.ts`                   | Transport, recording lifecycle, React/audio bridge                  |
-| `src/components/StudioHeader.tsx`         | Compact brand beside the transport                                  |
-| `src/components/TransportBar.tsx`         | Playback, composition settings, save/export, navigation menu        |
-| `src/components/Workspace.tsx`            | Canvas geometry, drag preview, sockets, SVG cables, zoom/pan        |
-| `src/components/PatchCable.tsx`           | Classic/braided cable rendering and endpoint-coloured plugs         |
-| `src/components/cable-geometry.ts`        | Cable curves and distance-based over/under braid geometry           |
-| `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls               |
-| `src/components/SequencerStep.tsx`        | Tap-to-cycle notes, vertical note gestures and keyboard adjustment  |
-| `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters    |
-| `src/components/MergerPanel.tsx`          | Four-input cable-occupancy diagram for the summing module           |
-| `src/components/module-finishes.css`      | Individual enclosure palettes, materials, knob finishes, and faders |
-| `src/components/Knob.tsx`                 | Logarithmic/linear parameter editing and keyboard controls          |
-| `src/components/Scope.tsx`                | Animation-frame waveform and RMS display                            |
-| `server/app.ts`                           | Local Express API and production static serving                     |
-| `server/repository.ts`                    | Validated atomic filesystem persistence                             |
+| Area                                      | Responsibility                                                       |
+| ----------------------------------------- | -------------------------------------------------------------------- |
+| `src/config.ts`                           | Shared product defaults, limits, scale tables                        |
+| `src/domain/types.ts`                     | Serializable model and catalog interfaces                            |
+| `src/domain/module-guides.ts`             | Teaching copy, example wiring, and derived socket compatibility      |
+| `src/components/ModuleHelpDialog.tsx`     | Library field-guide modal with related-guide navigation              |
+| `src/domain/modules.ts`                   | Declarative module registry                                          |
+| `src/domain/project.ts`                   | Starter patch, module creation, connection invariants, pitch math    |
+| `src/domain/examples.ts`                  | Six example recipes, catalog copy, and independent copy factories    |
+| `src/components/ExamplePatchesDialog.tsx` | First-visit and reusable example patch chooser                       |
+| `src/domain/validation.ts`                | Shared Zod validation for every data boundary                        |
+| `src/domain/storage.ts`                   | Browser patch library, optional server sync, downloads               |
+| `src/domain/preferences.ts`               | Validated browser-only cable appearance preference                   |
+| `src/audio/factories.ts`                  | Audio node creation, parameter updates, disposal                     |
+| `src/audio/engine.ts`                     | Context lifecycle, graph topology, note scheduling, analysis         |
+| `src/domain/samples.ts`                   | Portable PCM conversion and validation                               |
+| `src/audio/microphone.ts`                 | Opt-in microphone capture, cancellation and device-track ownership   |
+| `src/audio/mic-sampler.ts`                | Saved-PCM one-shot playback, retrigger envelopes and disposal        |
+| `src/hooks/useMicrophoneSampler.ts`       | Capture state, project/module lifetime and validated snippet commits |
+| `src/components/MicSamplerPanel.tsx`      | Recorder controls, saved waveform and WAV download                   |
+| `src/audio/sample-import.ts`              | Silent browser decoding/downmixing of imported percussion samples    |
+| `src/components/DrumKitPanel.tsx`         | Voice selectors, local sample import, and routed audition            |
+| `src/audio/drums.ts`                      | Synthesized kit recipes, scheduled one-shot ownership and cleanup    |
+| `src/audio/live.ts`                       | Ephemeral keyboard/pad gesture contract                              |
+| `src/domain/instruments.ts`               | Drum identities/patterns, shortcuts and chromatic pitch helpers      |
+| `src/components/KeyboardPanel.tsx`        | Piano key gestures, focus and note release                           |
+| `src/components/XYEffectsPanel.tsx`       | Assignable corner selectors, XY gestures and accessible axes         |
+| `src/domain/xy-effects.ts`                | Corner/effect identities and bounded continuous blend weights        |
+| `src/audio/xy-effects.ts`                 | Fixed parallel effects graph, crossfaded buses and disposal          |
+| `src/components/PadControllerPanel.tsx`   | Live pad layout, keyboard shortcuts and feedback                     |
+| `src/components/DrumMachinePanel.tsx`     | Drum pattern switches and voice audition                             |
+| `src/audio/recordings.ts`                 | Recording MIME selection and IndexedDB blob storage                  |
+| `src/hooks/useStudio.ts`                  | Patch edits, grouped undo/redo, autosave                             |
+| `src/hooks/useOffline.ts`                 | Production worker registration, verified readiness, update status    |
+| `src/offline/worker.ts`                   | Complete release caching and uninterrupted update lifecycle          |
+| `scripts/offline-build.ts`                | Generate release assets and revision from production output          |
+| `src/components/OfflineDialog.tsx`        | Readiness, updates, installation guidance, storage protection        |
+| `src/components/UpdateNotice.tsx`         | Dismissible update notice and explicit refresh controls              |
+| `src/hooks/useAudio.ts`                   | Transport, recording lifecycle, React/audio bridge                   |
+| `src/components/StudioHeader.tsx`         | Compact brand beside the transport                                   |
+| `src/components/TransportBar.tsx`         | Playback, composition settings, save/export, navigation menu         |
+| `src/components/Workspace.tsx`            | Canvas geometry, drag preview, sockets, SVG cables, zoom/pan         |
+| `src/components/PatchCable.tsx`           | Classic/braided cable rendering and endpoint-coloured plugs          |
+| `src/components/cable-geometry.ts`        | Cable curves and distance-based over/under braid geometry            |
+| `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls                |
+| `src/components/SequencerStep.tsx`        | Tap-to-cycle notes, vertical note gestures and keyboard adjustment   |
+| `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters     |
+| `src/components/MergerPanel.tsx`          | Four-input cable-occupancy diagram for the summing module            |
+| `src/components/module-finishes.css`      | Individual enclosure palettes, materials, knob finishes, and faders  |
+| `src/components/Knob.tsx`                 | Logarithmic/linear parameter editing and keyboard controls           |
+| `src/components/Scope.tsx`                | Animation-frame waveform and RMS display                             |
+| `server/app.ts`                           | Local Express API and production static serving                      |
+| `server/repository.ts`                    | Validated atomic filesystem persistence                              |
 
 ## App versioning
 
@@ -91,7 +95,7 @@ The guide layout lives in `components/module-help.css`. Instructions and connect
 
 ## Patch format and validation
 
-`Project.version` is currently `2`. `parseProject` explicitly migrates v1 input to v2 without mutating it: all fields except the version remain unchanged. V2 permits finite signed world coordinates (within a ±1 billion numerical safety range) rather than positions constrained to an 1800×1200 rack. Old saves, samples, IDs, and routing remain intact; new saves/exports use v2, which older releases reject. The browser library keeps its existing storage keys so previous work remains discoverable. A patch contains its UUID, title, update time, tempo, root/scale, time signature, master volume, positioned modules, and directed cables. A module stores its registry type, UUID, position, parameters, optional eight scale degrees, an optional `drumPattern` map, and optional Drum kit `samples`. Pattern and sample fields remain optional; the v1→v2 migration preserves their original contents. Drum machines must contain exactly the four named lanes of sixteen booleans; other module types cannot store a drum pattern. `-1` is a rest. Degrees `0…13` span two octaves of a seven-note scale; pentatonic degrees use its five-note table.
+`Project.version` is currently `2`. `parseProject` explicitly migrates v1 input to v2 without mutating it: all fields except the version remain unchanged. V2 permits finite signed world coordinates (within a ±1 billion numerical safety range) rather than positions constrained to an 1800×1200 rack. Old saves, samples, IDs, and routing remain intact; new saves/exports use v2, which older releases reject. The browser library keeps its existing storage keys so previous work remains discoverable. A patch contains its UUID, title, update time, tempo, root/scale, time signature, master volume, positioned modules, and directed cables. A module stores its registry type, UUID, position, parameters, optional eight scale degrees, an optional `drumPattern` map, and optional Drum kit or Mic sampler `samples`. Pattern and sample fields remain optional; the v1→v2 migration preserves their original contents. Drum machines must contain exactly the four named lanes of sixteen booleans; other module types cannot store a drum pattern. `-1` is a rest. Degrees `0…13` span two octaves of a seven-note scale; pentatonic degrees use its five-note table.
 
 No AudioContext, AudioNode, React state, object URL, or recording blob is serialized into a patch. `parseProject` checks UUIDs, bounds, module types, parameter ranges/enums, unique IDs, known sockets, signal compatibility, input occupancy, instance limits, and acyclic routing. Unknown top-level/module/cable fields and unknown parameters are rejected. Imported patches receive a fresh project ID to preserve existing saved work.
 
@@ -129,6 +133,16 @@ Keyboard holds have last-note priority per oscillator. Releasing the last note s
 
 The _Pocket rhythm_ example connects Keyboard → Oscillator, Pad controller → Drum machine, Drum kit → Drum machine, Drum machine/Oscillator → Mixer → Output. It is available through the example collection alongside the other starting points.
 
+## Microphone sampler
+
+`audio/microphone.ts` owns a single opt-in `getUserMedia` / MediaRecorder audio-only capture (requesting speech processing off to preserve musical transients), separately from the studio AudioContext and its output recorder. No microphone stream is connected to speakers or the recording destination. `useMicrophoneSampler` tracks its requesting/recording/processing lifecycle and module/project owner; all of this is ephemeral. Only pressing Record mic requests permission. Cancel, global Stop, module removal, project switching, page hiding, and unmount invalidate pending permission/decoding and stop every acquired track. Late permission grants are immediately released. A normal Finish or four-second timeout stops the device before silent decoding, downmixing, and resampling. Recorder padding is trimmed to the four-second PCM limit. Permission/device/decoding failures leave the existing clip intact. App refresh is blocked during capture/processing.
+
+The saved `samples.clip` uses the existing validated PCM format and shared project budget. This is additive to v2: existing patches need no migration, and an empty sampler is valid and silent. `useStudio.setSample` validates the latest patch before committing a sample edit, preserving undo/autosave and atomically rejecting over-budget replacements. Drum kit imports use the same commit path.
+
+`audio/mic-sampler.ts` reconstructs a buffer only when PCM changes. Each Play snippet or pad-trigger event starts a one-shot on `AudioContext.currentTime`; top-bar transport Play does not trigger it. All incoming pad identities select the same clip and velocity sets the hit gain. Level is smoothed; Speed applies to the next hit so its start/end envelope stays aligned with the audio clock. Retriggers retire the previous voice with a short fade and a bounded tail count. Stop, replacement, graph rebuild, and disposal release all sources and gains. The live idle tail includes the full clip duration at its selected speed plus effects time. Audio output uses ordinary routing to effects/mixers/Drum kit inputs; trigger/pitch/audio incompatibilities and cycle checks remain intact.
+
+`MicSamplerPanel` provides a slate-blue handheld-recorder enclosure, passive saved-waveform display, recording state, and accessible native controls. Download WAV writes the original mono PCM as a standard WAV for existing Drum kit sample import or use outside the app. Saved playback and WAV export need neither microphone permission nor a connection; new capture depends on secure-context/device permission support. Physical Safari/iPad microphone behavior still requires device verification.
+
 ## XY Effects
 
 XY Effects uses the ordinary parameter map: registry-bounded `x`/`y` (−1…1, positive Y upwards), `mix` (0…1), and four validated effect IDs (`topLeft`, `topRight`, `bottomLeft`, `bottomRight`). Corner/effect identities and `xyBlend()` live in `domain/xy-effects.ts`; the registry owns dimensions and defaults. Compatibility derives from its audio input/output sockets.
@@ -143,7 +157,7 @@ Drum kit adds a distinct `kit` signal: KIT OUT → Drum machine KIT IN. The exis
 
 Kit runtimes own four independent passthrough buses. KIT links explicitly connect those buses to private per-lane drum-runtime inputs; they are not ordinary public audio sockets. Each receiving drum machine owns its envelopes, sample buffers, and one-shot sources, so fan-out remains independent. External audio is gated on each hit with Input decay multiplied by drum Decay; no audio is recorded, buffered, or pitch shifted. A silent looping source supplies audio-clock `onended` cleanup for each input envelope, including scheduled hits. Cleanup detaches only that hit’s connection, is idempotent across Stop/late callbacks, and uses the existing overlap bound. Topology replacement/removal disposes buses, buffers, sources, and connections. Parameter/assignment edits leave existing hits to finish and affect the next scheduling window.
 
-Drum kit modules alone may contain `samples`, a map of known lane IDs to `{ name, pcm }`. PCM is base64 little-endian signed 16-bit mono at `CONFIG.samples.sampleRate` (24 kHz). This additive optional v1 field needs no migration; old project shapes/defaults still validate. Browser OfflineAudioContexts silently decode supported files, reject oversized/overlong clips, then downmix/resample before encoding. Four seconds and 20 MB are the per-file limits; decoded sample data is bounded independently, including at import/storage/API boundaries. The total encoded sample budget is 1,024,000 characters per patch (about sixteen seconds), and JSON import/API requests share a 2 MiB limit. Samples stay inside the patch rather than relying on URLs, IndexedDB IDs, or external services. Browser library quota can still be exhausted by multiple sample-heavy patches; the existing visible save failure/export path applies.
+Drum kit modules may contain `samples`, a map of known lane IDs to `{ name, pcm }`; Mic sampler modules use the same map with one allowed key, `clip`. Other module types reject sample data. PCM is base64 little-endian signed 16-bit mono at `CONFIG.samples.sampleRate` (24 kHz). This additive optional v1 field needs no migration; old project shapes/defaults still validate. Browser OfflineAudioContexts silently decode supported files, reject oversized/overlong clips, then downmix/resample before encoding. Four seconds and 20 MB are the per-file limits; decoded sample data is bounded independently, including at import/storage/API boundaries. The total encoded sample budget is 1,024,000 characters per patch (about sixteen seconds), and JSON import/API requests share a 2 MiB limit. Samples stay inside the patch rather than relying on URLs, IndexedDB IDs, or external services. Browser library quota can still be exhausted by multiple sample-heavy patches; the existing visible save failure/export path applies.
 
 `configureKit` synchronously reconstructs AudioBuffers from validated PCM only when the data changes, avoiding asynchronous loading during playback. Sample playback starts at the scheduled hit time and follows drum Tone/Decay/Level. Empty sample/input modes are silent. `drumLiveTailMs` adds the possible sample/input duration to the normal idle effect tail so tuned samples are not cut short by live-audio suspension. Sample import checks module lifetime and commits data plus its selection atomically through validation/history/autosave; a removed module or switched project cannot receive a late import. Browsing the guide and importing samples never starts studio audio.
 
@@ -173,7 +187,7 @@ Production builds include a standalone manifest, device icons, and a generated s
 
 `wrangler.jsonc` configures the assets-only **patchwork-studio** Cloudflare Worker at **https://patchwork.jameslane.dev**, excluding the local Node API. There is no application Worker script, hosted database, or cloud sync dependency. The Custom Domain configuration manages DNS/HTTPS through Cloudflare; `workers.dev` and preview URLs are disabled. Missing assets return 404 rather than falling back to HTML. `npm run deploy` rebuilds and publishes the studio using the project-local Wrangler dependency; deployments are manual and independent of GitHub pushes. Deployment credentials and local Wrangler state are never committed.
 
-Node persists each validated UUID to `.data/<id>.json` using a unique temporary file and atomic rename. A corrupt stored patch is skipped during listing. This is a single-user local adapter, not a database or multi-user synchronization system. Request JSON is bounded to 256 KB. The service listens on `127.0.0.1`; it is not ready for unauthenticated public access.
+Node persists each validated UUID to `.data/<id>.json` using a unique temporary file and atomic rename. A corrupt stored patch is skipped during listing. This is a single-user local adapter, not a database or multi-user synchronization system. Request JSON is bounded to 2 MiB. The service listens on `127.0.0.1`; it is not ready for unauthenticated public access.
 
 ## Canvas and styling invariants
 

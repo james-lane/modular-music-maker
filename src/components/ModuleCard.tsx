@@ -8,7 +8,9 @@ import { Knob } from './Knob';
 import { LevelMeter, Scope } from './Scope';
 import { Waveform } from './Waveform';
 import type { LiveControls } from '../audio/live';
-import type { DrumLane, DrumSound } from '../domain/instruments';
+import type { DrumSound } from '../domain/instruments';
+import { MicSamplerPanel } from './MicSamplerPanel';
+import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { DrumKitPanel } from './DrumKitPanel';
 import { DrumMachinePanel } from './DrumMachinePanel';
 import { KeyboardPanel } from './KeyboardPanel';
@@ -29,12 +31,13 @@ interface Props {
   drumStep: number;
   live: LiveControls;
   audioActive: boolean;
+  microphone: MicrophoneControls;
   engine: AudioEngine;
   playing: boolean;
   pending: Endpoint | null;
   onParameter: (id: string, value: number | string | boolean) => void;
   onParameters: (values: Parameters, group?: string) => void;
-  onSample: (lane: DrumLane, sample: DrumSample | null) => boolean;
+  onSample: (lane: string, sample: DrumSample | null) => boolean;
   onDrumStep: (sound: DrumSound, step: number) => void;
   onStep: (index: number, degree: StepNoteChange, group?: string) => void;
   onPort: (endpoint: Endpoint) => void;
@@ -53,6 +56,7 @@ export function ModuleCard({
   drumStep,
   live,
   audioActive,
+  microphone,
   engine,
   playing,
   pending,
@@ -127,6 +131,14 @@ export function ModuleCard({
             live={live}
             onParameter={onParameter}
             onSample={onSample}
+          />
+        )}
+        {module.type === 'mic-sampler' && (
+          <MicSamplerPanel
+            module={module}
+            microphone={microphone}
+            live={live}
+            onClear={() => onSample('clip', null)}
           />
         )}
         {module.type === 'keyboard' && <KeyboardPanel module={module} live={live} />}

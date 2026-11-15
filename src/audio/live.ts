@@ -6,5 +6,6 @@ export interface LiveControls {
   noteOff: (moduleId: string, note: number) => void;
   releaseKeyboard: (moduleId: string) => void;
   drumHit: (moduleId: string, sound: DrumSound) => void;
+  sampleHit: (moduleId: string) => void;
   padHit: (moduleId: string, sound: DrumSound) => void;
 }

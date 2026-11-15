@@ -137,6 +137,7 @@ export class AudioEngine {
     for (const module of project.modules) {
       const runtime = this.runtimes.get(module.id)!;
       runtime.update(module.parameters);
+      runtime.configureSample?.(module.samples?.clip);
       runtime.configureKit?.(connectedDrumKit(project, module.id));
       if (
         runtime.voice &&
@@ -209,6 +210,11 @@ export class AudioEngine {
       for (const id of controllerTargets(this.project, moduleId, 'kit'))
         this.hitDrum(id, sound, velocity);
     } else this.runtimes.get(moduleId)?.trigger?.(sound, velocity, this.context.currentTime);
+  }
+
+  hitSample(moduleId: string) {
+    if (this.project?.modules.find((module) => module.id === moduleId)?.type === 'mic-sampler')
+      this.runtimes.get(moduleId)?.trigger?.('kick', 1, this.context?.currentTime ?? 0);
   }
 
   hitPad(controllerId: string, sound: DrumSound, velocity: number) {

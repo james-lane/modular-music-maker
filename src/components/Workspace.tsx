@@ -22,9 +22,8 @@ import {
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
 import { MODULES, SEQUENCER_DEGREES } from '../domain/modules';
-import { parseProject } from '../domain/validation';
 import { connectionError, createModule, getPort } from '../domain/project';
-import type { Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
+import type { DrumSample, Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
 import { ModuleCard } from './ModuleCard';
 import { PatchCable } from './PatchCable';
@@ -33,11 +32,14 @@ import type { LiveControls } from '../audio/live';
 import { useWorkspaceGestures } from '../hooks/useWorkspaceGestures';
 import type { ModuleLibraryDrag } from '../hooks/useModuleLibraryDrag';
 import { moduleBounds, snapPosition, type Point } from '../domain/workspace';
+import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { edgePan, fittedView, viewAtAnchor } from './workspace-geometry';
 
 interface Props {
   project: Project;
   commit: (edit: (project: Project) => Project, group?: string) => void;
+  setSample: (moduleId: string, slot: string, sample: DrumSample | null) => boolean;
+  microphone: MicrophoneControls;
   notify: (message: string) => void;
   engine: AudioEngine;
   playing: boolean;
@@ -74,6 +76,8 @@ export function Workspace({
   project,
   commit,
   notify,
+  setSample,
+  microphone,
   engine,
   playing,
   step,
@@ -569,6 +573,7 @@ export function Workspace({
                 step={step}
                 drumStep={drumStep}
                 live={live}
+                microphone={microphone}
                 audioActive={audioActive}
                 engine={engine}
                 playing={playing}
@@ -619,35 +624,12 @@ export function Workspace({
                     group ? `${module.id}:${group}` : '',
                   )
                 }
-                onSample={(lane, sample) => {
-                  let accepted = false;
-                  commit((current) => {
-                    if (!current.modules.some((item) => item.id === module.id)) return current;
-                    const next = {
-                      ...current,
-                      modules: current.modules.map((item) => {
-                        if (item.id !== module.id) return item;
-                        const samples = { ...item.samples };
-                        if (sample) samples[lane] = sample;
-                        else delete samples[lane];
-                        return {
-                          ...item,
-                          samples,
-                          parameters: { ...item.parameters, [lane]: sample ? 'sample' : lane },
-                        };
-                      }),
-                    };
-                    try {
-                      const validated = parseProject(next);
-                      accepted = true;
-                      return validated;
-                    } catch {
-                      notify(
-                        'This sample exceeds the patch storage limit. Remove an unused sample first.',
-                      );
-                      return current;
-                    }
-                  });
+                onSample={(slot, sample) => {
+                  const accepted = setSample(module.id, slot, sample);
+                  if (!accepted)
+                    notify(
+                      'This sample exceeds the patch storage limit. Remove an unused sample first.',
+                    );
                   return accepted;
                 }}
                 onStep={(index, next, group) =>

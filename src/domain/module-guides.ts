@@ -56,6 +56,42 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       connections: [wire('drum-machine', 'out', 'output', 'in')],
     },
   },
+  'mic-sampler': {
+    overview:
+      'A pocket recorder for your voice, claps, and found sounds. Capture up to four seconds from your device microphone, then play the saved snippet through the studio. Recordings stay on this device and travel inside patch exports.',
+    steps: [
+      'Press Record mic and allow microphone access. Use HTTPS or localhost. Speak, clap, or make a sound; press Finish or let the four-second limit finish the capture.',
+      'Connect AUDIO OUT to an effect, Mixer, Merger, or Output AUDIO IN. The microphone is never monitored live.',
+      'Press Play snippet to hear it, even with the transport stopped. Connect Pad controller TRIGGER OUT to TRIGGER IN to retrigger it from any pad.',
+    ],
+    controls: {
+      level: 'Sets the saved snippet’s output volume without changing the recording.',
+      rate: 'Changes playback speed and pitch together on the next hit. Half speed is an octave lower and twice as long; double speed is an octave higher and half as long.',
+    },
+    extraControls: [
+      {
+        label: 'Record mic / Finish / Cancel',
+        description:
+          'Only Record mic requests microphone permission. Finish keeps the captured sound; Cancel discards it. Capture stops automatically after four seconds. Replacing a clip keeps the old one until the new capture succeeds. Stop, switching patches, removing the module, and hiding the app cancel capture and release the microphone.',
+      },
+      {
+        label: 'Play snippet / Clear',
+        description:
+          'Play the whole snippet once through connected cables; each hit restarts it. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
+      },
+    ],
+    tip: 'Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence a recording as a drum voice, download the clip as WAV and load it into a Drum kit sample slot. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',
+    example: {
+      title: 'Echo a found sound',
+      description:
+        'Record a clap, then tap any pad to play it through Delay. The top-bar Play button is optional for this live patch.',
+      connections: [
+        wire('pad-controller', 'trigger', 'mic-sampler', 'trigger'),
+        wire('mic-sampler', 'out', 'delay', 'in'),
+        wire('delay', 'out', 'output', 'in'),
+      ],
+    },
+  },
   'drum-kit': {
     overview:
       'A four-voice sound cartridge for the Drum machine. Give each voice a built-in percussion sound, an imported audio sample, or a sound patched in from another module. The drum machine keeps the rhythm and produces the final audio.',
@@ -130,7 +166,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
   },
   'pad-controller': {
     overview:
-      'Sixteen playable pads for the Drum machine’s percussion sounds. The first four pads follow a connected Drum kit’s voice assignments; the remaining pads keep their printed sounds. Its trigger cable carries the sound choice and velocity to the drum kit.',
+      'Sixteen playable pads for the Drum machine’s percussion sounds. The first four pads follow a connected Drum kit’s voice assignments; the remaining pads keep their printed sounds. Its trigger cable carries the sound choice and velocity to the drum machine. Connect a Mic sampler instead to play its recorded snippet from every pad.',
     steps: [
       'Connect TRIGGER OUT to a Drum machine TRIGGER IN socket.',
       'Connect the Drum machine AUDIO OUT to an Output AUDIO IN socket.',

@@ -27,6 +27,7 @@ import { saveLocally, saveToServer } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
 import { useAudio } from './hooks/useAudio';
+import { useMicrophoneSampler } from './hooks/useMicrophoneSampler';
 import { useStudio } from './hooks/useStudio';
 import { useOffline } from './hooks/useOffline';
 
@@ -42,13 +43,21 @@ export default function App() {
     toastTimer.current = setTimeout(() => setToast(''), 4500);
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
-  const audio = useAudio(project, notify);
+  const microphone = useMicrophoneSampler(project, studio.setSample, notify);
+  const playback = useAudio(project, notify);
+  const stop = async () => {
+    microphone.cancel();
+    await playback.stop();
+  };
+  const audio = { ...playback, stop, active: playback.active || microphone.phase !== 'idle' };
   const updateBlockedReason =
-    audio.recordingPending || audio.recording
-      ? 'Finish recording and wait for your take to save before refreshing.'
-      : audio.active || audio.starting
-        ? 'Stop playback before refreshing.'
-        : '';
+    microphone.phase !== 'idle'
+      ? 'Finish or cancel microphone capture before refreshing.'
+      : audio.recordingPending || audio.recording
+        ? 'Finish recording and wait for your take to save before refreshing.'
+        : audio.active || audio.starting
+          ? 'Stop playback before refreshing.'
+          : '';
   const applyUpdate = () => {
     if (updateBlockedReason || audio.engine.isActive) return;
     void offline.applyUpdate(studio.flush);
@@ -236,12 +245,13 @@ export default function App() {
         <Workspace
           {...studio}
           notify={notify}
+          microphone={microphone}
           engine={audio.engine}
           playing={audio.playing}
           step={audio.step}
           drumStep={audio.drumStep}
           live={audio.live}
-          audioActive={audio.active}
+          audioActive={playback.active}
           cableStyle={cableStyle}
           libraryDrag={libraryDrag}
           onLibraryDragFinish={finishLibraryDrag}
@@ -256,11 +266,13 @@ export default function App() {
         <div>
           <span className={`status-led ${audio.active ? 'playing' : ''}`} />
           <span>
-            {audio.recording
-              ? 'Recording your next happy accident'
-              : audio.active
-                ? 'Sound is flowing'
-                : 'Ready when you are'}
+            {microphone.phase !== 'idle'
+              ? 'Capturing a microphone snippet'
+              : audio.recording
+                ? 'Recording your next happy accident'
+                : audio.active
+                  ? 'Sound is flowing'
+                  : 'Ready when you are'}
           </span>
           <span className="status-separator" />
           <span>{project.modules.length} modules</span>

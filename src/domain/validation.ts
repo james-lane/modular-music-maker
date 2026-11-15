@@ -124,7 +124,10 @@ export const projectSchema = z
           )
             issue('Unknown drum voice source.');
         }
-      } else if (module.samples) issue('Only Drum kit modules can store samples.');
+      } else if (module.type === 'mic-sampler') {
+        if (Object.keys(module.samples ?? {}).some((slot) => slot !== 'clip'))
+          issue('Mic sampler only stores one clip.');
+      } else if (module.samples) issue('Only Drum kit and Mic sampler modules can store samples.');
       if (module.type === 'xy-effects') {
         for (const corner of XY_CORNERS) {
           if (!XY_EFFECTS.some((effect) => effect.id === module.parameters[corner.id]))

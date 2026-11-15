@@ -50,6 +50,8 @@ export const CONFIG = {
     defaultMasterVolume: 0.65,
     liveTailMs: 3000,
     maxDrumHits: 96,
+    samplerFadeSeconds: 0.008,
+    maxSamplerTails: 8,
     xyEffects: {
       filterHz: 700,
       filterResonance: 1.5,

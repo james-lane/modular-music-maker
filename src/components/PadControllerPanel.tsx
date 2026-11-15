@@ -66,7 +66,7 @@ export function PadControllerPanel({ module, live }: { module: PatchModule; live
           </button>
         ))}
       </div>
-      <p className="instrument-help">Wire TRIGGER OUT to a Drum machine.</p>
+      <p className="instrument-help">TRIGGER OUT → Drum machine or Mic sampler.</p>
     </div>
   );
 }

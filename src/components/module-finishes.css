@@ -1183,3 +1183,153 @@
   background: #f4e3bf;
   color: #775022;
 }
+
+/* A slate-blue pocket recorder, with a perforated metal capsule and green LCD. */
+:root {
+  --enclosure-mic-sampler: #435b68;
+}
+.module-mic-sampler {
+  --panel-face: var(--enclosure-mic-sampler);
+  --panel-end: #2c404c;
+  --panel-edge: #1b2c36;
+  --panel-ink: #edf2ed;
+  --panel-muted: #c4d3d5;
+  --panel-rule: #71828a;
+  --panel-highlight: #c9e7ed30;
+  --legend-shadow: #10232c80;
+  --knob-pointer: #20313a;
+  --knob-face: #e3e7e2;
+  --knob-shade: #9eaaa9;
+  --knob-ridge: #b0bab6;
+  --knob-ridge-light: #e9ece6;
+  --knob-border: #71817f;
+  border-radius: 24px 24px 12px 12px;
+}
+.mic-instrument {
+  display: grid;
+  gap: 8px;
+}
+.mic-grille {
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #21323c;
+  border-radius: 14px 14px 5px 5px;
+  background:
+    radial-gradient(ellipse, #080e13 1px, transparent 1.5px) 0 0 / 5px 4px,
+    linear-gradient(#788991, #485b65);
+  box-shadow:
+    inset 0 2px 4px #09141ec0,
+    0 1px 0 #a8c3ca40;
+}
+.mic-grille span {
+  padding: 3px 7px;
+  background: #2d404a;
+  color: #e0e8e5;
+  font: 8px monospace;
+  letter-spacing: 1.2px;
+}
+.mic-display {
+  padding: 8px 10px;
+  color: #253d2d;
+  background: linear-gradient(115deg, #c9d5ab, #a9ba8f);
+  border: 4px solid #1b2b34;
+  border-radius: 5px;
+  box-shadow:
+    inset 0 2px 5px #182b3150,
+    0 1px 0 #aac1cb70;
+  font: 9px monospace;
+}
+.mic-display > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.mic-display strong {
+  font-size: 16px;
+}
+.mic-display small {
+  font-size: 9px;
+  font-weight: normal;
+}
+.mic-display.capturing {
+  color: #742925;
+}
+.mic-display svg {
+  display: block;
+  width: 100%;
+  height: 48px;
+  margin-top: 3px;
+}
+.mic-display path {
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+}
+.mic-clip-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mic-transport {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.mic-transport button {
+  min-height: 36px;
+  border: 1px solid #172a34;
+  border-radius: 5px;
+  background: linear-gradient(#edf0e9, #b6c3c2);
+  color: #23373c;
+  box-shadow:
+    0 3px 0 #14252f,
+    inset 0 1px 0 #ffffffb0;
+  font-size: 10px;
+  font-weight: 700;
+}
+.mic-transport .mic-record {
+  background: linear-gradient(#d6aa9b, #a87062);
+  color: #321b18;
+}
+.mic-record i {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 5px;
+  border-radius: 50%;
+  background: #942e2b;
+  box-shadow: inset 0 1px 2px #4c0b0b80;
+}
+.mic-transport button:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #14252f;
+}
+.mic-tools {
+  display: flex;
+  justify-content: space-between;
+  min-height: 22px;
+}
+.mic-tools button {
+  padding: 3px 0;
+  color: #e1ece9;
+  background: transparent;
+  border: none;
+  font-size: 10px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mic-instrument button:disabled {
+  opacity: 0.5;
+}
+.mic-caption {
+  min-height: 24px;
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--panel-muted);
+}
+.module-mic-sampler .module-knobs {
+  margin-top: 5px;
+}

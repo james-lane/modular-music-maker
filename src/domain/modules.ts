@@ -30,6 +30,25 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     ],
     defaults: { enabled: true },
   },
+  'mic-sampler': {
+    type: 'mic-sampler',
+    name: 'Mic sampler',
+    subtitle: 'Catch a sound. Make it yours.',
+    description: 'Record a short microphone snippet, then play and patch it.',
+    category: 'Sources',
+    color: '#90a4ad',
+    code: 'MIC–01',
+    width: 300,
+    height: 480,
+    ports: [
+      { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
+      { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
+    ],
+    controls: [
+      { id: 'level', label: 'Level', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
+      { id: 'rate', label: 'Speed', min: 0.5, max: 2, step: 0.01, default: 1, unit: '×' },
+    ],
+  },
   'drum-kit': {
     type: 'drum-kit',
     name: 'Drum kit',

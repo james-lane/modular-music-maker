@@ -159,7 +159,9 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const padHit = useCallback(
     (moduleId: string, sound: DrumSound) => {
       if (!controllerTargets(latest.current, moduleId, 'trigger').length) {
-        notifyRef.current('Connect Pad controller TRIGGER OUT to Drum machine TRIGGER IN.');
+        notifyRef.current(
+          'Connect Pad controller TRIGGER OUT to a Drum machine or Mic sampler TRIGGER IN.',
+        );
         return;
       }
       void activateLive(() => {
@@ -170,7 +172,14 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     [activateLive, engine],
   );
 
-  const live: LiveControls = { noteOn, noteOff, releaseKeyboard, drumHit, padHit };
+  const sampleHit = useCallback(
+    (moduleId: string) => {
+      void activateLive(() => engine.hitSample(moduleId));
+    },
+    [activateLive, engine],
+  );
+
+  const live: LiveControls = { noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit };
 
   const toggleRecord = useCallback(async () => {
     if (recorder.current?.state === 'recording') {

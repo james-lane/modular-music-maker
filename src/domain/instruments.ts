@@ -62,6 +62,16 @@ export function drumLiveTailMs(project: Project): number {
       longest = Math.max(longest, duration);
     }
   }
+  for (const sampler of project.modules.filter((module) => module.type === 'mic-sampler')) {
+    const pcm = sampler.samples?.clip?.pcm;
+    if (pcm)
+      longest = Math.max(
+        longest,
+        Math.floor((pcm.length * 3) / 8) /
+          CONFIG.samples.sampleRate /
+          Number(sampler.parameters.rate),
+      );
+  }
   return CONFIG.audio.liveTailMs + longest * 1000;
 }
 

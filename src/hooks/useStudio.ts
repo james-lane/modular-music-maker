@@ -2,7 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CONFIG } from '../config';
 import { createProject } from '../domain/project';
 import { loadActiveProject, saveLocally } from '../domain/storage';
-import type { Project } from '../domain/types';
+import type { DrumSample, Project } from '../domain/types';
+import { parseProject } from '../domain/validation';
 
 type Edit = (project: Project) => Project;
 
@@ -34,6 +35,42 @@ export function useStudio() {
     setProject(current.current);
     setHistoryVersion((version) => version + 1);
   }, []);
+
+  // Capture/import can finish after unrelated edits; validate against the latest patch.
+  const setSample = useCallback(
+    (moduleId: string, slot: string, sample: DrumSample | null): boolean => {
+      let accepted = false;
+      commit((current) => {
+        if (!current.modules.some((item) => item.id === moduleId)) return current;
+        const next = {
+          ...current,
+          modules: current.modules.map((item) => {
+            if (item.id !== moduleId) return item;
+            const samples = { ...item.samples };
+            if (sample) samples[slot] = sample;
+            else delete samples[slot];
+            return {
+              ...item,
+              samples,
+              parameters:
+                item.type === 'drum-kit'
+                  ? { ...item.parameters, [slot]: sample ? 'sample' : slot }
+                  : item.parameters,
+            };
+          }),
+        };
+        try {
+          const validated = parseProject(next);
+          accepted = true;
+          return validated;
+        } catch {
+          return current;
+        }
+      });
+      return accepted;
+    },
+    [commit],
+  );
 
   const undo = useCallback(() => {
     const previous = past.current.pop();
@@ -111,6 +148,7 @@ export function useStudio() {
     project,
     isFirstVisit: initial.isFirstVisit,
     commit,
+    setSample,
     undo,
     redo,
     openProject,

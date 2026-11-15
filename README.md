@@ -26,7 +26,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 
 ## What works
 
-- A searchable module library with fifteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, XY Effects, mixer, merger, and output.
+- A searchable module library with sixteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, filter, delay, reverb, XY Effects, mixer, merger, and output.
 - Six contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers.
@@ -97,6 +97,16 @@ Use **More → Example patches → Pocket rhythm** for the connected performance
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 
 Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns retain their eight eighth-notes. Both repeat independently of the time-signature display. No physical MIDI device support is included yet.
+
+## Record a sound from your microphone
+
+Add **Mic sampler** from **Sources**. Press **Record mic**, allow microphone access, and speak, clap, or capture a found sound. Press **Finish** to keep it, or let the four-second limit finish automatically. **Cancel capture** discards the attempt. A replacement keeps the previous snippet until the new recording succeeds. Microphone access needs HTTPS or localhost and browser permission; no permission is requested by adding a module, opening a guide, or recording the studio output. The mic is never monitored through the speakers.
+
+Connect **AUDIO OUT** to an effect, Mixer, Merger, or Output. Press **Play snippet** to play it once, even with the transport stopped. Or connect Pad controller **TRIGGER OUT → TRIGGER IN**: every pad restarts the same snippet, with pad velocity controlling the hit volume. **Level** controls volume; **Speed** changes pitch and length together on the next hit (0.5× is an octave lower, 2× an octave higher). Top-bar Play does not automatically trigger snippets.
+
+**Download WAV** saves the original recording for use elsewhere, including **Drum kit → Imported sample → Load audio** for sequenced playback. **Clear** removes the clip; Undo restores it. Capture ends and releases the microphone on Finish, Cancel, Stop, module removal, patch switching, or hiding the app. Refresh waits for capture and processing to finish. Headphones keep a playing backing track out of the recording.
+
+Snippets use the same compact mono 24 kHz PCM format and shared patch sample budget as Drum kit samples (about sixteen seconds in total). They are embedded in browser saves and patch exports, and play offline without microphone access. New capture works offline where device/browser permissions permit it. No audio is uploaded to a service; the optional local Node save includes it in the patch just like imported samples.
 
 ## Merge several sounds
 

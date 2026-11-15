@@ -3,6 +3,7 @@ export type ModuleType =
   | 'sequencer'
   | 'oscillator'
   | 'noise'
+  | 'mic-sampler'
   | 'lfo'
   | 'filter'
   | 'delay'
@@ -69,7 +70,7 @@ export interface PatchModule {
   steps?: number[];
   /** Optional additive v1 field: only drum machines persist a per-voice step pattern. */
   drumPattern?: Record<string, boolean[]>;
-  /** Optional additive v1 data, owned only by Drum kit modules. */
+  /** Portable audio: Drum kit lane IDs, or the Mic sampler’s single `clip` slot. */
   samples?: Record<string, DrumSample>;
 }
 
