@@ -9,7 +9,7 @@ export interface ExamplePatch {
   description: string;
   tryThis: string;
   color: string;
-  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade';
+  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy';
   /** Factories supply fresh project/module/cable IDs and independent editable data every time. */
   create: () => Project;
 }
@@ -123,6 +123,51 @@ function createArcadeProject(): Project {
   };
 }
 
+function createCopperProject(): Project {
+  const kit = instrument('drum-kit', -440, 60, {
+    snare: 'rim',
+    clap: 'low-conga',
+    'closed-hat': 'input',
+    length: 0.055,
+  });
+  const noise = instrument('noise', -440, 620, { level: 0.16 });
+  const drums = instrument('drum-machine', 0, 60, { level: 0.62, tone: -1, decay: 0.6 });
+  drums.drumPattern = drumPattern({
+    kick: [0, 6, 10],
+    snare: [4, 12],
+    clap: [3, 7, 11, 14],
+    'closed-hat': [0, 2, 4, 6, 8, 10, 12, 14, 15],
+  });
+  const sequencer = instrument('sequencer', 0, 540, { gate: 0.45 });
+  sequencer.steps = [0, -1, 3, 4, -1, 6, 4, -1];
+  const bass = instrument('oscillator', 340, 540, {
+    waveform: 'triangle',
+    octave: -1,
+    level: 0.42,
+  });
+  const merger = instrument('merger', 540, 60, { level: 0.65 });
+  const effects = instrument('xy-effects', 940, 60, { x: 0.45, y: 0.65, mix: 0.5 });
+  const output = instrument('output', 1360, 60, { level: 0.8 });
+  return {
+    ...createProject(true),
+    name: 'Copper currents',
+    tempo: 94,
+    rootNote: 'D',
+    scale: 'pentatonic',
+    modules: [kit, noise, drums, sequencer, bass, merger, effects, output],
+    cables: [
+      // The kit gates this continuous noise into hats; it is never a direct noise wash.
+      wire(noise, 'out', kit, 'closed-hat'),
+      wire(kit, 'kit', drums, 'kit'),
+      wire(sequencer, 'pitch', bass, 'pitch'),
+      wire(drums, 'out', merger, 'in1'),
+      wire(bass, 'out', merger, 'in2'),
+      wire(merger, 'out', effects, 'in'),
+      wire(effects, 'out', output, 'in'),
+    ],
+  };
+}
+
 /** Curated, contrasting starting points. Keep copy and sound design together when adding examples. */
 export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
   {
@@ -174,5 +219,15 @@ export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
     color: '#728246',
     artwork: 'arcade',
     create: createArcadeProject,
+  },
+  {
+    id: 'copper-currents',
+    name: 'Copper currents',
+    style: 'Dub playground',
+    description: 'A laid-back bass groove, rim shots and congas, blended through XY Effects.',
+    tryThis: 'Slide the XY point towards Echo or Space; change a corner to reshape the groove.',
+    color: '#aa6c50',
+    artwork: 'xy',
+    create: createCopperProject,
   },
 ];

@@ -29,7 +29,7 @@ React controls / workspace
 | `src/components/ModuleHelpDialog.tsx`     | Library field-guide modal with related-guide navigation             |
 | `src/domain/modules.ts`                   | Declarative module registry                                         |
 | `src/domain/project.ts`                   | Starter patch, module creation, connection invariants, pitch math   |
-| `src/domain/examples.ts`                  | Five example recipes, catalog copy, and independent copy factories  |
+| `src/domain/examples.ts`                  | Six example recipes, catalog copy, and independent copy factories   |
 | `src/components/ExamplePatchesDialog.tsx` | First-visit and reusable example patch chooser                      |
 | `src/domain/validation.ts`                | Shared Zod validation for every data boundary                       |
 | `src/domain/storage.ts`                   | Browser patch library, optional server sync, downloads              |
@@ -149,11 +149,13 @@ Drum kit modules alone may contain `samples`, a map of known lane IDs to `{ name
 
 ## Example patches
 
-`domain/examples.ts` owns the five-item catalog, descriptions, starter tips, artwork colours, and sound factories. It reuses the original Sunday circuits and Pocket rhythm factories, and adds Warehouse pulse (drums and sequenced bass), Coastal static (noise/filter/LFO/reverb), and Tiny arcade (two independent sequenced voices). Each factory returns fresh UUIDs and independent parameters/pattern arrays. Examples are ordinary editable v1 projects; no template markers or UI data enter saved files.
+`domain/examples.ts` owns the six-item catalog, descriptions, starter tips, artwork colours, and sound factories. It reuses the original Sunday circuits and Pocket rhythm factories, and adds Warehouse pulse (drums and sequenced bass), Coastal static (noise/filter/LFO/reverb), and Tiny arcade (two independent sequenced voices). Each factory returns fresh UUIDs and independent parameters/pattern arrays. Examples are ordinary editable v2 projects; no template markers or UI data enter saved files.
+
+Copper currents is the sixth recipe: a 94 BPM D-pentatonic dub groove. Noise feeds Drum kit’s fourth audio input for gated hats; the kit assigns kick, rim and low conga to the other lanes. A sequenced triangle bass and the drum machine feed separate Merger inputs, then XY Effects and Output. Its default point leans towards Echo, with all four corner assignments editable. Negative kit/noise positions demonstrate the open workspace. All eight modules contribute to Output; no sample download or silent browsing preview is required.
 
 `useStudio` records whether initialization found a valid saved active project. App opens `ExamplePatchesDialog` only on a first visit; returning visits restore the saved patch. Examples remain accessible through More → Example patches. Browsing is silent and does not change the project. Selecting one uses the existing project-switch path: stop audio/finish recording, flush the current patch to browser storage, clear undo history, and open the new copy with playback stopped. The chooser guards repeated selection while opening. Dismissal leaves the current patch intact.
 
-`components/examples.css` provides responsive paper cards with CSS/SVG artwork and no external media. Tests verify five distinct routing arrangements, full output connectivity, validation/JSON round trips, non-overlapping in-bounds layouts, fresh IDs, and copy independence after edits. Keep all of these properties when replacing or adding recipes.
+`components/examples.css` provides responsive paper cards with CSS/SVG artwork and no external media. Tests verify six distinct routing arrangements, full output connectivity, validation/JSON round trips, non-overlapping layouts, fresh IDs, and copy independence after edits. Keep all of these properties when replacing or adding recipes.
 
 ## Recording and persistence
 

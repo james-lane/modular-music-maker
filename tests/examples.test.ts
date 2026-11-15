@@ -19,9 +19,9 @@ function routingSignature(project: Project) {
   });
 }
 
-test('five distinct examples are valid, fully connected and laid out without covering another module', () => {
-  assert.equal(EXAMPLE_PATCHES.length, 5);
-  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 5);
+test('six distinct examples are valid, fully connected and laid out without covering another module', () => {
+  assert.equal(EXAMPLE_PATCHES.length, 6);
+  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 6);
   const signatures = new Set<string>();
   for (const example of EXAMPLE_PATCHES) {
     const project = example.create();
@@ -52,7 +52,7 @@ test('five distinct examples are valid, fully connected and laid out without cov
       }
     }
   }
-  assert.equal(signatures.size, 5, 'Each example teaches a different routing arrangement');
+  assert.equal(signatures.size, 6, 'Each example teaches a different routing arrangement');
 });
 
 test('opening and editing an example cannot change its recipe or another saved copy', () => {

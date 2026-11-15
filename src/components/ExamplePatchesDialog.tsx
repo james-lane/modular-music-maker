@@ -13,6 +13,7 @@ function ExampleArtwork({ kind }: { kind: ExamplePatch['artwork'] }) {
     texture:
       'M4 42C20 4 36 4 52 42S84 80 100 42S132 4 148 42M4 52C20 14 36 14 52 52S84 90 100 52S132 14 148 52',
     arcade: 'M4 52V32H22V14H40V32H58V14H76V4H94V14H112V32H130V52H148',
+    xy: 'M24 8H128V68H24ZM76 8V68M24 38H128M44 56Q76 12 108 24M102 24a6 6 0 1 0 12 0a6 6 0 1 0-12 0',
   };
   return (
     <svg viewBox="0 0 152 76" fill="none" aria-hidden="true">
@@ -45,7 +46,7 @@ export function ExamplePatchesDialog({
 
   return (
     <Modal
-      title="Five ways to start."
+      title={`${EXAMPLE_PATCHES.length} ways to start.`}
       eyebrow="EXAMPLE PATCHES · VOL. 01"
       className="examples-dialog"
       wide
@@ -67,7 +68,7 @@ export function ExamplePatchesDialog({
               onClick={() => void open(example)}
             >
               <span className="example-artwork">
-                <span className="example-number">0{index + 1}</span>
+                <span className="example-number">{String(index + 1).padStart(2, '0')}</span>
                 <ExampleArtwork kind={example.artwork} />
                 <span className="example-style">{example.style}</span>
               </span>

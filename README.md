@@ -27,7 +27,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 ## What works
 
 - A searchable module library with fifteen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, LFO, filter, delay, reverb, XY Effects, mixer, merger, and output.
-- Five contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
+- Six contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, trigger, and kit are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
@@ -70,13 +70,14 @@ See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, devi
 
 Open **More → Example patches**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically.
 
-| Patch           | Sound and approach                                                         |
-| --------------- | -------------------------------------------------------------------------- |
-| Sunday circuits | Warm C-minor sequenced melody at 108 BPM, with filtering and delay         |
-| Pocket rhythm   | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads |
-| Warehouse pulse | Driving drums and a clipped F-minor bass line at 128 BPM                   |
-| Coastal static  | Ambient noise, slowly swept by an LFO through a filter and reverb          |
-| Tiny arcade     | Two independent sequencers playing square/triangle voices in G at 152 BPM  |
+| Patch           | Sound and approach                                                             |
+| --------------- | ------------------------------------------------------------------------------ |
+| Sunday circuits | Warm C-minor sequenced melody at 108 BPM, with filtering and delay             |
+| Pocket rhythm   | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads     |
+| Warehouse pulse | Driving drums and a clipped F-minor bass line at 128 BPM                       |
+| Coastal static  | Ambient noise, slowly swept by an LFO through a filter and reverb              |
+| Tiny arcade     | Two independent sequencers playing square/triangle voices in G at 152 BPM      |
+| Copper currents | 94 BPM D-pentatonic dub with a hybrid Drum kit, Merger and hands-on XY Effects |
 
 Coastal static is free-running: its LFO Rate controls the wash rather than the composition tempo. The other patches use the transport clock. Choose the same example again for a fresh original; your edited copies remain available in **More → My patches**. Returning visits restore the active saved patch without reopening the chooser.
 

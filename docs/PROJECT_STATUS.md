@@ -2,13 +2,21 @@
 
 Last updated: **15 November 2026**.
 
-## Open workspace — local change
+## Sixth example: Copper currents
+
+The example collection now has six recipes. Copper currents is a 94 BPM D-pentatonic dub playground featuring Drum kit, Merger and XY Effects alongside Noise, Drum machine, Step sequencer, Oscillator and Output. The kit assigns kick, rim shot and low conga, and gates patched-in noise for hats. Merger combines the syncopated drum pattern and triangle bass before the assignable XY pad. Its initial point leans towards Echo, and the card suggests exploring Echo/Space or changing a corner. The layout includes negative positions on the open workspace; all eight modules reach Output without overlapping panels.
+
+The chooser derives its heading count from the catalog and gives an unmatched final card a full row only when the count is odd. Six cards therefore form three balanced rows on desktop and one scrolling column on phones. Existing example recipes are unchanged; copies have fresh IDs and independent editable data, and switching uses the normal silent project-switch path that preserves the previous patch.
+
+All 51 automated tests, strict types, production build and formatting pass. The example checks include six distinct routing arrangements, complete output connectivity, non-overlapping layouts, fresh IDs and independent editable data. Browser checks confirmed the eight-module layout, nonzero live output, XY/corner editing while playing, and default restoration with playback stopped on opening a fresh copy. The complete production example also reopened and played after its preview server was shut down.
+
+## Open workspace — deployed 15 November 2026
 
 The fixed 1800×1200 rack has been replaced with an effectively infinite camera-based workspace. Pan, zoom, move, and place modules in any direction, including negative coordinates. A held module or library drag near a screen edge keeps panning; + finds non-overlapping space near the visible centre. Fit modules to view/Home recovers the patch, and focused-workspace arrow keys pan (Shift moves farther). Tabbing to an offscreen control reveals it through the camera. Navigation stays outside patch history and audio topology.
 
 Only a viewport-sized stage/SVG is rendered. Long cable braid detail and shadow surfaces are bounded; panning translates cached strand geometry. Normal zoom now spans 5–140% (Fit can go further for distant layouts), with a ±1 billion numeric guard for untrusted coordinates rather than a normal rack edge. Module/socket dimensions are unchanged.
 
-Patch format v2 supports signed world positions. An explicit `parseProject` migration loads v1 patches without changing IDs, positions, sounds, samples, or cables; new saves/exports use v2. Browser library keys remain stable. Older app releases cannot open v2 exports. This change has not been deployed.
+Patch format v2 supports signed world positions. An explicit `parseProject` migration loads v1 patches without changing IDs, positions, sounds, samples, or cables; new saves/exports use v2. Browser library keys remain stable. Older app releases cannot open v2 exports. Published source commit `703a771` as app version `0.1.0+26.g703a771` at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)**. Cloudflare version: `06fe9844-a354-4199-87b3-a26625521623`. Hosted verification matched all twelve release files to the clean build, confirmed update headers, and checked that the local Node API remains unavailable publicly. The previous release is `4ea3ed89-9c0d-48a4-b752-6fe8667f20a9`; it cannot read newly saved v2 patches, and rolling back code would not revert browser storage. Existing sessions can use Refresh now when ready or close all Patchwork windows and reopen.
 
 Validation: all 51 tests, strict types, production build, and formatting pass. Tests cover v1 migration with embedded samples, signed/distant position round trips and numeric guards, non-overlapping placement through the module limit, camera anchors across quadrants, recovery across the full guarded coordinate range, and bounded long-cable detail. Browser QA used isolated local preview origins: native module dragging plus synthetic touch sequences verified travel beyond every old boundary, negative coordinates, grouped undo/redo, wheel/keyboard pan without patch edits, focal zoom, touch pan/pinch cancellation with partial finger lift, continuous held-edge panning, distant + and library-drag placement without a camera jump, and focus recovery without native scrolling. Live signal continued while navigating; a take recorded during panning decoded with nonzero audio.
 
@@ -118,7 +126,7 @@ The user reports that the installed iPad app works well. Automated emulation sti
 
 ## Example patches
 
-**More → Example patches** opens five contrasting starting points: Sunday circuits (warm sequenced melody), Pocket rhythm (live drums/keys/pads), Warehouse pulse (128 BPM bass/drums), Coastal static (free-running modulated noise/reverb), and Tiny arcade (152 BPM two-voice chiptune). First visits open the chooser automatically; returning visits restore their active saved patch. Each selection opens a fresh editable copy, preserving the previous patch in My patches and stopping playback. Cards explain the sound and suggest a first adjustment.
+**More → Example patches** opens six contrasting starting points: Sunday circuits (warm sequenced melody), Pocket rhythm (live drums/keys/pads), Warehouse pulse (128 BPM bass/drums), Coastal static (free-running modulated noise/reverb), Tiny arcade (152 BPM two-voice chiptune), and Copper currents (94 BPM dub with hybrid percussion, Merger and XY Effects). First visits open the chooser automatically; returning visits restore their active saved patch. Each selection opens a fresh editable copy, preserving the previous patch in My patches and stopping playback. Cards explain the sound and suggest a first adjustment.
 
 Browser QA verified first-visit display, all five examples producing a live output signal, stopping playback on example switches, saving/reopening an edited variation, fresh original settings on repeated selection, returning-visit restoration, Escape, header/More entry points, and 390px phone scrolling with no horizontal overflow. The user's original studio patch was retained; audio/persistence checks used a separate local preview origin. No browser errors occurred.
 
