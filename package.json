@@ -19,6 +19,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@breezystack/lamejs": "1.2.7",
     "express": "^5.1.0",
     "lucide-react": "^0.468.0",
     "mediabunny": "1.66.0",

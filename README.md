@@ -43,7 +43,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 - App labels resist text selection and touch callouts, including double taps and long presses on iPad/iPhone. Patch names and search fields retain normal text editing, selection, and paste.
 - Undo and redo patch changes with the two arrow buttons beside workspace focus. **⌘/Ctrl Z** undoes; **⌘/Ctrl Shift Z** or **Ctrl Y** redoes. Drags and held adjustment keys undo in one step, including slow gestures. Unchanged controls leave history intact. History holds the latest 60 edits for the open patch; opening another patch or reloading starts fresh. Text fields retain normal text undo. Camera movement, live playing, recordings, and cable appearance stay outside patch history.
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
-- Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.
+- Record live output, play back saved takes, and download **WAV**, **MP3**, or the **original recording**. Recording captures the studio output, **not the microphone**.
 - Install on an iPad/iPhone home screen, Android, or desktop and use the complete studio offline after its first download. **More → Use offline / install** shows readiness and installation steps.
 
 ## Use offline or install on iPad
@@ -143,7 +143,9 @@ New saves and exports use patch format **v2**, which supports signed positions o
 
 Browser data belongs to the current origin and browser profile. The local preview and a hosted website have separate libraries. Clearing site data removes browser saves. Export patches and download recordings you want to keep.
 
-The frontend can also be hosted as static files from `dist/`; it retains browser saving, recording, and offline installation. Public installs make no patch API requests. The optional Node file API is only used on loopback after identifying a running Patchwork server, and is skipped immediately when offline. Static hosting does not run Node. Recording format is selected from the browser's supported WebM/Opus, Ogg/Opus, or MP4 formats. Takes are limited to 10 minutes by a configurable default.
+Open **More → Recordings**, choose **Save as**, then **Download** for each take. **WAV** is 16-bit PCM at 48 kHz for editing; **MP3** is 192 kbps at 48 kHz for smaller sharing files. Both preserve mono/stereo channels. **Original** downloads the unchanged WebM/Opus, Ogg/Opus, or MP4/M4A file captured by your browser. Existing takes have the same choices; conversion leaves the saved original intact. Converting compressed audio to WAV does not restore detail lost during capture. Downloads are prepared silently on this device, work offline, and never upload audio. Closing the dialog cancels an unfinished export. If conversion is unavailable, choose Original.
+
+The frontend can also be hosted as static files from `dist/`; it retains browser saving, recording, and offline installation. Public installs make no patch API requests. The optional Node file API is only used on loopback after identifying a running Patchwork server, and is skipped immediately when offline. Static hosting does not run Node. Takes are limited to 10 minutes by a configurable default. MP3 encoding uses the locally bundled [LAME/lamejs encoder](public/licenses/lamejs.txt).
 
 ## Cloudflare hosting
 

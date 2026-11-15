@@ -65,6 +65,7 @@ export const CONFIG = {
     scheduleAheadSeconds: 0.12,
     parameterRampSeconds: 0.025,
     maxRecordingSeconds: 600,
+    recordingExport: { sampleRate: 48000, mp3BitrateKbps: 192, blockFrames: 1152 },
     defaultMasterVolume: 0.65,
     liveTailMs: 3000,
     maxDrumHits: 96,

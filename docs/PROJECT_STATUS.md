@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Recording download formats
+
+**More → Recordings** now offers **Save as → WAV, MP3, or Original** for every saved take, including existing recordings. WAV is 16-bit PCM at 48 kHz; MP3 is 192 kbps at 48 kHz. Mono/stereo channels are preserved. Original retains the captured bytes and native extension; conversions never overwrite the IndexedDB take or change a patch. Silent native decoding and a bundled LAME encoder worker run locally and offline, with progress, serialized exports, cancellation on dialog close and original-download guidance after failures. Long takes require decoded PCM memory; full-duration patch rendering remains future work.
+
+Validation: strict types, all **98 tests**, production build, formatting and diff checks pass. Encoder regressions cover signed/interleaved WAV PCM, mono/stereo MP3 metadata and final-frame flushing, invalid audio rejection, unchanged legacy originals, and worker disposal on success/error/abort. Isolated Chromium verification recorded audible live output, restored and played the take after reload, downloaded all three formats, repeated conversions after an offline reload, preserved the original byte hash, recovered from a forced decoder failure, and suppressed late downloads after closing the dialog. Exported files independently probe as stereo 48 kHz PCM WAV and 192 kbps MP3 with nonzero signal and expected duration. Tablet/390px phone layouts remain accessible without horizontal overflow; no microphone request or page error occurred. Physical Safari/iPad downloads remain an on-device check.
+
 ## Security audit fixes
 
 The optional Node adapter now rejects unexpected Host/port values, foreign/null origins, and cross-site browser requests before parsing JSON or serving files. It remains on loopback and supports the normal Node origin, Vite’s development proxy, and local CLI clients. Forwarded headers cannot override this boundary. Node and static hosting share a tested security-header baseline covering framing, script/connect sources, content types and device permissions; local microphone capture and blob recordings remain permitted.
@@ -257,7 +263,7 @@ The user prefers individually designed instruments with different materials, col
 - Local-first, single-user storage. No accounts or cloud database; static hosted copies use browser storage. The Node server remains local and unauthenticated.
 - The melodic sequencer has eight steps; drum patterns have sixteen sixteenths. Keyboard voices are monophonic with last-note priority and chromatic pitch. No physical MIDI support.
 - Eight-step melodic and sixteen-step drum patterns; time signature controls beat grouping rather than pattern length. 6/8 currently uses three quarter-note groups, not a compound-meter transport.
-- Native MediaRecorder audio files (WebM/Ogg/MP4 depending on browser), not WAV/offline export. Recording takes are capped at 10 minutes.
+- Capture uses native MediaRecorder audio (WebM/Ogg/MP4 depending on browser), with WAV, MP3 and Original downloads. Recording takes are capped at 10 minutes; conversion preserves the captured quality rather than recovering lost detail. Rendering a patch faster than real time is not implemented.
 - Entire module graph rebuilds when routing changes, which may make a small transient. Parameter/position edits keep the existing graph.
 - Noise and reverb are generated anew for each graph, so their exact texture is not deterministic between sessions.
 - Background tab throttling can interrupt browser audio scheduling.
@@ -269,7 +275,7 @@ The user prefers individually designed instruments with different materials, col
 2. Add an ADSR/envelope and VCA module with a clear gate signal contract.
 3. Add more editable drum lanes, tempo-synced effects, and configurable pattern lengths.
 4. Provide deterministic noise/impulse seeds and gradual graph crossfades.
-5. Add offline WAV rendering and MIDI input after defining their lifecycle and permissions.
+5. Add faster-than-real-time patch rendering and MIDI input after defining their lifecycle and permissions.
 6. Add user accounts and a real persistence adapter only when cloud sync is requested.
 
 Keep these as potential directions, not automatic scope for future sessions.

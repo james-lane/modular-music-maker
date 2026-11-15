@@ -4,11 +4,9 @@ import {
   AudioLines,
   Check,
   Clock3,
-  Download,
   FolderOpen,
   Headphones,
   Plus,
-  Trash2,
   Upload,
   X,
 } from 'lucide-react';
@@ -18,6 +16,8 @@ import { deleteRecording, loadRecordings, type Recording } from '../audio/record
 import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
 import type { Project } from '../domain/types';
 import { isCableStyle, isTheme, type CableStyle, type Theme } from '../domain/preferences';
+import { RecordingItem } from './RecordingItem';
+import { useRecordingExport } from '../hooks/useRecordingExport';
 
 /** Also exposes composition controls that move out of the compact phone toolbar. */
 export function SettingsDialog({
@@ -290,57 +290,6 @@ export function PatchLibraryDialog({
   );
 }
 
-function RecordingItem({ recording, onDelete }: { recording: Recording; onDelete: () => void }) {
-  const [url, setUrl] = useState('');
-  useEffect(() => {
-    const next = URL.createObjectURL(recording.blob);
-    setUrl(next);
-    return () => URL.revokeObjectURL(next);
-  }, [recording.blob]);
-  return (
-    <div className="recording-item">
-      <div className="recording-title">
-        <Headphones size={19} />
-        <div>
-          <strong>{recording.name}</strong>
-          <small>
-            {Math.floor(recording.duration / 60)}:
-            {String(Math.floor(recording.duration % 60)).padStart(2, '0')} ·{' '}
-            {new Date(recording.createdAt).toLocaleString('en-GB', {
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </small>
-        </div>
-        <button
-          className="icon-button"
-          title="Download recording"
-          aria-label={`Download ${recording.name} recording`}
-          onClick={() =>
-            downloadFile(
-              recording.blob,
-              `${fileSlug(recording.name)}-${recording.id.slice(0, 6)}.${recording.extension}`,
-            )
-          }
-        >
-          <Download size={17} />
-        </button>
-        <button
-          className="icon-button"
-          title="Delete recording"
-          aria-label={`Delete ${recording.name} recording`}
-          onClick={onDelete}
-        >
-          <Trash2 size={17} />
-        </button>
-      </div>
-      <audio src={url || undefined} controls preload="metadata" />
-    </div>
-  );
-}
-
 export function RecordingsDialog({
   onClose,
   notify,
@@ -350,6 +299,7 @@ export function RecordingsDialog({
 }) {
   const [recordings, setRecordings] = useState<Recording[] | null>(null);
   const [error, setError] = useState(false);
+  const recordingExport = useRecordingExport(notify);
   useEffect(() => {
     let active = true;
     void loadRecordings()
@@ -371,6 +321,10 @@ export function RecordingsDialog({
       <p className="dialog-intro">
         Your live takes, just as you played them. Listen back or take them with you.
       </p>
+      <p className="recording-format-help">
+        Choose WAV for editing, MP3 for sharing, or Original for the unchanged recording. Downloads
+        are prepared on this device and work offline.
+      </p>
       <div className="recordings-list">
         {recordings === null ? (
           <p className="dialog-empty">Loading your recordings…</p>
@@ -391,6 +345,13 @@ export function RecordingsDialog({
             <RecordingItem
               key={recording.id}
               recording={recording}
+              exportActive={recordingExport.active !== null}
+              progress={
+                recordingExport.active?.id === recording.id
+                  ? recordingExport.active.progress
+                  : undefined
+              }
+              onDownload={(format) => void recordingExport.download(recording, format)}
               onDelete={() => {
                 void deleteRecording(recording.id)
                   .then(() =>
@@ -404,6 +365,11 @@ export function RecordingsDialog({
       </div>
       <p className="dialog-footnote">
         <Clock3 size={14} /> Up to 10 minutes per take. Saved in this browser until you delete them.
+      </p>
+      <p className="dialog-footnote">
+        <a href="/licenses/lamejs.txt" target="_blank" rel="noreferrer">
+          MP3 encoder credits
+        </a>
       </p>
     </Modal>
   );

@@ -34,11 +34,11 @@ Without explicit refresh, closing every client still applies the update naturall
 
 - Patches remain validated Project v2 data in localStorage; v1 patches migrate automatically through `parseProject`. Signed open-workspace positions survive offline saving, export/import, and reload. Autosave flushes on `pagehide` and hidden visibility, since iPadOS may suspend an app without closing it.
 - Mic sampler snippets are embedded in patch saves/exports and play offline without microphone access. New capture needs secure-context device permission and never uses a network service. Hiding the app cancels capture and releases the mic.
-- Takes remain blobs in IndexedDB. Offline recording, playback, and download use the supported MediaRecorder format, without microphone access.
+- Takes remain original MediaRecorder blobs in IndexedDB. Offline recording, playback, and downloads as WAV, MP3 or Original work without microphone access. The conversion worker, MP3 encoder and licence are bundled in the complete release; downloads never contact a conversion service.
 - Public installs never probe or upload to `/api`. The optional file adapter only considers known loopback hostnames while online, and checks the Patchwork health response before reading/writing.
 - **Protect device storage** calls `StorageManager.persist()` from a user gesture and reports whether protection was granted. Browsers decide whether to grant it. See [WebKit's storage policy](https://webkit.org/blog/14403/updates-to-storage-policy/).
 - Clearing website data removes the saved app, patches, and takes. Storage pressure can cause eviction where protection is unavailable. Export patches and download recordings for durable backups. There is no cross-device synchronization.
-- Offline use does not bypass iPadOS background/screen-lock suspension, browser CPU limits, or hardware audio differences. Keep the app visible while performing. Offline WAV rendering remains separate future work.
+- Offline use does not bypass iPadOS background/screen-lock suspension, browser CPU limits, or hardware audio differences. Keep the app visible while performing. Converting an existing take to WAV is available; rendering a patch faster than real time remains separate future work.
 
 ## Cloudflare hosting
 

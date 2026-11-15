@@ -4,6 +4,6 @@
     "lib": ["ES2022", "WebWorker"],
     "types": []
   },
-  "include": ["src/offline/worker.ts"],
+  "include": ["src/offline/worker.ts", "src/audio/recording-export-worker.ts"],
   "exclude": []
 }
