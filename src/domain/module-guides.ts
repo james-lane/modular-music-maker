@@ -121,7 +121,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Connect PITCH to an Oscillator PITCH input, then route the Oscillator AUDIO OUT to Output AUDIO IN.',
       'Press Play. Each button is one eighth-note in the repeating pattern.',
-      'Click a step to advance its note, or right-click it to make a rest. Change the composition key and scale in the top bar.',
+      'Tap a step to advance its note, or press and swipe up/down to raise/lower it. Right-click makes a rest. Change the composition key and scale in the top bar.',
     ],
     controls: {
       gate: 'Sets how long each note lasts within its step. Short gates make a more clipped rhythm.',
@@ -130,7 +130,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Note buttons',
         description:
-          'Choose scale degrees across two octaves. A dash is a rest; the lit step follows playback.',
+          'Tap to cycle through scale degrees across two octaves. Swipe up/down or use arrow keys to adjust without wrapping; a rest sits below the lowest note. Hold Shift for finer dragging. A dash is a rest; the lit step follows playback.',
       },
     ],
     tip: 'A pitch cable needs an Oscillator to turn the notes into sound. Each oscillator pitch input accepts one controller at a time.',

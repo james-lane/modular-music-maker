@@ -8,6 +8,12 @@ Patchwork v0.1 is a TypeScript/React/Vite frontend with an Express/Node local pe
 
 The initial connected patch is **Step sequencer → Oscillator → Filter → Delay → Output**, named _Sunday circuits_. Eight steps run at 108 BPM in C minor. Sound begins after Play/Record or a live instrument gesture.
 
+## Sequencer note gestures
+
+The eight melodic step buttons now support press-and-swipe editing like the knobs: up raises the scale degree, down lowers it, and Shift makes mouse/pen dragging finer. Swipes and arrow keys are bounded, with a rest below the lowest note. Taps and Enter/Space still cycle forward and wrap; right-click still inserts a rest. A small movement threshold protects taps from finger jitter, releasing a swipe does not add an extra cycle, and pinch zoom cancels the note gesture. Edits use the existing saved step data and undo/autosave path; no patch migration is needed.
+
+Touch-enabled Chromium QA at 1194×834 verified tap/jitter handling, vertical swipes in both directions, mouse and Shift dragging beyond the button, rest and upper bounds, tap wrapping, keyboard controls, grouped swipe undo/redo, pointer cancellation, and pinch with a partial finger lift followed by normal editing. The analyser confirmed nonzero live output while editing; a take recorded and played back successfully. Offline reload retained notes and allowed further swipes; a 390×844 phone layout had no document overflow. Checks used an isolated browser context with no page errors. Strict types, all 32 tests, production build, and formatting pass. Physical iPad swipe feel still needs on-device confirmation. These changes have not been deployed.
+
 ## Workspace-first iPad layout
 
 The separate navigation header and permanent catalog sidebar have been replaced by one compact transport toolbar and an Add modules drawer. Patch/recording libraries, examples, help, and settings are under More. Workspace focus hides the toolbar/footer without stopping audio; its heading button restores them. The workspace fills the available width in portrait, landscape, and split view. Menus scroll in short windows, drawer search receives focus, Escape closes it, and dismissal returns focus to Add modules.

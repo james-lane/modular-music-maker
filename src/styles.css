@@ -1349,6 +1349,8 @@ svg {
   gap: 8px;
 }
 .step-button {
+  cursor: ns-resize;
+  touch-action: none;
   position: relative;
   display: flex;
   flex-direction: column;

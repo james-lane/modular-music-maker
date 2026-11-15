@@ -14,7 +14,7 @@ import {
 import { useEffect, useRef, useState, type DragEvent, type PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
-import { MODULES } from '../domain/modules';
+import { MODULES, SEQUENCER_DEGREES } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
@@ -428,20 +428,27 @@ export function Workspace({
                     `${module.id}:${id}`,
                   )
                 }
-                onStep={(index, rest) =>
-                  commit((current) => ({
-                    ...current,
-                    modules: current.modules.map((item) =>
-                      item.id === module.id
-                        ? {
-                            ...item,
-                            steps: item.steps!.map((degree, position) =>
-                              position === index ? (rest ? -1 : (degree + 1) % 14) : degree,
-                            ),
-                          }
-                        : item,
-                    ),
-                  }))
+                onStep={(index, next, group) =>
+                  commit(
+                    (current) => ({
+                      ...current,
+                      modules: current.modules.map((item) =>
+                        item.id === module.id && item.steps
+                          ? {
+                              ...item,
+                              steps: item.steps.map((degree, position) =>
+                                position === index
+                                  ? next === 'next'
+                                    ? (degree + 1) % (SEQUENCER_DEGREES.max + 1)
+                                    : next
+                                  : degree,
+                              ),
+                            }
+                          : item,
+                      ),
+                    }),
+                    group ? `${module.id}:step:${index}:${group}` : '',
+                  )
                 }
                 onPort={portClick}
                 onDrumStep={(sound, index) =>

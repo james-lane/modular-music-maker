@@ -14,6 +14,7 @@ import { KeyboardPanel } from './KeyboardPanel';
 import { PadControllerPanel } from './PadControllerPanel';
 import { MixerPanel } from './MixerPanel';
 import { MergerPanel } from './MergerPanel';
+import { SequencerStep, type StepNoteChange } from './SequencerStep';
 
 interface Props {
   module: PatchModule;
@@ -28,7 +29,7 @@ interface Props {
   pending: Endpoint | null;
   onParameter: (id: string, value: number | string | boolean) => void;
   onDrumStep: (sound: DrumSound, step: number) => void;
-  onStep: (index: number, rest: boolean) => void;
+  onStep: (index: number, degree: StepNoteChange, group?: string) => void;
   onPort: (endpoint: Endpoint) => void;
   onRemove: () => void;
   onDragStart: (event: PointerEvent<HTMLElement>) => void;
@@ -114,21 +115,14 @@ export function ModuleCard({
             </div>
             <div className="sequence-steps">
               {module.steps?.map((degree, index) => (
-                <button
+                <SequencerStep
                   key={index}
-                  className={`step-button ${index === step && playing ? 'active' : ''} ${degree < 0 ? 'rest' : ''}`}
-                  title={`Step ${index + 1}: ${noteLabel(project, degree)}. Click to change note; right-click for a rest.`}
-                  aria-label={`Step ${index + 1}: ${noteLabel(project, degree)}`}
-                  onClick={() => onStep(index, false)}
-                  onContextMenu={(event) => {
-                    event.preventDefault();
-                    onStep(index, true);
-                  }}
-                >
-                  <i />
-                  <strong>{noteLabel(project, degree)}</strong>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                </button>
+                  degree={degree}
+                  index={index}
+                  label={noteLabel(project, degree)}
+                  active={index === step && playing}
+                  onChange={(next, group) => onStep(index, next, group)}
+                />
               ))}
             </div>
             <div className="sequencer-lower">

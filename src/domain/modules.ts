@@ -1,5 +1,8 @@
 import type { ModuleDefinition, ModuleType } from './types';
 
+/** Saved scale degrees include a rest and fourteen pitches, independently of the scale. */
+export const SEQUENCER_DEGREES = { rest: -1, min: 0, max: 13 } as const;
+
 /** The module catalog is the source of truth for appearance, ports and parameter ranges.
  * To add a module, register its definition here and its sound factory in audio/factories.ts.
  * Ordinary numeric controls render automatically; only special interfaces need a component.

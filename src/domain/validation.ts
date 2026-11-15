@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { CONFIG, ROOT_NOTES } from '../config';
-import { MODULES } from './modules';
+import { MODULES, SEQUENCER_DEGREES } from './modules';
 import { DRUM_LANES, DRUM_STEP_COUNT } from './instruments';
 import { connectionError } from './project';
 import type { ModuleType, Project } from './types';
@@ -31,7 +31,10 @@ export const projectSchema = z
               z.string(),
               z.union([z.number(), z.string().max(32), z.boolean()]),
             ),
-            steps: z.array(z.number().int().min(-1).max(13)).length(8).optional(),
+            steps: z
+              .array(z.number().int().min(SEQUENCER_DEGREES.rest).max(SEQUENCER_DEGREES.max))
+              .length(8)
+              .optional(),
             drumPattern: z
               .record(z.string(), z.array(z.boolean()).length(DRUM_STEP_COUNT))
               .optional(),

@@ -56,6 +56,7 @@ React controls / workspace
 | `src/components/PatchCable.tsx`           | Classic/braided cable rendering and endpoint-coloured plugs         |
 | `src/components/cable-geometry.ts`        | Cable curves and distance-based over/under braid geometry           |
 | `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls               |
+| `src/components/SequencerStep.tsx`        | Tap-to-cycle notes, vertical note gestures and keyboard adjustment  |
 | `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters    |
 | `src/components/MergerPanel.tsx`          | Four-input cable-occupancy diagram for the summing module           |
 | `src/components/module-finishes.css`      | Individual enclosure palettes, materials, knob finishes, and faders |
@@ -77,6 +78,8 @@ The guide layout lives in `components/module-help.css`. Instructions and connect
 `Project.version` is currently `1`. A patch contains its UUID, title, update time, tempo, root/scale, time signature, master volume, positioned modules, and directed cables. A module stores its registry type, UUID, position, parameters, optional eight scale degrees, and an optional `drumPattern` map. The new drum field is an additive v1 extension: old patches do not need migration. Drum machines must contain exactly the four named lanes of sixteen booleans; other module types cannot store a drum pattern. `-1` is a rest. Degrees `0…13` span two octaves of a seven-note scale; pentatonic degrees use its five-note table.
 
 No AudioContext, AudioNode, React state, object URL, or recording blob is serialized into a patch. `parseProject` checks UUIDs, bounds, module types, parameter ranges/enums, unique IDs, known sockets, signal compatibility, input occupancy, instance limits, and acyclic routing. Unknown top-level/module/cable fields and unknown parameters are rejected. Imported patches receive a fresh project ID to preserve existing saved work.
+
+Sequencer buttons retain native tap/Enter/Space activation to cycle forward and wrap. `SequencerStep` captures a single pointer and adjusts scale degrees from the initial press position: up raises, down lowers, with a rest below the lowest note and no wrapping during a swipe. Arrow keys adjust the same range. The range is shared with validation through `SEQUENCER_DEGREES` in the module registry; gesture thresholds and normal/Shift sensitivity live in `CONFIG.sequencerGesture`. Pointer state and click suppression remain local to the button; only degree changes enter the ordinary patch/history/autosave path, grouped per swipe. Pointer cancellation or lost capture clears the gesture. Workspace pinch cancellation uses that same path, so the remaining finger cannot resume note editing or cycle a note on release. Panel dimensions, playback scheduling, and the v1 saved shape are unchanged.
 
 The current model allows fan-out from an output, one cable per input, and at most one Output module. Mixer has separate A/B inputs. Empty patches may contain no output and therefore produce no audible signal. Removing a module removes its cables in the same edit.
 

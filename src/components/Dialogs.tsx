@@ -393,7 +393,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '03',
             'Get your hands on it',
-            'Pinch the workspace to zoom, or drag its empty background with one finger to pan. Drag knobs up and down; arrow keys also adjust them. Hold Shift for finer dragging. Double-click resets a knob. Click sequencer steps to change notes; right-click for a rest.',
+            'Pinch the workspace to zoom, or drag its empty background with one finger to pan. Drag knobs up and down; arrow keys also adjust them. Hold Shift for finer dragging. Double-click resets a knob. Tap sequencer steps to cycle notes, or swipe up/down to raise/lower them; arrow keys also adjust a step, and right-click inserts a rest.',
           ],
           [
             '04',
