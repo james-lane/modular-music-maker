@@ -733,7 +733,9 @@ svg {
 .canvas-viewport {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  /* World navigation belongs to the camera, never a browser-sized scroll surface. */
+  overflow: hidden;
+  position: relative;
   background-image: radial-gradient(#c3c7b9 0.8px, transparent 0.8px);
   background-size: 18px 18px;
   scrollbar-width: thin;
@@ -753,6 +755,7 @@ svg {
 }
 .canvas-size {
   position: relative;
+  overflow: hidden;
 }
 .canvas-stage {
   position: absolute;

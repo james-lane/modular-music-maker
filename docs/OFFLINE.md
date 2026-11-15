@@ -32,7 +32,7 @@ Without explicit refresh, closing every client still applies the update naturall
 
 ## Device data and limitations
 
-- Patches remain validated Project v1 data in localStorage. Autosave flushes on `pagehide` and hidden visibility, since iPadOS may suspend an app without closing it.
+- Patches remain validated Project v2 data in localStorage; v1 patches migrate automatically through `parseProject`. Signed open-workspace positions survive offline saving, export/import, and reload. Autosave flushes on `pagehide` and hidden visibility, since iPadOS may suspend an app without closing it.
 - Takes remain blobs in IndexedDB. Offline recording, playback, and download use the supported MediaRecorder format, without microphone access.
 - Public installs never probe or upload to `/api`. The optional file adapter only considers known loopback hostnames while online, and checks the Patchwork health response before reading/writing.
 - **Protect device storage** calls `StorageManager.persist()` from a user gesture and reports whether protection was granted. Browsers decide whether to grant it. See [WebKit's storage policy](https://webkit.org/blog/14403/updates-to-storage-policy/).

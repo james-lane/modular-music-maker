@@ -37,7 +37,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback by default. No acco
 - Eight editable sequencer steps. Tap to cycle through notes, or press and drag/swipe up to raise a note and down to lower it (including a rest at the bottom). Hold Shift for finer dragging. Arrow keys adjust a focused step; right-click inserts a rest.
 - Tempo, root note, scale, time signature, master volume, mute, live waveform, and level meters. The **More → Studio settings** panel keeps all settings available on narrow screens.
 - A compact, single-row toolbar and an on-demand module drawer leave the workspace at full width. **More** holds My patches, Recordings, examples, help, and settings. The **Focus on workspace** button beside Undo hides the toolbar/footer; use it again to return.
-- Pinch on the workspace to zoom around your fingers; drag empty workspace with one finger to pan. The zoom buttons, trackpad pinch, Pan tool, fit-to-view, undo, and redo remain available. Pinching the rack leaves the app controls at their normal size. Keys and pads still support multiple fingers.
+- An effectively infinite workspace extends in every direction: move modules beyond the old rack edges, including left/up from the starting point. Hold a dragged module near a screen edge to keep travelling. Pinch to zoom around your fingers; drag empty workspace with one finger to pan. Trackpad/wheel scrolling and the Pan tool move the view; use Fit modules to view to find your patch again. With the workspace focused, arrow keys pan (Shift moves farther) and Home fits the patch. The zoom buttons, trackpad pinch, undo, and redo remain available. Pinching the rack leaves the app controls at their normal size. Keys and pads still support multiple fingers.
 - App labels resist text selection and touch callouts, including double taps and long presses on iPad/iPhone. Patch names and search fields retain normal text editing, selection, and paste.
 - Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
 - Record live output, play back saved takes, and download audio files. Recording captures the studio output, **not the microphone**.
@@ -113,6 +113,8 @@ Focus the pad and use arrow keys to move; hold Shift for fine adjustments, or pr
 
 ## Saving and privacy
 
+New saves and exports use patch format **v2**, which supports signed positions on the open workspace. Existing v1 patches migrate automatically on loading without changing their IDs, sounds, samples, cables, or positions. Older app releases cannot open v2 exports; update the receiving app before importing them.
+
 | Item       | Storage                                                                                                               | Portable backup                        |
 | ---------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
 | Patches    | Browser localStorage automatically; local Node `.data/*.json` when **Save patch** is pressed and the API is available | **Export** downloads `.patchwork.json` |
@@ -157,7 +159,7 @@ Login is only needed when credentials are missing or expired. `npm run deploy` r
 
 - The bottom-right badge shows the package version plus Git commit number, such as **v0.1.0+20**. Its accessible label/hover text includes the commit hash; **\*** marks uncommitted changes. Every commit (including documentation-only or empty commits) automatically gets a distinct full version on the next build, without version-bump commits or local Git hooks. A running development server also refreshes the badge after commits and checkouts. `package.json` owns the release series; `dist/version.json` records the exact build identity and is cached with the offline app. Use a full Git checkout; shallow builds fail with recovery guidance, and source archives are explicitly labelled `+source`. Publishing still uses the normal manual deployment command, and installed sessions show their own running release until updated.
 - `index.html`: canonical production address, Open Graph, and Twitter/X large-image sharing cards. The locally bundled 1200×630 preview in `public/social/` shows the real studio interface. See [sharing previews](docs/SOCIAL_PREVIEWS.md) for refresh and verification steps.
-- `src/config.ts`: application limits, tempo range, canvas size, autosave, scheduler timing, scales, and root notes.
+- `src/config.ts`: application limits, tempo range, workspace navigation, autosave, scheduler timing, scales, and root notes.
 - `src/domain/modules.ts`: module catalog, defaults, parameter limits, ports, dimensions, and accent colors. `src/domain/module-guides.ts` contains the guides and derives compatibility from the catalog sockets.
 - `src/domain/examples.ts`: example patch catalog, sound recipes, artwork colours, and starter tips. Recipes use the ordinary module defaults and override only the settings that define each sound.
 - `src/styles.css`: shared theme tokens, panel mechanics, knobs, and sockets. `src/components/module-finishes.css` defines individual materials, colours, knob finishes, and enclosure details; `instruments.css` defines specialized performance layouts.

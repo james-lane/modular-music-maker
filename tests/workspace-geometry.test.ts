@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { CONFIG } from '../src/config';
-import { clampZoom, touchPair, zoomScroll } from '../src/components/workspace-geometry';
+import {
+  clampZoom,
+  touchPair,
+  viewAtAnchor,
+  worldPoint,
+} from '../src/components/workspace-geometry';
 
 test('pinching and translating retain the original rack point beneath the finger midpoint', () => {
   const first = touchPair([
@@ -13,12 +18,13 @@ test('pinching and translating retain the original rack point beneath the finger
     { x: 480, y: 320 },
   ]);
   const oldZoom = 0.8;
-  const anchor = { x: (240 + first.midpoint.x) / oldZoom, y: (120 + first.midpoint.y) / oldZoom };
+  const anchor = worldPoint({ x: 240, y: 120, zoom: oldZoom }, first.midpoint);
   for (const requested of [(oldZoom * moved.distance) / first.distance, 0.1, 3]) {
     const zoom = clampZoom(requested);
-    const scroll = zoomScroll(anchor, moved.midpoint, zoom);
-    assert.equal((scroll.x + moved.midpoint.x) / zoom, anchor.x);
-    assert.equal((scroll.y + moved.midpoint.y) / zoom, anchor.y);
+    const next = viewAtAnchor(anchor, moved.midpoint, zoom);
+    const retained = worldPoint(next, moved.midpoint);
+    assert.ok(Math.abs(retained.x - anchor.x) < 1e-9);
+    assert.ok(Math.abs(retained.y - anchor.y) < 1e-9);
     assert(zoom >= CONFIG.canvas.minZoom && zoom <= CONFIG.canvas.maxZoom);
   }
 });

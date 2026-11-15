@@ -32,7 +32,7 @@ test('performance preset round-trips with keyboard, pad and audio routes intact'
 test('original version-one saves remain valid without any new pattern fields', () => {
   const original = createProject();
   assert.ok(original.modules.every((module) => !('drumPattern' in module)));
-  assert.deepEqual(parseProject(JSON.parse(JSON.stringify(original))), original);
+  assert.deepEqual(parseProject(JSON.parse(JSON.stringify({ ...original, version: 1 }))), original);
 });
 
 test('drum patterns are independent and pattern mute does not erase hits', () => {

@@ -71,7 +71,7 @@ test('untrusted patch files cannot supply unknown modules, dangerous parameter r
     parseProject({ ...project, modules: [...project.modules, project.modules[0]] }),
   );
   assert.throws(() => parseProject({ ...project, tempo: Number.NaN }));
-  assert.throws(() => parseProject({ ...project, version: 2 }));
+  assert.throws(() => parseProject({ ...project, version: 3 }));
   assert.throws(() =>
     parseProject({ ...project, modules: [{ ...project.modules[0], type: 'untrusted-plugin' }] }),
   );

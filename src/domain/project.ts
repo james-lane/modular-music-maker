@@ -28,7 +28,7 @@ export function createProject(empty = false): Project {
     to: { moduleId: to.id, portId: toPort },
   });
   return {
-    version: 1,
+    version: 2,
     id: crypto.randomUUID(),
     name: empty ? 'Untitled patch' : 'Sunday circuits',
     updatedAt: new Date().toISOString(),

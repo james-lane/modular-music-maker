@@ -12,7 +12,7 @@ const endpoint = z.object({ moduleId: z.uuid(), portId: z.string().max(24) }).st
 /** One versioned validation boundary is shared by JSON import, browser storage and Node. */
 export const projectSchema = z
   .object({
-    version: z.literal(1),
+    version: z.literal(2),
     id: z.uuid(),
     name: z.string().trim().min(1).max(80),
     updatedAt: z.iso.datetime(),
@@ -27,8 +27,8 @@ export const projectSchema = z
           .object({
             id: z.uuid(),
             type: z.enum(Object.keys(MODULES) as [ModuleType, ...ModuleType[]]),
-            x: z.number().min(0).max(CONFIG.canvas.width),
-            y: z.number().min(0).max(CONFIG.canvas.height),
+            x: z.number().min(-CONFIG.canvas.maxCoordinate).max(CONFIG.canvas.maxCoordinate),
+            y: z.number().min(-CONFIG.canvas.maxCoordinate).max(CONFIG.canvas.maxCoordinate),
             parameters: z.record(
               z.string(),
               z.union([z.number(), z.string().max(32), z.boolean()]),
@@ -84,11 +84,6 @@ export const projectSchema = z
         project.modules.filter((item) => item.type === module.type).length > definition.maxInstances
       )
         issue(`Only ${definition.maxInstances} ${definition.name} module is allowed.`);
-      if (
-        module.x + definition.width > CONFIG.canvas.width ||
-        module.y + definition.height > CONFIG.canvas.height
-      )
-        issue('Module is outside the workspace.');
       const allowed = new Set([
         ...definition.controls.map((control) => control.id),
         ...Object.keys(definition.defaults ?? {}),
@@ -158,5 +153,15 @@ export const projectSchema = z
   });
 
 export function parseProject(value: unknown): Project {
-  return projectSchema.parse(value);
+  return projectSchema.parse(migrateProject(value));
+}
+
+/** V2 gives coordinates a signed, open-workspace meaning. V1 positions, IDs, sound,
+ * samples and cables migrate unchanged; never mutate the caller's stored object.
+ * Validation still runs after migration and unknown versions remain unsupported.
+ */
+function migrateProject(value: unknown): unknown {
+  if (typeof value === 'object' && value !== null && 'version' in value && value.version === 1)
+    return { ...value, version: 2 };
+  return value;
 }

@@ -1,6 +1,5 @@
 import {
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type MouseEvent,
@@ -8,16 +7,49 @@ import {
   type RefObject,
 } from 'react';
 import { CONFIG } from '../config';
-import { clampZoom, touchPair, zoomScroll, type Point } from '../components/workspace-geometry';
+import {
+  clampZoom,
+  touchPair,
+  viewAtAnchor,
+  worldPoint,
+  type Point,
+  type WorkspaceView,
+} from '../components/workspace-geometry';
+import type { Size } from '../domain/workspace';
 
 /** The rack owns touch navigation; browser magnification remains available outside it. */
 export function useWorkspaceGestures(
   viewport: RefObject<HTMLDivElement | null>,
   cancelEdit: () => void,
 ) {
-  const [zoom, setZoom] = useState<number>(CONFIG.canvas.defaultZoom);
-  const currentZoom = useRef(zoom);
-  const nextScroll = useRef<Point | null>(null);
+  const [view, setViewState] = useState<WorkspaceView>({
+    x: 0,
+    y: 0,
+    zoom: CONFIG.canvas.defaultZoom,
+  });
+  const currentView = useRef(view);
+  const [size, setSize] = useState<Size>({ width: 1, height: 1 });
+  const setView = (next: WorkspaceView) => {
+    const bounded = {
+      x: Math.max(-CONFIG.canvas.maxCoordinate, Math.min(CONFIG.canvas.maxCoordinate, next.x)),
+      y: Math.max(-CONFIG.canvas.maxCoordinate, Math.min(CONFIG.canvas.maxCoordinate, next.y)),
+      // Fit may need a much wider overview than ordinary hand zooming.
+      zoom: clampZoom(next.zoom, CONFIG.canvas.minFitZoom),
+    };
+    currentView.current = bounded;
+    setViewState(bounded);
+  };
+  const panByScreen = (x: number, y: number) => {
+    const current = currentView.current;
+    setView({ ...current, x: current.x + x / current.zoom, y: current.y + y / current.zoom });
+  };
+  const screenToWorld = (clientX: number, clientY: number) => {
+    const rect = viewport.current?.getBoundingClientRect();
+    return worldPoint(currentView.current, {
+      x: clientX - (rect?.left ?? 0),
+      y: clientY - (rect?.top ?? 0),
+    });
+  };
   const touches = useRef(new Map<number, { point: Point; target: Element }>());
   const pinch = useRef<{ distance: number; zoom: number; anchor: Point } | null>(null);
   const navigating = useRef(false);
@@ -25,40 +57,22 @@ export function useWorkspaceGestures(
   const syntheticCancel = useRef(false);
 
   const applyZoom = (value: number, anchor: Point, midpoint: Point) => {
-    const next = clampZoom(value);
-    const scroll = zoomScroll(anchor, midpoint, next);
-    nextScroll.current = scroll;
-    currentZoom.current = next;
-    setZoom(next);
-    // A clamped pinch can still pan without changing the React zoom value.
-    if (next === zoom && viewport.current) {
-      viewport.current.scrollTo(scroll.x, scroll.y);
-      nextScroll.current = null;
-    }
+    setView(
+      viewAtAnchor(
+        anchor,
+        midpoint,
+        clampZoom(value, Math.min(CONFIG.canvas.minZoom, currentView.current.zoom)),
+      ),
+    );
   };
-  useLayoutEffect(() => {
-    if (nextScroll.current && viewport.current) {
-      viewport.current.scrollTo(nextScroll.current.x, nextScroll.current.y);
-      nextScroll.current = null;
-    }
-  }, [zoom, viewport]);
-
   const zoomAt = (value: number, midpoint?: Point) => {
     const element = viewport.current;
     if (!element) return;
-    const center = midpoint ?? { x: element.clientWidth / 2, y: element.clientHeight / 2 };
-    applyZoom(
-      value,
-      {
-        x: (element.scrollLeft + center.x) / currentZoom.current,
-        y: (element.scrollTop + center.y) / currentZoom.current,
-      },
-      center,
-    );
+    const centre = midpoint ?? { x: element.clientWidth / 2, y: element.clientHeight / 2 };
+    applyZoom(value, worldPoint(currentView.current, centre), centre);
   };
-
-  const latest = useRef({ zoomAt, cancelEdit });
-  latest.current = { zoomAt, cancelEdit };
+  const latest = useRef({ zoomAt, cancelEdit, panByScreen });
+  latest.current = { zoomAt, cancelEdit, panByScreen };
 
   useEffect(() => {
     const element = viewport.current;
@@ -66,11 +80,25 @@ export function useWorkspaceGestures(
     // WebKit's gesture events and trackpad wheel zoom must not magnify the app shell.
     const preventGesture = (event: Event) => event.preventDefault();
     const wheel = (event: WheelEvent) => {
-      if (!event.ctrlKey) return;
+      // The camera owns trackpad/wheel panning as well as zoom; no browser-sized
+      // scroll surface or artificial scroll border participates in world geometry.
       event.preventDefault();
+      if (!event.ctrlKey) {
+        const unit =
+          event.deltaMode === 1
+            ? CONFIG.canvas.wheelLinePixels
+            : event.deltaMode === 2
+              ? element.clientHeight
+              : 1;
+        latest.current.panByScreen(
+          (event.shiftKey && !event.deltaX ? event.deltaY : event.deltaX) * unit,
+          (event.shiftKey && !event.deltaX ? 0 : event.deltaY) * unit,
+        );
+        return;
+      }
       const rect = element.getBoundingClientRect();
       latest.current.zoomAt(
-        currentZoom.current * Math.exp(-event.deltaY * CONFIG.canvas.wheelZoomSpeed),
+        currentView.current.zoom * Math.exp(-event.deltaY * CONFIG.canvas.wheelZoomSpeed),
         {
           x: event.clientX - rect.left,
           y: event.clientY - rect.top,
@@ -86,12 +114,17 @@ export function useWorkspaceGestures(
     const visibility = () => {
       if (document.hidden) resetTouches();
     };
+    const measure = () => setSize({ width: element.clientWidth, height: element.clientHeight });
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
     window.addEventListener('blur', resetTouches);
     document.addEventListener('visibilitychange', visibility);
     element.addEventListener('gesturestart', preventGesture, { passive: false });
     element.addEventListener('gesturechange', preventGesture, { passive: false });
     element.addEventListener('wheel', wheel, { passive: false });
     return () => {
+      observer.disconnect();
       window.removeEventListener('blur', resetTouches);
       document.removeEventListener('visibilitychange', visibility);
       element.removeEventListener('gesturestart', preventGesture);
@@ -107,12 +140,13 @@ export function useWorkspaceGestures(
   const points = () => [...touches.current.values()].map((touch) => touch.point);
 
   return {
-    zoom,
+    view,
+    size,
+    zoom: view.zoom,
+    setView,
     zoomAt,
-    setZoom: (value: number) => {
-      currentZoom.current = clampZoom(value);
-      setZoom(currentZoom.current);
-    },
+    screenToWorld,
+    panByScreen,
     onPointerDownCapture: (event: ReactPointerEvent<HTMLDivElement>) => {
       if (!touches.current.size) suppressClick.current = false;
       if (event.pointerType !== 'touch') return;
@@ -154,11 +188,8 @@ export function useWorkspaceGestures(
       const pair = touchPair(points());
       pinch.current = {
         distance: pair.distance,
-        zoom: currentZoom.current,
-        anchor: {
-          x: (event.currentTarget.scrollLeft + pair.midpoint.x) / currentZoom.current,
-          y: (event.currentTarget.scrollTop + pair.midpoint.y) / currentZoom.current,
-        },
+        zoom: currentView.current.zoom,
+        anchor: worldPoint(currentView.current, pair.midpoint),
       };
       event.currentTarget.setPointerCapture(event.pointerId);
       event.stopPropagation();
@@ -190,11 +221,8 @@ export function useWorkspaceGestures(
         const pair = touchPair(points());
         pinch.current = {
           distance: pair.distance,
-          zoom: currentZoom.current,
-          anchor: {
-            x: (event.currentTarget.scrollLeft + pair.midpoint.x) / currentZoom.current,
-            y: (event.currentTarget.scrollTop + pair.midpoint.y) / currentZoom.current,
-          },
+          zoom: currentView.current.zoom,
+          anchor: worldPoint(currentView.current, pair.midpoint),
         };
       } else pinch.current = null;
       cancelEdit();

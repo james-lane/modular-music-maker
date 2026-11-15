@@ -20,6 +20,9 @@ import { XYEffectsPanel } from './XYEffectsPanel';
 
 interface Props {
   module: PatchModule;
+  /** Camera-relative drawing only; world positions remain in the saved module. */
+  position: { x: number; y: number };
+  scale: number;
   project: Project;
   selected: boolean;
   step: number;
@@ -42,6 +45,8 @@ interface Props {
 
 export function ModuleCard({
   module,
+  position,
+  scale,
   project,
   selected,
   step,
@@ -67,14 +72,17 @@ export function ModuleCard({
       className={`module-panel ${selected ? 'selected' : ''} module-${module.type}`}
       style={
         {
-          left: module.x,
-          top: module.y,
+          left: position.x * scale,
+          top: position.y * scale,
+          transform: `scale(${scale})`,
+          transformOrigin: 'top left',
           width: definition.width,
           height: definition.height,
           '--module-color': definition.color,
         } as CSSProperties
       }
       aria-label={`${definition.name} module`}
+      data-module-id={module.id}
       onPointerDown={onSelect}
     >
       <i className="panel-screw top-left" />

@@ -11,7 +11,14 @@ import {
   RotateCw,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type DragEvent, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type PointerEvent,
+} from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
 import { MODULES, SEQUENCER_DEGREES } from '../domain/modules';
@@ -25,6 +32,8 @@ import { cablePath } from './cable-geometry';
 import type { LiveControls } from '../audio/live';
 import { useWorkspaceGestures } from '../hooks/useWorkspaceGestures';
 import type { ModuleLibraryDrag } from '../hooks/useModuleLibraryDrag';
+import { moduleBounds, snapPosition, type Point } from '../domain/workspace';
+import { edgePan, fittedView, viewAtAnchor } from './workspace-geometry';
 
 interface Props {
   project: Project;
@@ -44,6 +53,7 @@ interface Props {
   cableStyle: CableStyle;
   libraryDrag: ModuleLibraryDrag | null;
   onLibraryDragFinish: (added: boolean) => void;
+  onViewCentreChange: (point: Point) => void;
   libraryOpen: boolean;
   onLibraryToggle: () => void;
   focused: boolean;
@@ -78,6 +88,7 @@ export function Workspace({
   cableStyle,
   libraryDrag,
   onLibraryDragFinish,
+  onViewCentreChange,
   libraryOpen,
   onLibraryToggle,
   focused,
@@ -89,70 +100,90 @@ export function Workspace({
   const previousIds = useRef(new Set(project.modules.map((module) => module.id)));
   const [pending, setPending] = useState<Endpoint | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
+  const cablePointer = useRef<Point | null>(null);
   const [dragPreview, setDragPreview] = useState<{ id: string; x: number; y: number } | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const [handMode, setHandMode] = useState(false);
   const drag = useRef<{
     id: string;
-    startX: number;
-    startY: number;
+    offsetX: number;
+    offsetY: number;
     moduleX: number;
     moduleY: number;
+    clientX: number;
+    clientY: number;
     x: number;
     y: number;
   } | null>(null);
-  const pan = useRef<{ x: number; y: number; scrollX: number; scrollY: number } | null>(null);
+  const pan = useRef<Point | null>(null);
   const gestures = useWorkspaceGestures(viewport, () => {
     drag.current = null;
     pan.current = null;
     setDragPreview(null);
   });
-  const { zoom, setZoom, zoomAt } = gestures;
+  const { view, size, zoom, setView, zoomAt, panByScreen, screenToWorld } = gestures;
+  useEffect(() => {
+    if (pending && cablePointer.current)
+      setPointer(screenToWorld(cablePointer.current.x, cablePointer.current.y));
+  }, [view, pending]);
+  const fit = () => {
+    if (viewport.current)
+      setView(
+        fittedView(moduleBounds(project.modules), {
+          width: viewport.current.clientWidth,
+          height: viewport.current.clientHeight,
+        }),
+      );
+  };
+  // Opening a patch frames its saved world positions, including negative/distant ones.
+  useLayoutEffect(() => {
+    drag.current = null;
+    pan.current = null;
+    setDragPreview(null);
+    setPending(null);
+    fit();
+  }, [project.id]);
+  useEffect(() => {
+    onViewCentreChange({ x: view.x + size.width / zoom / 2, y: view.y + size.height / zoom / 2 });
+  }, [view, size, onViewCentreChange]);
+  const previousProject = useRef(project.id);
   useEffect(() => {
     const added = project.modules.filter((module) => !previousIds.current.has(module.id));
     previousIds.current = new Set(project.modules.map((module) => module.id));
+    if (previousProject.current !== project.id) {
+      previousProject.current = project.id;
+      return;
+    }
     if (added.length === 1 && viewport.current) {
       const module = added[0];
       const definition = MODULES[module.type];
       setSelected(module.id);
-      // A placed module is already under the pointer; preserve the rack's scroll position.
+      // A placed module is already under the pointer; preserve the current camera.
       if (droppedModule.current === module.id) {
         droppedModule.current = null;
         return;
       }
-      viewport.current.scrollTo({
-        left: Math.max(
-          0,
-          (module.x + definition.width / 2) * zoom - viewport.current.clientWidth / 2,
+      setView(
+        viewAtAnchor(
+          { x: module.x + definition.width / 2, y: module.y + definition.height / 2 },
+          { x: viewport.current.clientWidth / 2, y: viewport.current.clientHeight / 2 },
+          zoom,
         ),
-        top: Math.max(
-          0,
-          (module.y + definition.height / 2) * zoom - viewport.current.clientHeight / 2,
-        ),
-      });
-    } else if (added.length > 1) viewport.current?.scrollTo(0, 0);
-  }, [project.modules, zoom]);
+      );
+    }
+  }, [project.modules]);
   const displayModules = project.modules.map((module) =>
     module.id === dragPreview?.id ? { ...module, x: dragPreview.x, y: dragPreview.y } : module,
   );
-
-  const boundedPosition = (type: ModuleType, x: number, y: number) => ({
-    x: Math.max(
-      0,
-      Math.min(
-        CONFIG.canvas.width - MODULES[type].width,
-        Math.round(x / CONFIG.canvas.grid) * CONFIG.canvas.grid,
-      ),
-    ),
-    y: Math.max(
-      0,
-      Math.min(
-        CONFIG.canvas.height - MODULES[type].height,
-        Math.round(y / CONFIG.canvas.grid) * CONFIG.canvas.grid,
-      ),
-    ),
-  });
-
+  const localPoint = (point: Point) => ({ x: point.x - view.x, y: point.y - view.y });
+  const moveModule = (clientX: number, clientY: number) => {
+    const current = drag.current;
+    if (!current) return;
+    const point = screenToWorld(clientX, clientY);
+    const position = snapPosition(point.x - current.offsetX, point.y - current.offsetY);
+    Object.assign(current, position, { clientX, clientY });
+    setDragPreview({ id: current.id, ...position });
+  };
   const portClick = (endpoint: Endpoint) => {
     const port = getPort(project, endpoint);
     if (!port) return;
@@ -189,35 +220,22 @@ export function Workspace({
       }
     }
     setPending(endpoint);
+    cablePointer.current = null;
     const module = displayModules.find((module) => module.id === endpoint.moduleId)!;
     setPointer(socketPosition(module, endpoint.portId));
   };
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (pan.current && viewport.current) {
-      viewport.current.scrollLeft = pan.current.scrollX + pan.current.x - event.clientX;
-      viewport.current.scrollTop = pan.current.scrollY + pan.current.y - event.clientY;
+    if (pan.current) {
+      panByScreen(pan.current.x - event.clientX, pan.current.y - event.clientY);
+      pan.current = { x: event.clientX, y: event.clientY };
     }
-    if (drag.current) {
-      const module = project.modules.find((module) => module.id === drag.current!.id)!;
-      const position = boundedPosition(
-        module.type,
-        drag.current.moduleX + (event.clientX - drag.current.startX) / zoom,
-        drag.current.moduleY + (event.clientY - drag.current.startY) / zoom,
-      );
-      drag.current.x = position.x;
-      drag.current.y = position.y;
-      setDragPreview({ id: module.id, ...position });
-    }
-    if (pending && viewport.current) {
-      const rect = viewport.current.getBoundingClientRect();
-      setPointer({
-        x: (event.clientX - rect.left + viewport.current.scrollLeft) / zoom,
-        y: (event.clientY - rect.top + viewport.current.scrollTop) / zoom,
-      });
+    if (drag.current) moveModule(event.clientX, event.clientY);
+    if (pending) {
+      cablePointer.current = { x: event.clientX, y: event.clientY };
+      setPointer(screenToWorld(event.clientX, event.clientY));
     }
   };
-
   const finishDrag = () => {
     const position = drag.current;
     if (position && (position.x !== position.moduleX || position.y !== position.moduleY))
@@ -247,11 +265,8 @@ export function Workspace({
       clientY >= rect.bottom
     )
       return null;
-    return boundedPosition(
-      type,
-      (clientX - rect.left + element.scrollLeft) / zoom - MODULES[type].width / 2,
-      (clientY - rect.top + element.scrollTop) / zoom - 30,
-    );
+    const point = screenToWorld(clientX, clientY);
+    return snapPosition(point.x - MODULES[type].width / 2, point.y - 30);
   };
 
   const addAtPointer = (type: ModuleType, clientX: number, clientY: number) => {
@@ -293,20 +308,47 @@ export function Workspace({
     if (definition) addAtPointer(definition.type, event.clientX, event.clientY);
   };
 
-  const fit = () => {
-    if (!viewport.current || !project.modules.length) return;
-    const right =
-      Math.max(...project.modules.map((module) => module.x + MODULES[module.type].width)) + 50;
-    const bottom =
-      Math.max(...project.modules.map((module) => module.y + MODULES[module.type].height)) + 60;
-    setZoom(
-      Math.max(
-        CONFIG.canvas.minZoom,
-        Math.min(1, viewport.current.clientWidth / right, viewport.current.clientHeight / bottom),
-      ),
-    );
-    viewport.current.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
-  };
+  const livePlacement = useRef(libraryDrag);
+  livePlacement.current = libraryDrag;
+  const latestMove = useRef({ panByScreen, moveModule });
+  latestMove.current = { panByScreen, moveModule };
+  const dragging = dragPreview !== null || libraryDrag !== null;
+  useEffect(() => {
+    if (!dragging) return;
+    let frame = 0;
+    let previous = performance.now();
+    const tick = (now: number) => {
+      const current = drag.current ?? livePlacement.current;
+      const element = viewport.current;
+      if (current && element) {
+        const rect = element.getBoundingClientRect();
+        const point = { x: current.clientX - rect.left, y: current.clientY - rect.top };
+        // Releases/invalid targets never navigate; a held pointer near a rack edge does.
+        if (
+          point.x >= 0 &&
+          point.x <= rect.width &&
+          point.y >= 0 &&
+          point.y <= rect.height &&
+          !livePlacement.current?.released &&
+          (drag.current ||
+            element.contains(document.elementFromPoint(current.clientX, current.clientY)))
+        ) {
+          const speed = edgePan(point, { width: rect.width, height: rect.height });
+          const seconds = Math.min(0.05, (now - previous) / 1000);
+          if (speed.x || speed.y) {
+            latestMove.current.panByScreen(speed.x * seconds, speed.y * seconds);
+            if (drag.current) latestMove.current.moveModule(current.clientX, current.clientY);
+          }
+        }
+      }
+      previous = now;
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [dragging]);
+  const gridSize =
+    CONFIG.canvas.grid * zoom * Math.max(1, Math.ceil(8 / (CONFIG.canvas.grid * zoom)));
 
   return (
     <main className="workspace">
@@ -375,7 +417,41 @@ export function Workspace({
         ref={viewport}
         className={`canvas-viewport ${dragOver || placement ? 'drag-over' : ''} ${handMode ? 'hand-mode' : ''}`}
         aria-label="Module workspace"
+        data-zoom={zoom}
+        style={{
+          backgroundSize: `${gridSize}px ${gridSize}px`,
+          backgroundPosition: `${(-view.x * zoom) % gridSize}px ${(-view.y * zoom) % gridSize}px`,
+        }}
         tabIndex={0}
+        onFocusCapture={(event) => {
+          if (event.target === event.currentTarget) return;
+          const target = event.target as HTMLElement;
+          if (!target.closest('.module-panel')) return;
+          if (zoom < CONFIG.canvas.minZoom) {
+            const id = target.closest<HTMLElement>('[data-module-id]')?.dataset.moduleId;
+            const module = project.modules.find((item) => item.id === id);
+            if (module) setView(fittedView(moduleBounds([module]), size));
+            return;
+          }
+          const rect = target.getBoundingClientRect();
+          const frame = event.currentTarget.getBoundingClientRect();
+          // Tabbing to an offscreen control should move the camera, not silently
+          // introduce browser scroll offsets into a camera-only coordinate system.
+          if (
+            rect.left < frame.left ||
+            rect.right > frame.right ||
+            rect.top < frame.top ||
+            rect.bottom > frame.bottom
+          ) {
+            const point = screenToWorld(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            setView(viewAtAnchor(point, { x: frame.width / 2, y: frame.height / 2 }, zoom));
+          }
+        }}
+        onScroll={(event) => {
+          // Browsers may attempt native focus/scrollIntoView on clipped descendants.
+          event.currentTarget.scrollLeft = 0;
+          event.currentTarget.scrollTop = 0;
+        }}
         onPointerDownCapture={gestures.onPointerDownCapture}
         onPointerMoveCapture={gestures.onPointerMoveCapture}
         onPointerUpCapture={gestures.endTouch}
@@ -383,7 +459,16 @@ export function Workspace({
         onClickCapture={gestures.onClickCapture}
         onPointerMove={onPointerMove}
         onPointerUp={finishDrag}
-        onPointerCancel={finishDrag}
+        onPointerCancel={() => {
+          drag.current = null;
+          pan.current = null;
+          setDragPreview(null);
+        }}
+        onLostPointerCapture={() => {
+          drag.current = null;
+          pan.current = null;
+          setDragPreview(null);
+        }}
         onPointerDown={(event) => {
           if (
             event.target === event.currentTarget ||
@@ -396,8 +481,6 @@ export function Workspace({
               pan.current = {
                 x: event.clientX,
                 y: event.clientY,
-                scrollX: viewport.current.scrollLeft,
-                scrollY: viewport.current.scrollTop,
               };
               event.currentTarget.setPointerCapture(event.pointerId);
             }
@@ -413,30 +496,58 @@ export function Workspace({
         }}
         onDrop={onDrop}
         onKeyDown={(event) => {
-          if (event.key === 'Escape') setPending(null);
+          if (event.key === 'Escape') {
+            setPending(null);
+            drag.current = null;
+            pan.current = null;
+            setDragPreview(null);
+          }
+          if (event.target !== event.currentTarget) return;
+          const amount = CONFIG.canvas.keyboardPanPixels * (event.shiftKey ? 3 : 1);
+          const directions: Record<string, Point> = {
+            ArrowLeft: { x: -amount, y: 0 },
+            ArrowRight: { x: amount, y: 0 },
+            ArrowUp: { x: 0, y: -amount },
+            ArrowDown: { x: 0, y: amount },
+          };
+          if (directions[event.key]) {
+            event.preventDefault();
+            const delta = directions[event.key];
+            panByScreen(delta.x, delta.y);
+          }
+          if (event.key === 'Home') {
+            event.preventDefault();
+            fit();
+          }
         }}
       >
-        <div
-          className="canvas-size"
-          style={{ width: CONFIG.canvas.width * zoom, height: CONFIG.canvas.height * zoom }}
-        >
+        <div className="canvas-size" style={{ width: size.width, height: size.height }}>
           <div
             className="canvas-stage"
             style={{
-              width: CONFIG.canvas.width,
-              height: CONFIG.canvas.height,
-              transform: `scale(${zoom})`,
+              width: size.width,
+              height: size.height,
             }}
           >
-            <div className="workspace-label">
+            <div
+              className="workspace-label"
+              style={{
+                left: (49 - view.x) * zoom,
+                top: (26 - view.y) * zoom,
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+              }}
+            >
               <span className="tiny-led on" /> YOUR SOUND, YOUR RULES.
             </div>
             {libraryDrag && placement && (
               <div
                 className="library-drop-preview"
                 style={{
-                  left: placement.x,
-                  top: placement.y,
+                  left: (placement.x - view.x) * zoom,
+                  top: (placement.y - view.y) * zoom,
+                  transform: `scale(${zoom})`,
+                  transformOrigin: 'top left',
                   width: MODULES[libraryDrag.type].width,
                   height: MODULES[libraryDrag.type].height,
                   borderColor: MODULES[libraryDrag.type].color,
@@ -451,6 +562,8 @@ export function Workspace({
               <ModuleCard
                 key={module.id}
                 module={module}
+                position={localPoint(module)}
+                scale={zoom}
                 project={project}
                 selected={module.id === selected}
                 step={step}
@@ -465,15 +578,19 @@ export function Workspace({
                   if (event.button !== 0) return;
                   event.stopPropagation();
                   event.currentTarget.setPointerCapture(event.pointerId);
+                  const point = screenToWorld(event.clientX, event.clientY);
                   drag.current = {
                     id: module.id,
-                    startX: event.clientX,
-                    startY: event.clientY,
+                    offsetX: point.x - module.x,
+                    offsetY: point.y - module.y,
+                    clientX: event.clientX,
+                    clientY: event.clientY,
                     moduleX: module.x,
                     moduleY: module.y,
                     x: module.x,
                     y: module.y,
                   };
+                  setDragPreview({ id: module.id, x: module.x, y: module.y });
                   setSelected(module.id);
                 }}
                 onParameter={(id, value) =>
@@ -589,8 +706,8 @@ export function Workspace({
             ))}
             <svg
               className="patch-cables"
-              width={CONFIG.canvas.width}
-              height={CONFIG.canvas.height}
+              width={size.width}
+              height={size.height}
               aria-label="Patch cable connections"
             >
               <defs>
@@ -604,44 +721,58 @@ export function Workspace({
                   />
                 </filter>
               </defs>
-              {project.cables.map((cable) => {
-                const fromModule = displayModules.find(
-                  (module) => module.id === cable.from.moduleId,
-                );
-                const toModule = displayModules.find((module) => module.id === cable.to.moduleId);
-                const signal = getPort(project, cable.from)?.signal;
-                if (!fromModule || !toModule || !signal) return null;
-                const from = socketPosition(fromModule, cable.from.portId);
-                const to = socketPosition(toModule, cable.to.portId);
-                return (
-                  <PatchCable
-                    key={cable.id}
-                    from={from}
-                    to={to}
-                    fromModule={fromModule}
-                    toModule={toModule}
-                    signal={signal}
-                    cableStyle={cableStyle}
-                    onUnplug={() =>
-                      commit((current) => ({
-                        ...current,
-                        cables: current.cables.filter((item) => item.id !== cable.id),
-                      }))
-                    }
-                  />
-                );
-              })}
-              {pending &&
-                (() => {
-                  const module = displayModules.find((module) => module.id === pending.moduleId);
-                  if (!module) return null;
+              <g transform={`scale(${zoom})`}>
+                {project.cables.map((cable) => {
+                  const fromModule = displayModules.find(
+                    (module) => module.id === cable.from.moduleId,
+                  );
+                  const toModule = displayModules.find((module) => module.id === cable.to.moduleId);
+                  const signal = getPort(project, cable.from)?.signal;
+                  if (!fromModule || !toModule || !signal) return null;
+                  const from = localPoint(socketPosition(fromModule, cable.from.portId));
+                  const to = localPoint(socketPosition(toModule, cable.to.portId));
+                  // The curve stays between its endpoint Xs and sags at most 200px.
+                  // Links wholly outside that hull cannot enter the visible viewport.
+                  if (
+                    Math.max(from.x, to.x) < -20 ||
+                    Math.min(from.x, to.x) > size.width / zoom + 20 ||
+                    Math.max(from.y, to.y) < -220 ||
+                    Math.min(from.y, to.y) > size.height / zoom + 20
+                  )
+                    return null;
                   return (
-                    <path
-                      className="pending-cable"
-                      d={cablePath(socketPosition(module, pending.portId), pointer)}
+                    <PatchCable
+                      key={cable.id}
+                      from={from}
+                      to={to}
+                      fromModule={fromModule}
+                      toModule={toModule}
+                      signal={signal}
+                      cableStyle={cableStyle}
+                      onUnplug={() =>
+                        commit((current) => ({
+                          ...current,
+                          cables: current.cables.filter((item) => item.id !== cable.id),
+                        }))
+                      }
                     />
                   );
-                })()}
+                })}
+                {pending &&
+                  (() => {
+                    const module = displayModules.find((module) => module.id === pending.moduleId);
+                    if (!module) return null;
+                    return (
+                      <path
+                        className="pending-cable"
+                        d={cablePath(
+                          localPoint(socketPosition(module, pending.portId)),
+                          localPoint(pointer),
+                        )}
+                      />
+                    );
+                  })()}
+              </g>
             </svg>
           </div>
         </div>
@@ -677,11 +808,11 @@ export function Workspace({
           </button>
         </div>
         <span className="control-divider" />
-        <button onClick={() => zoomAt(zoom - 0.1)} aria-label="Zoom out">
+        <button onClick={() => zoomAt(zoom / CONFIG.canvas.zoomButtonFactor)} aria-label="Zoom out">
           <Minus size={16} />
         </button>
-        <span className="zoom-value">{Math.round(zoom * 100)}%</span>
-        <button onClick={() => zoomAt(zoom + 0.1)} aria-label="Zoom in">
+        <span className="zoom-value">{zoom < 0.01 ? '<1' : Math.round(zoom * 100)}%</span>
+        <button onClick={() => zoomAt(zoom * CONFIG.canvas.zoomButtonFactor)} aria-label="Zoom in">
           <Plus size={16} />
         </button>
         <span className="control-divider" />

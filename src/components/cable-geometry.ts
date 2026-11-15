@@ -1,3 +1,5 @@
+import { CONFIG } from '../config';
+
 interface Point {
   x: number;
   y: number;
@@ -18,7 +20,14 @@ export function cablePath(from: Point, to: Point): string {
  */
 export function braidedCablePaths(from: Point, to: Point) {
   const sag = cableSag(from, to);
-  const samples = Math.ceil((Math.hypot(to.x - from.x, to.y - from.y) + 2 * sag) / 1.5);
+  // Open workspaces can contain extremely long cables. Their visual detail must
+  // stay bounded rather than allocating a path point for every world-space pixel.
+  const samples = Math.min(
+    CONFIG.cables.maxBraidSamples,
+    Math.ceil(
+      (Math.hypot(to.x - from.x, to.y - from.y) + 2 * sag) / CONFIG.cables.braidSamplePixels,
+    ),
+  );
   const period = 16;
   const radius = 1.8;
   const source = { under: '', over: '' };

@@ -2,6 +2,18 @@
 
 Last updated: **15 November 2026**.
 
+## Open workspace — local change
+
+The fixed 1800×1200 rack has been replaced with an effectively infinite camera-based workspace. Pan, zoom, move, and place modules in any direction, including negative coordinates. A held module or library drag near a screen edge keeps panning; + finds non-overlapping space near the visible centre. Fit modules to view/Home recovers the patch, and focused-workspace arrow keys pan (Shift moves farther). Tabbing to an offscreen control reveals it through the camera. Navigation stays outside patch history and audio topology.
+
+Only a viewport-sized stage/SVG is rendered. Long cable braid detail and shadow surfaces are bounded; panning translates cached strand geometry. Normal zoom now spans 5–140% (Fit can go further for distant layouts), with a ±1 billion numeric guard for untrusted coordinates rather than a normal rack edge. Module/socket dimensions are unchanged.
+
+Patch format v2 supports signed world positions. An explicit `parseProject` migration loads v1 patches without changing IDs, positions, sounds, samples, or cables; new saves/exports use v2. Browser library keys remain stable. Older app releases cannot open v2 exports. This change has not been deployed.
+
+Validation: all 51 tests, strict types, production build, and formatting pass. Tests cover v1 migration with embedded samples, signed/distant position round trips and numeric guards, non-overlapping placement through the module limit, camera anchors across quadrants, recovery across the full guarded coordinate range, and bounded long-cable detail. Browser QA used isolated local preview origins: native module dragging plus synthetic touch sequences verified travel beyond every old boundary, negative coordinates, grouped undo/redo, wheel/keyboard pan without patch edits, focal zoom, touch pan/pinch cancellation with partial finger lift, continuous held-edge panning, distant + and library-drag placement without a camera jump, and focus recovery without native scrolling. Live signal continued while navigating; a take recorded during panning decoded with nonzero audio.
+
+With the production preview server stopped after Offline ready, a saved patch spanning negative and distant coordinates reloaded, played with a nonzero analyser level, accepted parameter edits, and exported v2 with its signed positions and four cables intact. A further offline reload retained the edit. Phone (390×844), tablet landscape (1194×834), and tablet portrait (834×1194) kept the stage/SVG viewport-sized without document overflow; offscreen keyboard controls remained reachable. The development browser reported no warnings/errors in the final run. Physical iPad pan/pinch feel still needs device confirmation.
+
 ## Installed app name
 
 Desktop installation metadata now uses **Patchwork** for both the manifest name and short name. The document title and explicit HTML application name also use Patchwork, covering page-title fallbacks. Apple's web-app title already used the short name. Sharing previews retain their existing tagline; the stable app ID, scope, start URL, and patch data are unchanged. Production build and formatting checks pass, and the built HTML/manifest were checked for the short name. Included in the touch/XY Effects production release below.

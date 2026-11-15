@@ -1,5 +1,6 @@
 import { useMemo, type CSSProperties } from 'react';
 import { MODULES } from '../domain/modules';
+import { CONFIG } from '../config';
 import type { CableStyle } from '../domain/preferences';
 import type { PatchModule, SignalType } from '../domain/types';
 import { braidedCablePaths, cablePath } from './cable-geometry';
@@ -36,14 +37,21 @@ export function PatchCable({
             ? 'var(--cable-kit-color)'
             : sourceColor;
   const braided = cableStyle === 'braided';
-  const path = cablePath(from, to);
+  // Geometry is relative to its first socket, so camera movement only translates
+  // the cable and does not regenerate the detailed braid on every pan frame.
+  const start = { x: 0, y: 0 };
+  const end = { x: to.x - from.x, y: to.y - from.y };
+  const path = cablePath(start, end);
+  // Avoid asking SVG for an enormous offscreen filter surface on distant links.
+  const shadow = Math.hypot(end.x, end.y) <= CONFIG.cables.maxShadowLength;
   const strands = useMemo(
-    () => (braided ? braidedCablePaths(from, to) : null),
-    [braided, from.x, from.y, to.x, to.y],
+    () => (braided ? braidedCablePaths(start, end) : null),
+    [braided, end.x, end.y],
   );
 
   return (
     <g
+      transform={`translate(${from.x},${from.y})`}
       className={`patch-cable signal-${signal}${braided ? ' braided' : ''}`}
       style={
         {
@@ -60,7 +68,7 @@ export function PatchCable({
           to unplug this cable
         </title>
       </path>
-      <path className="cable-body" d={path} />
+      <path className="cable-body" d={path} style={shadow ? undefined : { filter: 'none' }} />
       {strands && (
         <g className="cable-braid" aria-hidden="true">
           <path className="braid-source braid-under" d={strands.source.under} />
@@ -70,7 +78,7 @@ export function PatchCable({
         </g>
       )}
       <path className="cable-highlight" d={path} />
-      {[from, to].map((position, index) => (
+      {[start, end].map((position, index) => (
         <g
           key={index}
           className={`cable-plug${braided && index === 1 ? ' cable-plug-target' : ''}`}

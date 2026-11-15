@@ -22,6 +22,7 @@ import { TransportBar } from './components/TransportBar';
 import { MODULES } from './domain/modules';
 import { loadCableStyle, saveCableStyle, type CableStyle } from './domain/preferences';
 import { createModule, createProject } from './domain/project';
+import { findOpenPosition, type Point } from './domain/workspace';
 import { saveLocally, saveToServer } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
@@ -57,6 +58,10 @@ export default function App() {
   const [focused, setFocused] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryDrag, setLibraryDrag] = useState<ModuleLibraryDrag | null>(null);
+  const workspaceCentre = useRef<Point>({ x: 600, y: 400 });
+  const viewCentreChanged = useCallback((point: Point) => {
+    workspaceCentre.current = point;
+  }, []);
   const finishLibraryDrag = useCallback((added: boolean) => {
     setLibraryDrag(null);
     if (added) {
@@ -144,34 +149,10 @@ export default function App() {
       notify('Your patch already has an Output module. Use a Merger or Mixer to combine sounds.');
       return;
     }
-    // Find an unoccupied rack slot. Modules added with + should never cover an existing one.
-    const slots = [0, 1, 2].flatMap((row) => [0, 1, 2, 3].map((column) => ({ row, column })));
-    slots.push(...[0, 1, 2].map((row) => ({ row, column: 4 })));
-    for (const { row, column } of slots) {
-      const x = 48 + column * 306;
-      const y = 60 + row * 410;
-      const overlaps = project.modules.some(
-        (module) =>
-          x < module.x + MODULES[module.type].width + 15 &&
-          x + definition.width + 15 > module.x &&
-          y < module.y + MODULES[module.type].height + 15 &&
-          y + definition.height + 15 > module.y,
-      );
-      if (
-        !overlaps &&
-        x + definition.width <= CONFIG.canvas.width &&
-        y + definition.height <= CONFIG.canvas.height
-      ) {
-        commit((current) => ({
-          ...current,
-          modules: [...current.modules, createModule(type, x, y)],
-        }));
-        closeLibrary();
-        notify(`${definition.name} added. Connect a cable to bring it into your patch.`);
-        return;
-      }
-    }
-    notify('Make a little room by moving a module, then drag your new one into the workspace.');
+    const { x, y } = findOpenPosition(type, project.modules, workspaceCentre.current);
+    commit((current) => ({ ...current, modules: [...current.modules, createModule(type, x, y)] }));
+    closeLibrary();
+    notify(`${definition.name} added. Connect a cable to bring it into your patch.`);
   };
 
   const openProject = async (next: Project) => {
@@ -264,6 +245,7 @@ export default function App() {
           cableStyle={cableStyle}
           libraryDrag={libraryDrag}
           onLibraryDragFinish={finishLibraryDrag}
+          onViewCentreChange={viewCentreChanged}
           libraryOpen={libraryOpen}
           onLibraryToggle={() => setLibraryOpen((open) => !open)}
           focused={focused}

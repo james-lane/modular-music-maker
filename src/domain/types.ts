@@ -84,7 +84,7 @@ export interface Cable {
 }
 
 export interface Project {
-  version: 1;
+  version: 2;
   id: string;
   name: string;
   updatedAt: string;
