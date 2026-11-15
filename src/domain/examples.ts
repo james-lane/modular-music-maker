@@ -9,7 +9,7 @@ export interface ExamplePatch {
   description: string;
   tryThis: string;
   color: string;
-  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy';
+  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy' | 'ensemble';
   /** Factories supply fresh project/module/cable IDs and independent editable data every time. */
   create: () => Project;
 }
@@ -168,6 +168,128 @@ function createCopperProject(): Project {
   };
 }
 
+/** Four readable rows: rhythm, bass, layered lead, then answering bells.
+ * Repeated modules have separate musical jobs; the lead's pitch fan-out is intentional.
+ * Keep the two submixers and two mergers explicit so the recipe teaches bus routing.
+ */
+function createClockworkProject(): Project {
+  const tempo = 118;
+  const eighth = 60 / tempo / 2;
+  const drums = instrument('drum-machine', -1000, -480, { level: 0.48, tone: -2, decay: 0.55 });
+  drums.drumPattern = drumPattern({ kick: [0, 8], snare: [4, 12], 'closed-hat': [2, 6, 10, 14] });
+  const percussion = instrument('drum-machine', -480, -480, { level: 0.34, tone: 2, decay: 0.5 });
+  percussion.drumPattern = drumPattern({
+    kick: [3, 10],
+    snare: [6, 15],
+    clap: [1, 5, 9, 13],
+    'closed-hat': [14],
+  });
+  const kit = instrument('drum-kit', 40, -480, {
+    kick: 'low-conga',
+    snare: 'claves',
+    clap: 'shaker',
+    'closed-hat': 'open-hat',
+  });
+  const rhythmMix = instrument('mixer', 460, -480, { a: 0.8, b: 0.65 });
+
+  const bassSequence = instrument('sequencer', -1000, 100, { gate: 0.54 });
+  bassSequence.steps = [0, 0, -1, 0, 3, -1, 4, 6];
+  const bass = instrument('oscillator', -680, 100, {
+    waveform: 'sawtooth',
+    octave: -1,
+    level: 0.27,
+  });
+  const bassFilter = instrument('filter', -360, 100, { cutoff: 620, resonance: 1.5 });
+  const bassLfo = instrument('lfo', -60, 100, { rate: 0.17, depth: 220 });
+
+  const leadSequence = instrument('sequencer', -1000, 500, { gate: 0.42 });
+  leadSequence.steps = [7, -1, 9, -1, 11, -1, 9, 6];
+  const leadSaw = instrument('oscillator', -680, 500, {
+    waveform: 'sawtooth',
+    detune: -7,
+    level: 0.17,
+  });
+  const leadTriangle = instrument('oscillator', -360, 500, {
+    waveform: 'triangle',
+    detune: 7,
+    level: 0.22,
+  });
+  const leadMix = instrument('mixer', -60, 500, { a: 0.55, b: 0.75 });
+  const leadFilter = instrument('filter', 260, 500, { cutoff: 2400, resonance: 1.1 });
+  const leadEcho = instrument('delay', 580, 500, { time: eighth * 1.5, feedback: 0.28, mix: 0.24 });
+  const leadLfo = instrument('lfo', 900, 500, { rate: 0.31, depth: 900 });
+
+  const bellSequence = instrument('sequencer', -1000, 900, { gate: 0.22 });
+  bellSequence.steps = [-1, 4, -1, 6, -1, 7, 4, -1];
+  const bell = instrument('oscillator', -680, 900, { waveform: 'sine', octave: 1, level: 0.2 });
+  const bellFilter = instrument('filter', -360, 900, { cutoff: 4200, resonance: 0.7 });
+  const bellEcho = instrument('delay', -60, 900, { time: eighth, feedback: 0.36, mix: 0.32 });
+
+  const voices = instrument('merger', 780, 100, { level: 0.8 });
+  const room = instrument('reverb', 1180, 100, { mix: 0.2 });
+  const master = instrument('merger', 1180, -480, { level: 0.8 });
+  const output = instrument('output', 1580, -480, { level: 0.8 });
+  return {
+    ...createProject(true),
+    name: 'Clockwork garden',
+    tempo,
+    rootNote: 'E',
+    scale: 'minor',
+    modules: [
+      drums,
+      percussion,
+      kit,
+      rhythmMix,
+      bassSequence,
+      bass,
+      bassFilter,
+      bassLfo,
+      leadSequence,
+      leadSaw,
+      leadTriangle,
+      leadMix,
+      leadFilter,
+      leadEcho,
+      leadLfo,
+      bellSequence,
+      bell,
+      bellFilter,
+      bellEcho,
+      voices,
+      room,
+      master,
+      output,
+    ],
+    cables: [
+      wire(kit, 'kit', percussion, 'kit'),
+      wire(drums, 'out', rhythmMix, 'a'),
+      wire(percussion, 'out', rhythmMix, 'b'),
+      wire(bassSequence, 'pitch', bass, 'pitch'),
+      wire(bass, 'out', bassFilter, 'in'),
+      wire(bassLfo, 'out', bassFilter, 'cutoff'),
+      wire(bassFilter, 'out', voices, 'in1'),
+      // One sequence plays two detuned voices. This fader pair blends their timbres.
+      wire(leadSequence, 'pitch', leadSaw, 'pitch'),
+      wire(leadSequence, 'pitch', leadTriangle, 'pitch'),
+      wire(leadSaw, 'out', leadMix, 'a'),
+      wire(leadTriangle, 'out', leadMix, 'b'),
+      wire(leadMix, 'out', leadFilter, 'in'),
+      wire(leadLfo, 'out', leadFilter, 'cutoff'),
+      wire(leadFilter, 'out', leadEcho, 'in'),
+      wire(leadEcho, 'out', voices, 'in2'),
+      wire(bellSequence, 'pitch', bell, 'pitch'),
+      wire(bell, 'out', bellFilter, 'in'),
+      wire(bellFilter, 'out', bellEcho, 'in'),
+      wire(bellEcho, 'out', voices, 'in3'),
+      // Only the melodic bus gets room ambience; the separate rhythm bus stays crisp.
+      wire(voices, 'out', room, 'in'),
+      wire(room, 'out', master, 'in1'),
+      wire(rhythmMix, 'out', master, 'in2'),
+      wire(master, 'out', output, 'in'),
+    ],
+  };
+}
+
 /** Curated, contrasting starting points. Keep copy and sound design together when adding examples. */
 export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
   {
@@ -229,5 +351,17 @@ export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
     color: '#aa6c50',
     artwork: 'xy',
     create: createCopperProject,
+  },
+  {
+    id: 'clockwork-garden',
+    name: 'Clockwork garden',
+    style: '23-module ensemble',
+    description:
+      'Three interlocking melodies, a detuned dual-oscillator lead, and two drum machines at 118 BPM.',
+    tryThis:
+      'Zoom into the lead row and blend its two oscillators with the Mixer; compare the two echo times.',
+    color: '#537863',
+    artwork: 'ensemble',
+    create: createClockworkProject,
   },
 ];

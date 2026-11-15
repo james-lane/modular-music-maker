@@ -19,9 +19,9 @@ function routingSignature(project: Project) {
   });
 }
 
-test('six distinct examples are valid, fully connected and laid out without covering another module', () => {
-  assert.equal(EXAMPLE_PATCHES.length, 6);
-  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 6);
+test('seven distinct examples are valid, fully connected and laid out without covering another module', () => {
+  assert.equal(EXAMPLE_PATCHES.length, 7);
+  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 7);
   const signatures = new Set<string>();
   for (const example of EXAMPLE_PATCHES) {
     const project = example.create();
@@ -52,7 +52,7 @@ test('six distinct examples are valid, fully connected and laid out without cove
       }
     }
   }
-  assert.equal(signatures.size, 6, 'Each example teaches a different routing arrangement');
+  assert.equal(signatures.size, 7, 'Each example teaches a different routing arrangement');
 });
 
 test('opening and editing an example cannot change its recipe or another saved copy', () => {
@@ -93,4 +93,46 @@ test('opening and editing an example cannot change its recipe or another saved c
       snapshot.modules.map((module) => module.drumPattern),
     );
   }
+});
+
+test('the ensemble layers a shared-pitch voice, independent rhythms, and separate effects before combining buses', () => {
+  const project = EXAMPLE_PATCHES.find((example) => example.id === 'clockwork-garden')!.create();
+  assert.equal(project.modules.length, 23);
+  const modules = (type: string) => project.modules.filter((module) => module.type === type);
+  assert.equal(modules('sequencer').length, 3);
+  assert.equal(modules('oscillator').length, 4);
+  for (const type of ['drum-machine', 'delay', 'lfo', 'mixer', 'merger'])
+    assert.equal(modules(type).length, 2, type);
+  assert.equal(new Set(modules('sequencer').map((module) => JSON.stringify(module.steps))).size, 3);
+  assert.equal(
+    new Set(modules('drum-machine').map((module) => JSON.stringify(module.drumPattern))).size,
+    2,
+  );
+  const split = modules('sequencer').find(
+    (module) => project.cables.filter((cable) => cable.from.moduleId === module.id).length === 2,
+  )!;
+  assert(split, 'one sequence controls both oscillators of a layered voice');
+  const layeredIds = project.cables
+    .filter((cable) => cable.from.moduleId === split.id)
+    .map((cable) => cable.to.moduleId);
+  assert(
+    modules('mixer').some(
+      (mixer) =>
+        project.cables.filter(
+          (cable) => cable.to.moduleId === mixer.id && layeredIds.includes(cable.from.moduleId),
+        ).length === 2,
+    ),
+  );
+  const times = modules('delay')
+    .map((module) => Number(module.parameters.time))
+    .sort();
+  assert(
+    Math.abs(times[1] / times[0] - 1.5) < 0.0001,
+    'eighth and dotted-eighth echoes have different jobs',
+  );
+  assert.equal(
+    project.modules.some((module) => module.type === 'mic-sampler'),
+    false,
+    'the example sounds on Play without microphone permission or a user recording',
+  );
 });
