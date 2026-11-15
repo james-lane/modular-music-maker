@@ -17,6 +17,7 @@ import { OfflineDialog, OfflineIndicator } from './components/OfflineDialog';
 import { UpdateNotice } from './components/UpdateNotice';
 import { Workspace } from './components/Workspace';
 import { CONFIG } from './config';
+import { historyShortcut } from './domain/history';
 import { StudioHeader, type StudioDialog } from './components/StudioHeader';
 import { TransportBar } from './components/TransportBar';
 import { MODULES } from './domain/modules';
@@ -129,17 +130,27 @@ export default function App() {
         void save();
         return;
       }
+      // Text fields keep native text undo; sliders, selects and instruments use patch history.
+      const textEditing =
+        event.target instanceof HTMLElement &&
+        Boolean(
+          event.target.closest(
+            'textarea, input:not([type="range"]), [contenteditable]:not([contenteditable="false"])',
+          ),
+        );
+      const historyAction = historyShortcut(event);
+      if (historyAction && !textEditing && (!dialog || dialog === 'settings')) {
+        event.preventDefault();
+        if (historyAction === 'redo') studio.redo();
+        else studio.undo();
+        return;
+      }
       if (editing || dialog) return;
       if (event.code === 'Space') {
         // A focused button keeps its native Space activation (for example drum audition).
         if (event.target instanceof HTMLElement && event.target.closest('button')) return;
         event.preventDefault();
         if (!event.repeat) void (audio.active ? audio.stop() : audio.play());
-      }
-      if (modifier && event.key.toLowerCase() === 'z') {
-        event.preventDefault();
-        if (event.shiftKey) studio.redo();
-        else studio.undo();
       }
     };
     window.addEventListener('keydown', shortcuts);
@@ -205,7 +216,26 @@ export default function App() {
   };
 
   return (
-    <div className={`studio-app ${focused ? 'workspace-focused' : ''}`}>
+    <div
+      className={`studio-app ${focused ? 'workspace-focused' : ''}`}
+      onPointerDownCapture={studio.beginInteraction}
+      onKeyDownCapture={(event) => {
+        if (
+          event.repeat ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.altKey ||
+          event.nativeEvent.isComposing
+        )
+          return;
+        if (
+          ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key) &&
+          event.target instanceof HTMLElement &&
+          event.target.closest('[role="slider"], input[type="range"], .step-button, .xy-pad')
+        )
+          studio.beginInteraction();
+      }}
+    >
       <div className="studio-toolbar" inert={offline.applying}>
         <StudioHeader />
         <TransportBar

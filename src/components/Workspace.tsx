@@ -51,6 +51,7 @@ interface Props {
   canRedo: boolean;
   undo: () => void;
   redo: () => void;
+  historyNavigation: number;
   saveStatus: 'saving' | 'saved' | 'error';
   cableStyle: CableStyle;
   cableOpacity: number;
@@ -89,6 +90,7 @@ export function Workspace({
   canRedo,
   undo,
   redo,
+  historyNavigation,
   saveStatus,
   cableStyle,
   cableOpacity,
@@ -149,6 +151,13 @@ export function Workspace({
     setPending(null);
     fit();
   }, [project.id]);
+  // Restoring a snapshot also abandons transient wiring/movement from the old graph.
+  useLayoutEffect(() => {
+    drag.current = null;
+    pan.current = null;
+    setDragPreview(null);
+    setPending(null);
+  }, [historyNavigation]);
   useEffect(() => {
     onViewCentreChange({ x: view.x + size.width / zoom / 2, y: view.y + size.height / zoom / 2 });
   }, [view, size, onViewCentreChange]);
@@ -413,7 +422,7 @@ export function Workspace({
             disabled={!canRedo}
             onClick={redo}
             aria-label="Redo"
-            title="Redo (⌘/Ctrl Shift Z)"
+            title="Redo (⌘/Ctrl Shift Z or Ctrl Y)"
           >
             <RotateCw size={17} />
           </button>

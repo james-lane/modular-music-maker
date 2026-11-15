@@ -19,6 +19,7 @@ export const CONFIG = {
   },
   localApi: { hosts: ['localhost', '127.0.0.1', '[::1]'], timeoutMs: 1500 },
   historyLimit: 60,
+  historyGroupDelayMs: 700,
   moduleLibrary: { dragThresholdPx: 6 },
   sequencerGesture: {
     dragThresholdPx: 6,

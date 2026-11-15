@@ -2,6 +2,14 @@
 
 Last updated: **15 November 2026**.
 
+## Undo/redo reliability
+
+The existing workspace arrow icons remain unchanged. History now ignores equivalent/no-op edits, preserves redo when an unchanged value is submitted, and keeps each pointer gesture or held adjustment key in one undo step even across a long pause. Separate fast gestures remain independent. Redo and project switches reset grouping. The 60-edit session limit and current-patch autosave remain in place; opening another patch or reloading starts a fresh history.
+
+Cmd/Ctrl Z and Shift Z now work while knobs, sliders, selects, keys/pads, or the settings dialog have focus; Ctrl Y also redoes. Text editing retains native undo, and other dialogs still guard the patch. Undo/redo abandon pending cable and module movement previews. Playback, recording, camera navigation, and browser appearance stay independent of history. Patch format and offline storage are unchanged.
+
+Validation: `npm run check` passes (strict types, all **79 tests**, production build). Eleven history regressions cover whole-patch restoration, no-op/redo preservation, timed and interaction grouping, redo branching, the bounded stack, project switches, atomic module/cable removal, embedded sample/trim restoration, and shortcut mapping. An isolated production-browser check verified slow and separate fast knob drags, held adjustment keys, focused knob/select/settings shortcuts, native text undo isolation, branch replacement, pending cable cleanup, module movement/removal with restored wiring and nonzero live audio, recording through undo, decoded saved-take audio, offline reload persistence/fresh history, and visible controls without document overflow at 390px, 834px, and 1194px. No page errors occurred. Formatting and diff checks pass. Physical iPad interaction remains an on-device check. The changes are local; this update has not been deployed.
+
 ## Independent Merger levels — deployed 15 November 2026
 
 Merger now has four **Input 1–4** level knobs and a separate **Sum level** knob, so four sources or effect returns can be balanced directly without extra Mixers. Each input ranges from silent to 100%, defaults to 100%, and ramps independently; Sum level retains its 50% default. The teal enclosure, amber cable indicators, original 320×336 footprint, and socket positions are preserved. All five values use normal saving, history, and JSON export/import. Older v1/v2 patches missing the entire input-level group explicitly migrate to unity gain without changing their sound or mutating saved data; partial and invalid groups are rejected. The guide documents each control and balancing an echo return.

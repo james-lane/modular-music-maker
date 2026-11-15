@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CONFIG } from '../config';
+import { PatchHistory, type ProjectEdit } from '../domain/history';
 import { SAMPLER_TRIM } from '../domain/modules';
 import { createProject } from '../domain/project';
 import { loadActiveProject, saveLocally } from '../domain/storage';
 import type { DrumSample, Project } from '../domain/types';
 import { parseProject } from '../domain/validation';
-
-type Edit = (project: Project) => Project;
 
 /** Patch history contains serializable snapshots. Drag previews stay in Canvas until released. */
 export function useStudio() {
@@ -16,26 +15,43 @@ export function useStudio() {
   });
   const [project, setProject] = useState(initial.project);
   const current = useRef(project);
-  const past = useRef<Project[]>([]);
-  const future = useRef<Project[]>([]);
-  const lastGroup = useRef({ key: '', time: 0 });
-  const [, setHistoryVersion] = useState(0);
+  const [history] = useState(() => new PatchHistory(initial.project));
+  const [historyNavigation, setHistoryNavigation] = useState(0);
   const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'error'>('saving');
 
-  const commit = useCallback((edit: Edit, group = '') => {
-    const previous = current.current;
-    const next = edit(previous);
-    if (next === previous) return;
-    const now = Date.now();
-    if (!group || group !== lastGroup.current.key || now - lastGroup.current.time > 700) {
-      past.current = [...past.current.slice(-CONFIG.historyLimit + 1), previous];
-    }
-    lastGroup.current = { key: group, time: now };
-    future.current = [];
-    current.current = { ...next, updatedAt: new Date().toISOString() };
-    setProject(current.current);
-    setHistoryVersion((version) => version + 1);
-  }, []);
+  const commit = useCallback(
+    (edit: ProjectEdit, group = '') => {
+      if (!history.commit(edit, group)) return;
+      current.current = history.project;
+      setProject(history.project);
+    },
+    [history],
+  );
+
+  const beginInteraction = useCallback(() => history.beginInteraction(), [history]);
+  const endInteraction = useCallback(() => history.endInteraction(), [history]);
+  useEffect(() => {
+    // Captured pointers normally end inside the app; also clear grouping after window loss.
+    window.addEventListener('blur', endInteraction);
+    window.addEventListener('pointerup', endInteraction);
+    window.addEventListener('pointercancel', endInteraction);
+    const adjustmentReleased = (event: KeyboardEvent) => {
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key))
+        endInteraction();
+    };
+    window.addEventListener('keyup', adjustmentReleased);
+    const visibilityChanged = () => {
+      if (document.hidden) endInteraction();
+    };
+    document.addEventListener('visibilitychange', visibilityChanged);
+    return () => {
+      window.removeEventListener('blur', endInteraction);
+      window.removeEventListener('pointerup', endInteraction);
+      window.removeEventListener('pointercancel', endInteraction);
+      window.removeEventListener('keyup', adjustmentReleased);
+      document.removeEventListener('visibilitychange', visibilityChanged);
+    };
+  }, [endInteraction]);
 
   // Capture/import can finish after unrelated edits; validate against the latest patch.
   const setSample = useCallback(
@@ -80,37 +96,34 @@ export function useStudio() {
   );
 
   const undo = useCallback(() => {
-    const previous = past.current.pop();
-    if (!previous) return;
-    future.current.push(current.current);
-    current.current = { ...previous, updatedAt: new Date().toISOString() };
-    lastGroup.current = { key: '', time: 0 };
-    setProject(current.current);
-    setHistoryVersion((version) => version + 1);
-  }, []);
+    if (!history.undo()) return;
+    setHistoryNavigation((value) => value + 1);
+    current.current = history.project;
+    setProject(history.project);
+  }, [history]);
 
   const redo = useCallback(() => {
-    const next = future.current.pop();
-    if (!next) return;
-    past.current.push(current.current);
-    current.current = { ...next, updatedAt: new Date().toISOString() };
-    setProject(current.current);
-    setHistoryVersion((version) => version + 1);
-  }, []);
+    if (!history.redo()) return;
+    setHistoryNavigation((value) => value + 1);
+    current.current = history.project;
+    setProject(history.project);
+  }, [history]);
 
-  const openProject = useCallback((next: Project) => {
-    // A patch switch may happen before the pending autosave timer has fired.
-    try {
-      saveLocally(current.current);
-    } catch {
-      setSaveStatus('error');
-    }
-    past.current = [];
-    future.current = [];
-    current.current = next;
-    setProject(next);
-    setHistoryVersion((version) => version + 1);
-  }, []);
+  const openProject = useCallback(
+    (next: Project) => {
+      // A patch switch may happen before the pending autosave timer has fired.
+      try {
+        saveLocally(current.current);
+      } catch {
+        setSaveStatus('error');
+      }
+      history.open(next);
+      setHistoryNavigation((value) => value + 1);
+      current.current = next;
+      setProject(next);
+    },
+    [history],
+  );
 
   useEffect(() => {
     setSaveStatus('saving');
@@ -161,7 +174,10 @@ export function useStudio() {
     openProject,
     saveStatus,
     flush,
-    canUndo: past.current.length > 0,
-    canRedo: future.current.length > 0,
+    beginInteraction,
+    endInteraction,
+    historyNavigation,
+    canUndo: history.canUndo,
+    canRedo: history.canRedo,
   };
 }

@@ -441,6 +441,9 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
         <span>
           <kbd>⌘ / Ctrl Z</kbd> Undo
         </span>
+        <span>
+          <kbd>⌘ / Ctrl Shift Z · Ctrl Y</kbd> Redo
+        </span>
       </div>
       <button className="button primary help-done" onClick={onClose}>
         <Check size={16} /> Let’s make some noise
