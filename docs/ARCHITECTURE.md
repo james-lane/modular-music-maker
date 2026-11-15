@@ -193,6 +193,8 @@ Node persists each validated UUID to `.data/<id>.json` using a unique temporary 
 
 ## Canvas and styling invariants
 
+The canvas contains instruments, cables, and interaction previews; decorative slogans and their indicator lights stay out of the workspace.
+
 The studio has one 56px toolbar (54px on phones), a 46px workspace heading, and a 26px status strip. The module catalog is a dismissible overlay opened with Add modules at every width; it retains search/category while browsing guides, focuses its close button on opening, and returns focus to Add modules on closing. Compact category chips and a small footer reserve most drawer height for the scrolling instrument list. Search is revealed and focused only by an explicit search-button action, keeping the iPad keyboard closed while browsing. More contains patch/recording libraries, examples, help, and settings. Workspace focus hides the toolbar and status strip without unmounting audio or changing the patch. Layout/drawer/zoom state is ephemeral, outside patch files and undo history.
 
 The root document cannot scroll or overscroll; a fixed, opaque, safe-area-padded shell owns the viewport, and only internal rack, drawer, menu, and dialog surfaces scroll. This keeps scrolling content below the iPad status area. It does not claim to disable native iPadOS compositing effects; the reported home-screen top fade still requires an on-device check.

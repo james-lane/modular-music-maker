@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Clean workspace
+
+Removed the “YOUR SOUND, YOUR RULES.” slogan and its decorative light from the canvas, along with their unused styling and pointer-target handling. The workspace keeps its dot grid, instruments, cables, and functional controls.
+
+Validation: all 61 tests, strict types, production build, formatting, and deployment dry run pass in an isolated checkout. Browser checks confirmed the clean canvas, nonzero live output, saved tempo after reload, and a 390px phone layout without document overflow. Unfinished drum-related edits in the main checkout are excluded from this release.
+
 ## Mic sampler trimming — deployed 15 November 2026
 
 Mic sampler now has **Start** and **End** trim rails beneath its waveform. The dimmed ends show discarded audio and the display gives the selected duration against the original length. Mouse/touch and keyboard arrows/Home/End adjust the selection without crossing its bounds; one drag forms an Undo step. **Reset trim** restores the full recording. Button playback, pad triggers, half-speed duration/idle timing, and WAV export all use the same selected frame range. Speed and trim changes affect the next hit. The original PCM is preserved in the patch and retains its original sample-budget cost. A successful new recording or Clear resets the trim; failed/cancelled replacements preserve it, and Undo restores both audio and selection. The existing 300×480 panel and socket positions are unchanged.

@@ -476,9 +476,7 @@ export function Workspace({
         onPointerDown={(event) => {
           if (
             event.target === event.currentTarget ||
-            (event.target as Element).matches(
-              '.canvas-stage, .canvas-size, .workspace-label, .workspace-label *',
-            )
+            (event.target as Element).matches('.canvas-stage, .canvas-size')
           ) {
             setSelected(null);
             if ((handMode || event.pointerType === 'touch') && viewport.current) {
@@ -533,17 +531,6 @@ export function Workspace({
               height: size.height,
             }}
           >
-            <div
-              className="workspace-label"
-              style={{
-                left: (49 - view.x) * zoom,
-                top: (26 - view.y) * zoom,
-                transform: `scale(${zoom})`,
-                transformOrigin: 'top left',
-              }}
-            >
-              <span className="tiny-led on" /> YOUR SOUND, YOUR RULES.
-            </div>
             {libraryDrag && placement && (
               <div
                 className="library-drop-preview"
