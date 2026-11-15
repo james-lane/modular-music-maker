@@ -2,11 +2,13 @@
 
 Last updated: **15 November 2026**.
 
-## Mic sampler direct preview — 15 November 2026
+## Mic sampler direct preview — deployed 15 November 2026
 
 **Play snippet** now restarts a direct dry preview on every press, whether studio playback is stopped or running. No cable or Output module is required, and Output level/master mute cannot silence it. The preview uses the saved trim, Speed and sampler Level, bypasses patch effects/master volume, and is excluded from studio recordings. Pad and Drum kit hits keep their normal patch routing. A separate engine-owned sampler runtime prevents duplicate dry/routed hits; Stop, Clear/replacement, module removal, patch switching and disposal clean it up. Outstanding sampler end times protect an already playing long preview from later trim/rate edits shortening its idle allowance. Saved patch format is unchanged.
 
 Validation: strict types, all **107 automated tests**, production build, formatting and diff checks pass. New engine regressions cover repeated stopped/running previews, direct destination routing with Output/master at zero, recording exclusion, trim/Speed offsets, long-hit idle protection, Stop/restart, Clear, removal/project-switch/disposal and unchanged pad routing. Isolated production Chromium measured audible previews with silent studio recording-bus audio, verified no doubled source when cabled to Output, captured a test microphone signal and auditioned it without an Output module, then restored and played that saved capture after an offline reload. The preview remains reachable at 390px with no document overflow; no browser errors occurred. Physical iPad/Safari audio remains an on-device check.
+
+Published source commit `7649bf6` as clean app version **`0.1.0+51.g7649bf6`** at **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** (Cloudflare version `20b64707-21ee-4209-b085-94fb475e7474`). All fifteen public release files match the clean build byte for byte; update-cache headers and public Node API isolation pass. The hosted browser repeated the stopped/running, muted/unpatched/cabled, fresh microphone capture, offline restoration and phone-layout checks with audible speaker signal, silent studio recording-bus audio and no page errors. The previous Cloudflare release is `2c27a444-f289-4b77-95ef-bee82fa998b9`. Existing installs can use **Refresh now** when the complete update is ready, or close all Patchwork windows and reopen.
 
 ## Large-patch navigation: first performance fixes — deployed 15 November 2026
 
