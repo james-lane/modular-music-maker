@@ -1,3 +1,5 @@
+import type { PlaybackPosition } from '../audio/playback-position';
+import { usePlaybackStep } from '../hooks/usePlaybackStep';
 import { MODULES, SEQUENCER_RATES, sequencerRate } from '../domain/modules';
 import { noteLabel } from '../domain/project';
 import type { PatchModule, Project } from '../domain/types';
@@ -8,16 +10,16 @@ interface Props {
   module: PatchModule;
   project: Project;
   playing: boolean;
-  tick: number;
+  position: PlaybackPosition;
   onParameter: (id: string, value: number | string | boolean) => void;
   onStep: (index: number, degree: StepNoteChange, group?: string) => void;
 }
 
-export function SequencerPanel({ module, project, playing, tick, onParameter, onStep }: Props) {
+export function SequencerPanel({ module, project, playing, position, onParameter, onStep }: Props) {
   const rate = sequencerRate(module.parameters.rate);
   const steps = module.steps ?? [];
   // Derive lights from the audio-clock tick; rendering never advances the musical clock.
-  const activeStep = tick < 0 ? -1 : Math.floor(tick / rate.ticks) % steps.length;
+  const activeStep = usePlaybackStep(position, rate.ticks, steps.length);
 
   return (
     <>

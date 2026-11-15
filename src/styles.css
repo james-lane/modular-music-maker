@@ -794,6 +794,11 @@ svg {
   left: 0;
   transform-origin: top left;
 }
+.module-surface {
+  position: absolute;
+  inset: 0;
+  transform-origin: top left;
+}
 .canvas-controls {
   display: flex;
   align-items: center;

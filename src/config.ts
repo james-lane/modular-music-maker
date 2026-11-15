@@ -47,6 +47,11 @@ export const CONFIG = {
     grid: 20,
     moduleGap: 20,
     fitPadding: 50,
+    renderOriginSize: 4096,
+    maxLocalDrawingCoordinate: 1_000_000,
+    maxCompositedSpan: 8192,
+    // Just below two 60 Hz frames, avoiding a jittery third frame at rounded timestamps.
+    playbackGestureIntervalMs: 32,
     // A numerical safety limit, not a rendered surface: the view only draws its own size.
     maxCoordinate: 1_000_000_000,
     minZoom: 0.05,
@@ -61,6 +66,7 @@ export const CONFIG = {
     autoPanPixelsPerSecond: 650,
   },
   audio: {
+    visualizationIntervalMs: 32,
     schedulerIntervalMs: 25,
     scheduleAheadSeconds: 0.12,
     parameterRampSeconds: 0.025,

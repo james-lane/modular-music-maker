@@ -1,4 +1,4 @@
-import { useMemo, type CSSProperties } from 'react';
+import { memo, useMemo, type CSSProperties } from 'react';
 import { MODULES } from '../domain/modules';
 import { CONFIG } from '../config';
 import type { CableStyle } from '../domain/preferences';
@@ -6,19 +6,21 @@ import type { PatchModule, SignalType } from '../domain/types';
 import { braidedCablePaths, cablePath } from './cable-geometry';
 
 interface Props {
+  id: string;
   from: { x: number; y: number };
-  to: { x: number; y: number };
+  span: { x: number; y: number };
   fromModule: PatchModule;
   toModule: PatchModule;
   signal: SignalType;
   cableStyle: CableStyle;
   cableOpacity: number;
-  onUnplug: () => void;
+  onUnplug: (id: string) => void;
 }
 
-export function PatchCable({
+export const PatchCable = memo(function PatchCable({
+  id,
   from,
-  to,
+  span,
   fromModule,
   toModule,
   signal,
@@ -42,7 +44,7 @@ export function PatchCable({
   // Geometry is relative to its first socket, so camera movement only translates
   // the cable and does not regenerate the detailed braid on every pan frame.
   const start = { x: 0, y: 0 };
-  const end = { x: to.x - from.x, y: to.y - from.y };
+  const end = span;
   const path = cablePath(start, end);
   // Avoid asking SVG for an enormous offscreen filter surface on distant links.
   const shadow = Math.hypot(end.x, end.y) <= CONFIG.cables.maxShadowLength;
@@ -70,7 +72,7 @@ export function PatchCable({
         d={path}
         // Hidden cables must not intercept controls underneath their hit areas.
         style={cableOpacity === 0 ? { pointerEvents: 'none' } : undefined}
-        onDoubleClick={onUnplug}
+        onDoubleClick={() => onUnplug(id)}
       >
         <title>
           {MODULES[fromModule.type].name} → {MODULES[toModule.type].name} · {signal} · Double-click
@@ -99,4 +101,4 @@ export function PatchCable({
       ))}
     </g>
   );
-}
+});

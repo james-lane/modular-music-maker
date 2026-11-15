@@ -1,3 +1,4 @@
+import type { PlaybackPosition } from '../audio/playback-position';
 import { GripVertical, X } from 'lucide-react';
 import type { CSSProperties, PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
@@ -23,13 +24,12 @@ import { XYEffectsPanel } from './XYEffectsPanel';
 
 interface Props {
   module: PatchModule;
-  /** Camera-relative drawing only; world positions remain in the saved module. */
+  /** Drawing-origin-relative placement only; world positions remain in the saved module. */
   position: { x: number; y: number };
   scale: number;
   project: Project;
   selected: boolean;
-  tick: number;
-  drumStep: number;
+  playbackPosition: PlaybackPosition;
   live: LiveControls;
   audioActive: boolean;
   microphone: MicrophoneControls;
@@ -53,8 +53,7 @@ export function ModuleCard({
   scale,
   project,
   selected,
-  tick,
-  drumStep,
+  playbackPosition,
   live,
   audioActive,
   microphone,
@@ -79,7 +78,7 @@ export function ModuleCard({
         {
           left: position.x * scale,
           top: position.y * scale,
-          transform: `scale(${scale})`,
+          transform: scale === 1 ? undefined : `scale(${scale})`,
           transformOrigin: 'top left',
           width: definition.width,
           height: definition.height,
@@ -120,7 +119,7 @@ export function ModuleCard({
             project={project}
             live={live}
             playing={playing}
-            step={drumStep}
+            position={playbackPosition}
             onToggle={onDrumStep}
             onEnabled={() => onParameter('enabled', !module.parameters.enabled)}
           />
@@ -153,7 +152,7 @@ export function ModuleCard({
             module={module}
             project={project}
             playing={playing}
-            tick={tick}
+            position={playbackPosition}
             onParameter={onParameter}
             onStep={onStep}
           />

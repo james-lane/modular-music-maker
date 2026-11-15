@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { AudioEngine } from '../audio/engine';
+import { CONFIG } from '../config';
 
 export function Scope({ engine, playing }: { engine: AudioEngine; playing: boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -8,7 +9,11 @@ export function Scope({ engine, playing }: { engine: AudioEngine; playing: boole
     if (!context) return;
     const data = new Uint8Array(256);
     let frame = 0;
-    const draw = () => {
+    let previous = -Infinity;
+    const draw = (now: number) => {
+      if (playing) frame = requestAnimationFrame(draw);
+      if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
+      previous = now;
       context.clearRect(0, 0, 420, 120);
       context.strokeStyle = '#2c4240';
       context.lineWidth = 1;
@@ -36,9 +41,8 @@ export function Scope({ engine, playing }: { engine: AudioEngine; playing: boole
         else context.lineTo(x, y);
       }
       context.stroke();
-      frame = requestAnimationFrame(draw);
     };
-    draw();
+    draw(0);
     return () => cancelAnimationFrame(frame);
   }, [engine, playing]);
   return (
@@ -58,12 +62,15 @@ export function LevelMeter({ engine, playing }: { engine: AudioEngine; playing: 
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
     let frame = 0;
-    const update = () => {
-      const level = Math.min(1, engine.readLevel() * 5);
+    let previous = -Infinity;
+    const update = (now: number) => {
+      if (playing) frame = requestAnimationFrame(update);
+      if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
+      previous = now;
+      const level = playing ? Math.min(1, engine.readLevel() * 5) : 0;
       container.current?.style.setProperty('--level', `${playing ? level * 100 : 0}%`);
-      frame = requestAnimationFrame(update);
     };
-    update();
+    update(0);
     return () => cancelAnimationFrame(frame);
   }, [engine, playing]);
   return (

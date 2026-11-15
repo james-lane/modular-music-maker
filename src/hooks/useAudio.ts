@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AudioEngine } from '../audio/engine';
+import { PlaybackPosition } from '../audio/playback-position';
 import { preferredRecordingType, saveRecording, type Recording } from '../audio/recordings';
 import { CONFIG } from '../config';
 import { downloadFile, fileSlug } from '../domain/storage';
@@ -11,9 +12,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const [engine] = useState(() => new AudioEngine());
   const [playing, setPlaying] = useState(false);
   const [starting, setStarting] = useState(false);
-  const [tick, setTick] = useState(-1);
+  const [position] = useState(() => new PlaybackPosition());
   const [beat, setBeat] = useState(0);
-  const [drumStep, setDrumStep] = useState(-1);
   const [liveActive, setLiveActive] = useState(false);
   const [recording, setRecording] = useState(false);
   // Remains true until the last chunk is safely stored, even after Record is stopped.
@@ -38,10 +38,9 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     setPlaying(engine.isPlaying);
     setLiveActive(engine.isActive);
     setRecording(recorder.current?.state === 'recording');
-    engine.onTick = (nextTick, nextBeat, nextDrumStep) => {
-      setTick(nextTick);
+    engine.onTick = (nextTick, nextBeat) => {
+      position.publish(nextTick);
       setBeat(nextBeat);
-      setDrumStep(nextDrumStep);
     };
     return () => {
       recorder.current?.state === 'recording' && recorder.current.stop();
@@ -49,7 +48,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
       liveGeneration.current++;
       void engine.dispose();
     };
-  }, [engine]);
+  }, [engine, position]);
 
   const play = useCallback(async () => {
     setStarting(true);
@@ -185,7 +184,10 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     [activateLive, engine],
   );
 
-  const live: LiveControls = { noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit };
+  const live: LiveControls = useMemo(
+    () => ({ noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit }),
+    [noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit],
+  );
 
   const toggleRecord = useCallback(async () => {
     if (recorder.current?.state === 'recording') {
@@ -258,9 +260,8 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     starting,
     play,
     stop,
-    tick,
+    position,
     beat,
-    drumStep,
     recording,
     recordingSeconds,
     toggleRecord,

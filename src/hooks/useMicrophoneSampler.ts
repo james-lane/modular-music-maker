@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MicrophoneCapture, type CapturePhase } from '../audio/microphone';
 import type { DrumSample, Project } from '../domain/types';
 
@@ -100,5 +100,9 @@ export function useMicrophoneSampler(
     const timer = setInterval(() => setSeconds((performance.now() - start) / 1000), 100);
     return () => clearInterval(timer);
   }, [phase]);
-  return { moduleId, phase, seconds, start, finish: () => capture.finish(), cancel };
+  const finish = useCallback(() => capture.finish(), [capture]);
+  return useMemo(
+    () => ({ moduleId, phase, seconds, start, finish, cancel }),
+    [moduleId, phase, seconds, start, finish, cancel],
+  );
 }

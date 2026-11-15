@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -16,11 +17,13 @@ import {
   type WorkspaceView,
 } from '../components/workspace-geometry';
 import type { Size } from '../domain/workspace';
+import { FramePublisher } from '../utils/frame-publisher';
 
 /** The rack owns touch navigation; browser magnification remains available outside it. */
 export function useWorkspaceGestures(
   viewport: RefObject<HTMLDivElement | null>,
   cancelEdit: () => void,
+  frameIntervalMs = 0,
 ) {
   const [view, setViewState] = useState<WorkspaceView>({
     x: 0,
@@ -28,28 +31,48 @@ export function useWorkspaceGestures(
     zoom: CONFIG.canvas.defaultZoom,
   });
   const currentView = useRef(view);
+  const [viewPublisher] = useState(() => new FramePublisher(setViewState));
+  const publicationInterval = useRef(frameIntervalMs);
+  publicationInterval.current = frameIntervalMs;
+  useEffect(() => () => viewPublisher.cancel(), [viewPublisher]);
   const [size, setSize] = useState<Size>({ width: 1, height: 1 });
-  const setView = (next: WorkspaceView) => {
-    const bounded = {
-      x: Math.max(-CONFIG.canvas.maxCoordinate, Math.min(CONFIG.canvas.maxCoordinate, next.x)),
-      y: Math.max(-CONFIG.canvas.maxCoordinate, Math.min(CONFIG.canvas.maxCoordinate, next.y)),
-      // Fit may need a much wider overview than ordinary hand zooming.
-      zoom: clampZoom(next.zoom, CONFIG.canvas.minFitZoom),
-    };
-    currentView.current = bounded;
-    setViewState(bounded);
-  };
-  const panByScreen = (x: number, y: number) => {
-    const current = currentView.current;
-    setView({ ...current, x: current.x + x / current.zoom, y: current.y + y / current.zoom });
-  };
-  const screenToWorld = (clientX: number, clientY: number) => {
-    const rect = viewport.current?.getBoundingClientRect();
-    return worldPoint(currentView.current, {
-      x: clientX - (rect?.left ?? 0),
-      y: clientY - (rect?.top ?? 0),
-    });
-  };
+  const updateView = useCallback(
+    (next: WorkspaceView, immediate: boolean) => {
+      const bounded = {
+        x: Math.max(-CONFIG.canvas.maxCoordinate, Math.min(CONFIG.canvas.maxCoordinate, next.x)),
+        y: Math.max(-CONFIG.canvas.maxCoordinate, Math.min(CONFIG.canvas.maxCoordinate, next.y)),
+        // Fit may need a much wider overview than ordinary hand zooming.
+        zoom: clampZoom(next.zoom, CONFIG.canvas.minFitZoom),
+      };
+      currentView.current = bounded;
+      if (immediate) {
+        viewPublisher.cancel();
+        setViewState(bounded);
+      } else viewPublisher.queue(bounded, publicationInterval.current);
+    },
+    [viewPublisher],
+  );
+  const setView = useCallback((next: WorkspaceView) => updateView(next, true), [updateView]);
+  const panByScreen = useCallback(
+    (x: number, y: number) => {
+      const current = currentView.current;
+      updateView(
+        { ...current, x: current.x + x / current.zoom, y: current.y + y / current.zoom },
+        false,
+      );
+    },
+    [updateView],
+  );
+  const screenToWorld = useCallback(
+    (clientX: number, clientY: number) => {
+      const rect = viewport.current?.getBoundingClientRect();
+      return worldPoint(currentView.current, {
+        x: clientX - (rect?.left ?? 0),
+        y: clientY - (rect?.top ?? 0),
+      });
+    },
+    [viewport],
+  );
   const touches = useRef(new Map<number, { point: Point; target: Element }>());
   const pinch = useRef<{ distance: number; zoom: number; anchor: Point } | null>(null);
   const navigating = useRef(false);
@@ -57,12 +80,13 @@ export function useWorkspaceGestures(
   const syntheticCancel = useRef(false);
 
   const applyZoom = (value: number, anchor: Point, midpoint: Point) => {
-    setView(
+    updateView(
       viewAtAnchor(
         anchor,
         midpoint,
         clampZoom(value, Math.min(CONFIG.canvas.minZoom, currentView.current.zoom)),
       ),
+      false,
     );
   };
   const zoomAt = (value: number, midpoint?: Point) => {

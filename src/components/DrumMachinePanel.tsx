@@ -1,8 +1,11 @@
+import type { PlaybackPosition } from '../audio/playback-position';
+import { usePlaybackStep } from '../hooks/usePlaybackStep';
 import type { LiveControls } from '../audio/live';
 import {
   connectedDrumKit,
   drumVoiceLabel,
   DRUM_LANES,
+  DRUM_STEP_COUNT,
   type DrumSound,
 } from '../domain/instruments';
 import type { PatchModule, Project } from '../domain/types';
@@ -12,7 +15,7 @@ export function DrumMachinePanel({
   project,
   live,
   playing,
-  step,
+  position,
   onToggle,
   onEnabled,
 }: {
@@ -20,11 +23,12 @@ export function DrumMachinePanel({
   project: Project;
   live: LiveControls;
   playing: boolean;
-  step: number;
+  position: PlaybackPosition;
   onToggle: (sound: DrumSound, step: number) => void;
   onEnabled: () => void;
 }) {
   const kit = connectedDrumKit(project, module.id);
+  const step = usePlaybackStep(position, 1, DRUM_STEP_COUNT);
   return (
     <div className="drum-instrument">
       <div className="drum-toolbar">

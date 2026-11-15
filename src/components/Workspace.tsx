@@ -1,3 +1,4 @@
+import type { PlaybackPosition } from '../audio/playback-position';
 import {
   Cable as CableIcon,
   Check,
@@ -12,7 +13,9 @@ import {
   X,
 } from 'lucide-react';
 import {
+  useCallback,
   useEffect,
+  useMemo,
   useLayoutEffect,
   useRef,
   useState,
@@ -21,11 +24,11 @@ import {
 } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
-import { MODULES, SEQUENCER_DEGREES } from '../domain/modules';
+import { MODULES } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { DrumSample, Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
-import { ModuleCard } from './ModuleCard';
+import { WorkspaceModule } from './WorkspaceModule';
 import { PatchCable } from './PatchCable';
 import { cablePath } from './cable-geometry';
 import type { LiveControls } from '../audio/live';
@@ -43,8 +46,7 @@ interface Props {
   notify: (message: string) => void;
   engine: AudioEngine;
   playing: boolean;
-  tick: number;
-  drumStep: number;
+  playbackPosition: PlaybackPosition;
   live: LiveControls;
   audioActive: boolean;
   canUndo: boolean;
@@ -82,8 +84,7 @@ export function Workspace({
   microphone,
   engine,
   playing,
-  tick,
-  drumStep,
+  playbackPosition,
   live,
   audioActive,
   canUndo,
@@ -124,11 +125,15 @@ export function Workspace({
     y: number;
   } | null>(null);
   const pan = useRef<Point | null>(null);
-  const gestures = useWorkspaceGestures(viewport, () => {
-    drag.current = null;
-    pan.current = null;
-    setDragPreview(null);
-  });
+  const gestures = useWorkspaceGestures(
+    viewport,
+    () => {
+      drag.current = null;
+      pan.current = null;
+      setDragPreview(null);
+    },
+    audioActive ? CONFIG.canvas.playbackGestureIntervalMs : 0,
+  );
   const { view, size, zoom, setView, zoomAt, panByScreen, screenToWorld } = gestures;
   useEffect(() => {
     if (pending && cablePointer.current)
@@ -187,10 +192,105 @@ export function Workspace({
       );
     }
   }, [project.modules]);
-  const displayModules = project.modules.map((module) =>
-    module.id === dragPreview?.id ? { ...module, x: dragPreview.x, y: dragPreview.y } : module,
+  const displayModules = useMemo(
+    () =>
+      project.modules.map((module) =>
+        module.id === dragPreview?.id ? { ...module, x: dragPreview.x, y: dragPreview.y } : module,
+      ),
+    [project.modules, dragPreview],
   );
-  const localPoint = (point: Point) => ({ x: point.x - view.x, y: point.y - view.y });
+  const drawingBounds = useMemo(() => moduleBounds(displayModules), [displayModules]);
+  const compactDrawing =
+    drawingBounds.width <= CONFIG.canvas.maxCompositedSpan &&
+    drawingBounds.height <= CONFIG.canvas.maxCompositedSpan;
+  // Compact patches keep an origin anchored to their content: crossing a camera
+  // tile must not suddenly re-render every instrument during a performance.
+  // Dispersed patches use a floating camera origin to bound layout coordinates.
+  const originX = compactDrawing
+    ? drawingBounds.x
+    : Math.floor(view.x / CONFIG.canvas.renderOriginSize) * CONFIG.canvas.renderOriginSize;
+  const originY = compactDrawing
+    ? drawingBounds.y
+    : Math.floor(view.y / CONFIG.canvas.renderOriginSize) * CONFIG.canvas.renderOriginSize;
+  const offsetX = (originX - view.x) * zoom;
+  const offsetY = (originY - view.y) * zoom;
+  // CSS layout coordinates have a smaller usable range than our saved world.
+  // Exceptionally spread-out patches retain per-panel screen placement so Fit and
+  // keyboard recovery still work across the entire ±1 billion import guard.
+  const sharedSurface = displayModules.every(
+    (module) =>
+      Math.abs(module.x - originX) <= CONFIG.canvas.maxLocalDrawingCoordinate &&
+      Math.abs(module.y - originY) <= CONFIG.canvas.maxLocalDrawingCoordinate,
+  );
+  const compositedSurface =
+    sharedSurface &&
+    [
+      drawingBounds.x - originX,
+      drawingBounds.x + drawingBounds.width - originX,
+      drawingBounds.y - originY,
+      drawingBounds.y + drawingBounds.height - originY,
+    ].every((coordinate) => Math.abs(coordinate) <= CONFIG.canvas.maxCompositedSpan);
+  const cableModels = useMemo(() => {
+    const modules = new Map(displayModules.map((module) => [module.id, module]));
+    return project.cables.flatMap((cable) => {
+      const fromModule = modules.get(cable.from.moduleId);
+      const toModule = modules.get(cable.to.moduleId);
+      const signal =
+        fromModule &&
+        MODULES[fromModule.type].ports.find((port) => port.id === cable.from.portId)?.signal;
+      if (!fromModule || !toModule || !signal) return [];
+      const start = socketPosition(fromModule, cable.from.portId);
+      const end = socketPosition(toModule, cable.to.portId);
+      return [
+        {
+          cable,
+          fromModule,
+          toModule,
+          signal,
+          from: { x: start.x - originX, y: start.y - originY },
+          to: { x: end.x - originX, y: end.y - originY },
+          // Calculate before rebasing: subtracting two rebased floats can introduce
+          // rounding differences that needlessly regenerate every braided strand.
+          span: { x: end.x - start.x, y: end.y - start.y },
+        },
+      ];
+    });
+  }, [displayModules, project.cables, originX, originY]);
+  const unplug = useCallback(
+    (id: string) => {
+      commit((current) => ({
+        ...current,
+        cables: current.cables.filter((cable) => cable.id !== id),
+      }));
+    },
+    [commit],
+  );
+
+  const startModuleDrag = useCallback(
+    (module: PatchModule, event: PointerEvent<HTMLElement>) => {
+      if (event.button !== 0) return;
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      const point = screenToWorld(event.clientX, event.clientY);
+      drag.current = {
+        id: module.id,
+        offsetX: point.x - module.x,
+        offsetY: point.y - module.y,
+        clientX: event.clientX,
+        clientY: event.clientY,
+        moduleX: module.x,
+        moduleY: module.y,
+        x: module.x,
+        y: module.y,
+      };
+      setDragPreview({ id: module.id, x: module.x, y: module.y });
+      setSelected(module.id);
+    },
+    [screenToWorld],
+  );
+  const moduleRemoved = useCallback((id: string) => {
+    setPending((current) => (current?.moduleId === id ? null : current));
+  }, []);
   const moveModule = (clientX: number, clientY: number) => {
     const current = drag.current;
     if (!current) return;
@@ -199,46 +299,49 @@ export function Workspace({
     Object.assign(current, position, { clientX, clientY });
     setDragPreview({ id: current.id, ...position });
   };
-  const portClick = (endpoint: Endpoint) => {
-    const port = getPort(project, endpoint);
-    if (!port) return;
-    if (pending) {
-      if (pending.moduleId === endpoint.moduleId && pending.portId === endpoint.portId) {
+  const portClick = useCallback(
+    (endpoint: Endpoint) => {
+      const port = getPort(project, endpoint);
+      if (!port) return;
+      if (pending) {
+        if (pending.moduleId === endpoint.moduleId && pending.portId === endpoint.portId) {
+          setPending(null);
+          return;
+        }
+        const from = port.direction === 'input' ? pending : endpoint;
+        const to = port.direction === 'input' ? endpoint : pending;
+        const error = connectionError(project, from, to);
+        if (error) {
+          notify(error);
+          return;
+        }
+        commit((current) => ({
+          ...current,
+          cables: [...current.cables, { id: crypto.randomUUID(), from, to }],
+        }));
         setPending(null);
         return;
       }
-      const from = port.direction === 'input' ? pending : endpoint;
-      const to = port.direction === 'input' ? endpoint : pending;
-      const error = connectionError(project, from, to);
-      if (error) {
-        notify(error);
-        return;
+      if (port.direction === 'input') {
+        const cable = project.cables.find(
+          (cable) => cable.to.moduleId === endpoint.moduleId && cable.to.portId === endpoint.portId,
+        );
+        if (cable) {
+          commit((current) => ({
+            ...current,
+            cables: current.cables.filter((item) => item.id !== cable.id),
+          }));
+          setPending(cable.from);
+          return;
+        }
       }
-      commit((current) => ({
-        ...current,
-        cables: [...current.cables, { id: crypto.randomUUID(), from, to }],
-      }));
-      setPending(null);
-      return;
-    }
-    if (port.direction === 'input') {
-      const cable = project.cables.find(
-        (cable) => cable.to.moduleId === endpoint.moduleId && cable.to.portId === endpoint.portId,
-      );
-      if (cable) {
-        commit((current) => ({
-          ...current,
-          cables: current.cables.filter((item) => item.id !== cable.id),
-        }));
-        setPending(cable.from);
-        return;
-      }
-    }
-    setPending(endpoint);
-    cablePointer.current = null;
-    const module = displayModules.find((module) => module.id === endpoint.moduleId)!;
-    setPointer(socketPosition(module, endpoint.portId));
-  };
+      setPending(endpoint);
+      cablePointer.current = null;
+      const module = displayModules.find((module) => module.id === endpoint.moduleId)!;
+      setPointer(socketPosition(module, endpoint.portId));
+    },
+    [project, pending, displayModules, commit, notify],
+  );
 
   const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
     if (pan.current) {
@@ -487,7 +590,7 @@ export function Workspace({
         onPointerDown={(event) => {
           if (
             event.target === event.currentTarget ||
-            (event.target as Element).matches('.canvas-stage, .canvas-size')
+            (event.target as Element).matches('.canvas-stage, .canvas-size, .module-surface')
           ) {
             setSelected(null);
             if ((handMode || event.pointerType === 'touch') && viewport.current) {
@@ -560,201 +663,111 @@ export function Workspace({
                 <span>Release to place</span>
               </div>
             )}
-            {displayModules.map((module) => (
-              <ModuleCard
-                key={module.id}
-                module={module}
-                position={localPoint(module)}
-                scale={zoom}
-                project={project}
-                selected={module.id === selected}
-                tick={tick}
-                drumStep={drumStep}
-                live={live}
-                microphone={microphone}
-                audioActive={audioActive}
-                engine={engine}
-                playing={playing}
-                pending={pending}
-                onSelect={() => setSelected(module.id)}
-                onDragStart={(event) => {
-                  if (event.button !== 0) return;
-                  event.stopPropagation();
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  const point = screenToWorld(event.clientX, event.clientY);
-                  drag.current = {
-                    id: module.id,
-                    offsetX: point.x - module.x,
-                    offsetY: point.y - module.y,
-                    clientX: event.clientX,
-                    clientY: event.clientY,
-                    moduleX: module.x,
-                    moduleY: module.y,
-                    x: module.x,
-                    y: module.y,
-                  };
-                  setDragPreview({ id: module.id, x: module.x, y: module.y });
-                  setSelected(module.id);
-                }}
-                onParameter={(id, value) =>
-                  commit(
-                    (current) => ({
-                      ...current,
-                      modules: current.modules.map((item) =>
-                        item.id === module.id
-                          ? { ...item, parameters: { ...item.parameters, [id]: value } }
-                          : item,
-                      ),
-                    }),
-                    `${module.id}:${id}`,
-                  )
-                }
-                onParameters={(values, group) =>
-                  commit(
-                    (current) => ({
-                      ...current,
-                      modules: current.modules.map((item) =>
-                        item.id === module.id
-                          ? { ...item, parameters: { ...item.parameters, ...values } }
-                          : item,
-                      ),
-                    }),
-                    group ? `${module.id}:${group}` : '',
-                  )
-                }
-                onSample={(slot, sample) => {
-                  const accepted = setSample(module.id, slot, sample);
-                  if (!accepted)
-                    notify(
-                      'This sample exceeds the patch storage limit. Remove an unused sample first.',
-                    );
-                  return accepted;
-                }}
-                onStep={(index, next, group) =>
-                  commit(
-                    (current) => ({
-                      ...current,
-                      modules: current.modules.map((item) =>
-                        item.id === module.id && item.steps
-                          ? {
-                              ...item,
-                              steps: item.steps.map((degree, position) =>
-                                position === index
-                                  ? next === 'next'
-                                    ? (degree + 1) % (SEQUENCER_DEGREES.max + 1)
-                                    : next
-                                  : degree,
-                              ),
-                            }
-                          : item,
-                      ),
-                    }),
-                    group ? `${module.id}:step:${index}:${group}` : '',
-                  )
-                }
-                onPort={portClick}
-                onDrumStep={(sound, index) =>
-                  commit((current) => ({
-                    ...current,
-                    modules: current.modules.map((item) =>
-                      item.id === module.id && item.drumPattern
-                        ? {
-                            ...item,
-                            drumPattern: {
-                              ...item.drumPattern,
-                              [sound]: item.drumPattern[sound].map((enabled, position) =>
-                                position === index ? !enabled : enabled,
-                              ),
-                            },
-                          }
-                        : item,
-                    ),
-                  }))
-                }
-                onRemove={() => {
-                  commit((current) => ({
-                    ...current,
-                    modules: current.modules.filter((item) => item.id !== module.id),
-                    cables: current.cables.filter(
-                      (cable) =>
-                        cable.from.moduleId !== module.id && cable.to.moduleId !== module.id,
-                    ),
-                  }));
-                  if (pending?.moduleId === module.id) setPending(null);
-                }}
-              />
-            ))}
-            <svg
-              className="patch-cables"
-              width={size.width}
-              height={size.height}
-              aria-label="Patch cable connections"
+            <div
+              className="module-surface"
+              style={{
+                transform: sharedSurface
+                  ? `translate(${offsetX}px, ${offsetY}px) scale(${zoom})`
+                  : undefined,
+                willChange: compositedSurface ? 'transform' : undefined,
+              }}
             >
-              <defs>
-                <filter id="cable-shadow" x="-20%" y="-20%" width="140%" height="150%">
-                  <feDropShadow
-                    dx="0"
-                    dy="3"
-                    stdDeviation="2"
-                    floodColor="#302a22"
-                    floodOpacity="0.2"
-                  />
-                </filter>
-              </defs>
-              <g transform={`scale(${zoom})`}>
-                {project.cables.map((cable) => {
-                  const fromModule = displayModules.find(
-                    (module) => module.id === cable.from.moduleId,
-                  );
-                  const toModule = displayModules.find((module) => module.id === cable.to.moduleId);
-                  const signal = getPort(project, cable.from)?.signal;
-                  if (!fromModule || !toModule || !signal) return null;
-                  const from = localPoint(socketPosition(fromModule, cable.from.portId));
-                  const to = localPoint(socketPosition(toModule, cable.to.portId));
-                  // The curve stays between its endpoint Xs and sags at most 200px.
-                  // Links wholly outside that hull cannot enter the visible viewport.
-                  if (
-                    Math.max(from.x, to.x) < -20 ||
-                    Math.min(from.x, to.x) > size.width / zoom + 20 ||
-                    Math.max(from.y, to.y) < -220 ||
-                    Math.min(from.y, to.y) > size.height / zoom + 20
-                  )
-                    return null;
-                  return (
-                    <PatchCable
-                      key={cable.id}
-                      from={from}
-                      to={to}
-                      fromModule={fromModule}
-                      toModule={toModule}
-                      signal={signal}
-                      cableStyle={cableStyle}
-                      cableOpacity={cableOpacity}
-                      onUnplug={() =>
-                        commit((current) => ({
-                          ...current,
-                          cables: current.cables.filter((item) => item.id !== cable.id),
-                        }))
-                      }
+              {displayModules.map((module) => (
+                <WorkspaceModule
+                  key={module.id}
+                  module={module}
+                  project={project}
+                  originX={sharedSurface ? originX : view.x}
+                  originY={sharedSurface ? originY : view.y}
+                  scale={sharedSurface ? 1 : zoom}
+                  selected={module.id === selected}
+                  playbackPosition={playbackPosition}
+                  live={live}
+                  microphone={microphone}
+                  audioActive={audioActive}
+                  engine={engine}
+                  playing={playing}
+                  pending={pending}
+                  commit={commit}
+                  setSample={setSample}
+                  notify={notify}
+                  onSelect={setSelected}
+                  onDragStart={startModuleDrag}
+                  onPort={portClick}
+                  onRemoved={moduleRemoved}
+                />
+              ))}
+              <svg
+                className="patch-cables"
+                width={size.width}
+                height={size.height}
+                aria-label="Patch cable connections"
+              >
+                <defs>
+                  <filter id="cable-shadow" x="-20%" y="-20%" width="140%" height="150%">
+                    <feDropShadow
+                      dx="0"
+                      dy="3"
+                      stdDeviation="2"
+                      floodColor="#302a22"
+                      floodOpacity="0.2"
                     />
-                  );
-                })}
-                {pending &&
-                  (() => {
-                    const module = displayModules.find((module) => module.id === pending.moduleId);
-                    if (!module) return null;
+                  </filter>
+                </defs>
+                <g
+                  transform={
+                    sharedSurface ? undefined : `translate(${offsetX},${offsetY}) scale(${zoom})`
+                  }
+                >
+                  {cableModels.map(({ cable, fromModule, toModule, signal, from, to, span }) => {
+                    // Keep the SVG viewport-sized. Curves outside their endpoint hull
+                    // plus the bounded sag cannot enter the view, even after rebasing.
+                    const left = view.x - originX;
+                    const top = view.y - originY;
+                    if (
+                      Math.max(from.x, to.x) < left - 20 ||
+                      Math.min(from.x, to.x) > left + size.width / zoom + 20 ||
+                      Math.max(from.y, to.y) < top - 220 ||
+                      Math.min(from.y, to.y) > top + size.height / zoom + 20
+                    )
+                      return null;
                     return (
-                      <path
-                        className="pending-cable"
-                        d={cablePath(
-                          localPoint(socketPosition(module, pending.portId)),
-                          localPoint(pointer),
-                        )}
+                      <PatchCable
+                        key={cable.id}
+                        id={cable.id}
+                        from={from}
+                        span={span}
+                        fromModule={fromModule}
+                        toModule={toModule}
+                        signal={signal}
+                        cableStyle={cableStyle}
+                        cableOpacity={cableOpacity}
+                        onUnplug={unplug}
                       />
                     );
-                  })()}
-              </g>
-            </svg>
+                  })}
+                  {pending &&
+                    (() => {
+                      const module = displayModules.find(
+                        (module) => module.id === pending.moduleId,
+                      );
+                      if (!module) return null;
+                      return (
+                        <path
+                          className="pending-cable"
+                          d={cablePath(
+                            {
+                              x: socketPosition(module, pending.portId).x - originX,
+                              y: socketPosition(module, pending.portId).y - originY,
+                            },
+                            { x: pointer.x - originX, y: pointer.y - originY },
+                          )}
+                        />
+                      );
+                    })()}
+                </g>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
