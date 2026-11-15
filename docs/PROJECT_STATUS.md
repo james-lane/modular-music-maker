@@ -2,11 +2,11 @@
 
 Last updated: **15 November 2026**.
 
-## Installed app name — local change
+## Installed app name
 
-Desktop installation metadata now uses **Patchwork** for both the manifest name and short name. The document title and explicit HTML application name also use Patchwork, covering page-title fallbacks. Apple's web-app title already used the short name. Sharing previews retain their existing tagline; the stable app ID, scope, start URL, and patch data are unchanged. Production build and formatting checks pass, and the built HTML/manifest were checked for the short name. This fix is local and has not been deployed.
+Desktop installation metadata now uses **Patchwork** for both the manifest name and short name. The document title and explicit HTML application name also use Patchwork, covering page-title fallbacks. Apple's web-app title already used the short name. Sharing previews retain their existing tagline; the stable app ID, scope, start URL, and patch data are unchanged. Production build and formatting checks pass, and the built HTML/manifest were checked for the short name. Included in the touch/XY Effects production release below.
 
-## Touch controls and assignable XY Effects — local changes
+## Touch controls and assignable XY Effects
 
 App text now suppresses selection and WebKit touch callouts, including labels outside module panels. Patch-name/search inputs retain native editing, caret selection, and paste. Keyboard keys support finger, pen, and mouse swipes across white and raised black keys, independently per pointer. Leaving the bed releases that finger's note; re-entry plays again. Shared held pitches are retained until their final owner releases. Cancellation, lost capture, focus/window loss, hidden documents, and unmount preserve note-off cleanup.
 
@@ -14,7 +14,13 @@ The fifteenth module, **XY Effects**, is a copper console with a recessed four-q
 
 Validation: all 45 automated tests, strict types, production build, and formatting pass. New tests cover continuous bounded blending, corner isolation, dry centre/Mix-zero, repeated assignments, saved round trips, and invalid/missing settings. Browser checks used separate local preview origins, preserving user work: native pointer swipes and synthetic touch sequences covered white/black transitions, leaving/re-entry, overlapping fingers on one pitch, cancellation, lost capture, and window blur. Real audio renders measured all six effect paths, echo/reverb tails, exact dry-centre/Mix-zero behavior, and silence after disposal; a live take decoded with nonzero audio. Studio checks covered native pad drag, coherent X/Y undo/redo, corner selectors, guide browsing, imported and restored choices, and phone/tablet layouts (390×844 and 1194×834) without document overflow. Selection styles were checked on rendered labels and editable inputs.
 
-With the production preview server shut down after **Offline ready**, the cached studio reloaded with saved choices, accepted a new corner choice, recorded live keys/swipes, and reopened/played the stored take. A further offline reload retained the edit. Live output measured nonzero through XY Effects, zero after removal, and nonzero after Undo restored the graph. Physical iPad/iPhone Safari selection and swipe feel still need device confirmation. These changes are committed locally; the hosted studio has not been redeployed for this update.
+With the production preview server shut down after **Offline ready**, the cached studio reloaded with saved choices, accepted a new corner choice, recorded live keys/swipes, and reopened/played the stored take. A further offline reload retained the edit. Live output measured nonzero through XY Effects, zero after removal, and nonzero after Undo restored the graph. Physical iPad/iPhone Safari selection and swipe feel still need device confirmation. Deployed in the touch/XY Effects production release below.
+
+## Touch/XY Effects production release — 15 November 2026
+
+Published source commit `fe574c2` (app version `0.1.0+24.gfe574c2`) to **[patchwork.jameslane.dev](https://patchwork.jameslane.dev)** on the existing `patchwork-studio` Worker. This release includes the text-selection fix, keyboard swiping, assignable XY Effects, and the short installed-app name. Cloudflare version: `4ea3ed89-9c0d-48a4-b752-6fe8667f20a9`. The preceding deployed version is `e7ab9231-7edf-4e0e-82ed-866995de7d90` for a code/assets rollback; saved patches and recordings remain independent of these versions.
+
+All 45 tests, strict types, production build, formatting, and deployment dry run passed. Hosted verification matched all twelve public release files (including the service worker) byte-for-byte to the clean local build, confirmed the short manifest/page name, no-cache worker/manifest headers, and 404 responses for the local-only Node API. Existing installed sessions can choose **Refresh now** when ready, or close every Patchwork window and reopen. Installs predating the refresh notice need the close/reopen path to receive it. Physical-device validation remains as described above.
 
 ## Combined production release — 15 November 2026
 
