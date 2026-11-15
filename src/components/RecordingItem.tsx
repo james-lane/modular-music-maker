@@ -8,12 +8,14 @@ export function RecordingItem({
   onDelete,
   onDownload,
   exportActive,
+  exportError,
   progress,
 }: {
   recording: Recording;
   onDelete: () => void;
   onDownload: (format: RecordingExportFormat) => void;
   exportActive: boolean;
+  exportError: string | null;
   // undefined: another/no export; null: decoding this take; number: encoding.
   progress: number | null | undefined;
 }) {
@@ -82,6 +84,11 @@ export function RecordingItem({
       {progress !== undefined && (
         <p className="recording-progress" role="status">
           {progress === null ? 'Preparing audio…' : `Converting audio… ${progress}%`}
+        </p>
+      )}
+      {exportError && (
+        <p className="recording-progress" role="alert">
+          {exportError}
         </p>
       )}
     </div>

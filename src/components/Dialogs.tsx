@@ -299,7 +299,7 @@ export function RecordingsDialog({
 }) {
   const [recordings, setRecordings] = useState<Recording[] | null>(null);
   const [error, setError] = useState(false);
-  const recordingExport = useRecordingExport(notify);
+  const recordingExport = useRecordingExport();
   useEffect(() => {
     let active = true;
     void loadRecordings()
@@ -346,6 +346,9 @@ export function RecordingsDialog({
               key={recording.id}
               recording={recording}
               exportActive={recordingExport.active !== null}
+              exportError={
+                recordingExport.error?.id === recording.id ? recordingExport.error.message : null
+              }
               progress={
                 recordingExport.active?.id === recording.id
                   ? recordingExport.active.progress

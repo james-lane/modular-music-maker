@@ -4,9 +4,10 @@ import type { RecordingExportFormat } from '../audio/recording-encoder';
 import type { Recording } from '../audio/recordings';
 import { downloadFile, fileSlug } from '../domain/storage';
 
-export function useRecordingExport(notify: (message: string) => void) {
+export function useRecordingExport() {
   const pending = useRef<AbortController | null>(null);
   const [active, setActive] = useState<{ id: string; progress: number | null } | null>(null);
+  const [error, setError] = useState<{ id: string; message: string } | null>(null);
   useEffect(() => () => pending.current?.abort(), []);
 
   async function download(recording: Recording, format: RecordingExportFormat) {
@@ -14,6 +15,7 @@ export function useRecordingExport(notify: (message: string) => void) {
     if (pending.current) return;
     const controller = new AbortController();
     pending.current = controller;
+    setError(null);
     setActive({ id: recording.id, progress: null });
     try {
       const result = await exportRecording(recording, format, controller.signal, (progress) => {
@@ -26,12 +28,15 @@ export function useRecordingExport(notify: (message: string) => void) {
         );
     } catch {
       if (!controller.signal.aborted)
-        notify('This take could not be converted. Choose Original to download the saved audio.');
+        setError({
+          id: recording.id,
+          message: 'This take could not be converted. Choose Original to download the saved audio.',
+        });
     } finally {
       if (pending.current === controller) pending.current = null;
       if (!controller.signal.aborted) setActive(null);
     }
   }
 
-  return { active, download };
+  return { active, error, download };
 }
