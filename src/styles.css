@@ -441,6 +441,10 @@ svg {
 .more-menu button:hover {
   background: light-dark(#f1f1e9, var(--night-hover));
 }
+/* Keep overflow actions available only when their toolbar counterparts are hidden. */
+.more-menu .toolbar-overflow-action {
+  display: none;
+}
 .menu-dismiss {
   position: fixed;
   inset: 0;
@@ -653,11 +657,6 @@ svg {
   font-size: 12px;
   line-height: 1.6;
 }
-.library-footer {
-  margin-top: 10px;
-  padding: 0 3px 13px;
-  flex-shrink: 0;
-}
 .library-tip {
   display: flex;
   align-items: center;
@@ -677,22 +676,6 @@ svg {
   line-height: 1.8;
   color: light-dark(#989e8b, var(--night-muted));
   margin: 0;
-}
-.help-link {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 0;
-  width: 100%;
-  font-size: 9px;
-  color: light-dark(#929a83, var(--night-muted));
-  text-align: left;
-}
-.help-link > span {
-  margin-left: auto;
-}
-.help-link:hover {
-  color: var(--orange);
 }
 .library-close {
   display: inline-flex;
@@ -1653,6 +1636,27 @@ svg {
   align-items: center;
   gap: 9px;
 }
+.status-bar > div:first-child {
+  min-width: 0;
+}
+.status-bar > div:last-child {
+  flex-shrink: 0;
+}
+.studio-help {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 0 3px;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.studio-status-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .offline-indicator {
   display: inline-flex;
   align-items: center;
@@ -2223,9 +2227,6 @@ svg {
     font-size: 10px;
     gap: 5px;
   }
-  .export-button {
-    display: none;
-  }
   .transport-bar > .transport-divider:nth-last-of-type(1) {
     display: none;
   }
@@ -2397,8 +2398,12 @@ body,
   }
   .composition-select,
   .transport-bar > .transport-divider,
-  .save-button {
+  .save-button,
+  .export-button {
     display: none;
+  }
+  .more-menu .toolbar-overflow-action {
+    display: flex;
   }
   .transport-spacer {
     min-width: 0;

@@ -3,7 +3,6 @@ import {
   AudioLines,
   FolderOpen,
   Headphones,
-  CircleHelp,
   MoreHorizontal,
   Play,
   Plus,
@@ -12,7 +11,6 @@ import {
   SlidersHorizontal,
   Volume2,
   VolumeX,
-  WifiOff,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { CONFIG, ROOT_NOTES } from '../config';
@@ -31,10 +29,8 @@ interface Props {
   onImport: () => void;
   onExamples: () => void;
   onSettings: () => void;
-  onOffline: () => void;
   onPatches: () => void;
   onRecordings: () => void;
-  onHelp: () => void;
   recordingCount: number;
 }
 
@@ -50,10 +46,8 @@ export function TransportBar({
   onImport,
   onExamples,
   onSettings,
-  onOffline,
   onPatches,
   onRecordings,
-  onHelp,
   recordingCount,
 }: Props) {
   const [tempoDraft, setTempoDraft] = useState(String(project.tempo));
@@ -267,6 +261,7 @@ export function TransportBar({
             <div className="menu-dismiss" onClick={() => setMoreOpen(false)} />
             <div className="more-menu">
               <button
+                className="toolbar-overflow-action"
                 disabled={saving}
                 onClick={() => {
                   setMoreOpen(false);
@@ -295,28 +290,13 @@ export function TransportBar({
               <button
                 onClick={() => {
                   setMoreOpen(false);
-                  onHelp();
-                }}
-              >
-                <CircleHelp size={15} /> Getting started
-              </button>
-              <button
-                onClick={() => {
-                  setMoreOpen(false);
-                  onOffline();
-                }}
-              >
-                <WifiOff size={15} /> Use offline / install
-              </button>
-              <button
-                onClick={() => {
-                  setMoreOpen(false);
                   onSettings();
                 }}
               >
                 <SlidersHorizontal size={15} /> Studio settings
               </button>
               <button
+                className="toolbar-overflow-action"
                 onClick={() => {
                   setMoreOpen(false);
                   onExport();

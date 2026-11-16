@@ -2,6 +2,12 @@
 
 Last updated: **16 November 2026**.
 
+## Single action locations and footer Help — issue #4 — 16 November 2026
+
+General Getting started and the port glossary now open from one small **Help** button at the bottom left. Their former More-menu and module-drawer links are removed; each instrument’s own field-guide question mark stays in the drawer. The footer’s bottom-right offline status is the sole installation/update entry point. Save and Export each appear once: toolbar buttons on wide screens, More-menu overflow actions at the same 760px breakpoint where those buttons disappear.
+
+The footer allows its status message to shorten before Help or the offline/version controls can overlap. Native keyboard activation, dialog focus return, live audio and offline help remain available. Validation: all **140 tests**, strict types, production build, formatting and diff checks pass. Browser QA covered widths 1600, 1194, 834, 761, 760, 600, 390 and 360px; single visible Save/Export actions; Help placement; drawer guides; Tab/Enter/Escape and focus restoration; mobile Save/export; nonzero recorded audio while browsing Help; offline installation dialog and saved reload; and dark phone layout. No microphone requests or browser errors occurred. The user requested a direct push for this change, with no preview URL.
+
 ## Temporary examples and guide demos — issue #2 — 16 November 2026
 
 All nine examples, all 21 guide demos and the first-visit Sunday circuits starter remain temporary until explicit **Save patch** or **⌘/Ctrl S**, even after edits, Undo/Redo or recording. A visible **Demo** label identifies them on desktop and phone. My patches omits the unsaved demo; switching away, hiding/closing or reloading never adds it or changes the prior saved active pointer. Reload restores the previous owned patch, or the example chooser if no patch has been saved. Existing saved copies are kept.

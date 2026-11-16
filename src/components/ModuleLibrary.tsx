@@ -8,7 +8,6 @@ import { Waveform } from './Waveform';
 
 export function ModuleLibrary({
   onAdd,
-  onHelp,
   onModuleHelp,
   open,
   onClose,
@@ -16,7 +15,6 @@ export function ModuleLibrary({
   onDragChange,
 }: {
   onAdd: (type: ModuleType) => void;
-  onHelp: () => void;
   onModuleHelp: (type: ModuleType) => void;
   open: boolean;
   onClose: () => void;
@@ -184,11 +182,6 @@ export function ModuleLibrary({
           </div>
         ))}
         {!filtered.length && <p className="empty-search">No modules found. Try another name.</p>}
-      </div>
-      <div className="library-footer">
-        <button className="help-link" onClick={onHelp}>
-          <CircleHelp size={15} /> Getting started <span>↗</span>
-        </button>
       </div>
     </aside>
   );

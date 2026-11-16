@@ -108,15 +108,6 @@
   width: 30px;
   height: 36px;
 }
-.library-footer {
-  margin: 0;
-  padding: 10px 4px;
-  border-top: 1px solid var(--line);
-}
-.library-footer .help-link {
-  min-height: 24px;
-  font-size: 11px;
-}
 /* The backdrop must not intercept pointer hit testing while placing an instrument. */
 .library-dragging .library-dismiss {
   pointer-events: none;
@@ -168,8 +159,7 @@
     margin: 0;
   }
   .library-tools p,
-  .module-library .library-section-title,
-  .module-library .library-footer {
+  .module-library .library-section-title {
     display: none;
   }
   .module-library .search-field {

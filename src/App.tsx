@@ -1,5 +1,5 @@
 import { PatchLibraryDialog } from './components/PatchLibraryDialog';
-import { Cable, Check, X } from 'lucide-react';
+import { Cable, Check, CircleHelp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadRecordings } from './audio/recordings';
 import { AppVersion } from './components/AppVersion';
@@ -254,10 +254,8 @@ export default function App() {
           onImport={() => importInput.current?.click()}
           onExamples={() => setDialog('examples')}
           onSettings={() => setDialog('settings')}
-          onOffline={() => setDialog('offline')}
           onPatches={() => setDialog('patches')}
           onRecordings={() => setDialog('recordings')}
-          onHelp={() => setDialog('help')}
           recordingCount={recordingCount}
         />
       </div>
@@ -276,7 +274,6 @@ export default function App() {
           drag={libraryDrag}
           onDragChange={setLibraryDrag}
           onAdd={addModule}
-          onHelp={() => setDialog('help')}
           onModuleHelp={(type) => {
             setGuideType(type);
             setDialog('module-help');
@@ -306,8 +303,15 @@ export default function App() {
       </div>
       <footer className="status-bar" inert={offline.applying}>
         <div>
+          <button
+            className="studio-help"
+            title="Getting started and port guide"
+            onClick={() => setDialog('help')}
+          >
+            <CircleHelp size={12} /> Help
+          </button>
           <span className={`status-led ${audio.active ? 'playing' : ''}`} />
-          <span>
+          <span className="studio-status-text">
             {microphone.phase !== 'idle'
               ? 'Capturing a microphone snippet'
               : audio.recording
