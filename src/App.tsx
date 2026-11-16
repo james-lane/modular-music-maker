@@ -26,7 +26,7 @@ import {
 } from './domain/preferences';
 import { createModule, createProject } from './domain/project';
 import { findOpenPosition, type Point } from './domain/workspace';
-import { saveLocally, saveToServer, syncDeletedProjects } from './domain/storage';
+import { saveToServer, syncDeletedProjects } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
 import { useAudio } from './hooks/useAudio';
@@ -67,7 +67,9 @@ export default function App() {
         ? 'Finish recording and wait for your take to save before refreshing.'
         : audio.active || audio.starting
           ? 'Stop playback before refreshing.'
-          : '';
+          : studio.isTemporary
+            ? 'Save this temporary demo as a patch, or open a saved patch, before refreshing.'
+            : '';
   const applyUpdate = () => {
     if (updateBlockedReason || audio.engine.isActive) return;
     void offline.applyUpdate(studio.flush);
@@ -103,8 +105,8 @@ export default function App() {
   const save = useCallback(async () => {
     setSaving(true);
     try {
-      saveLocally(project);
-      const onServer = await saveToServer(project);
+      const saved = studio.saveProject();
+      const onServer = await saveToServer(saved);
       notify(
         onServer
           ? 'Patch saved to this browser and your Node server.'
@@ -115,7 +117,7 @@ export default function App() {
     } finally {
       setSaving(false);
     }
-  }, [project, notify]);
+  }, [studio.saveProject, notify]);
 
   useEffect(() => {
     const shortcuts = (event: KeyboardEvent) => {
@@ -185,9 +187,9 @@ export default function App() {
     notify(`${definition.name} added. Connect a cable to bring it into your patch.`);
   };
 
-  const openProject = async (next: Project) => {
+  const openProject = async (next: Project, temporary = false) => {
     await audio.stop();
-    studio.openProject(next);
+    studio.openProject(next, temporary);
     setDialog(null);
   };
   const newProject = () => {
@@ -349,14 +351,17 @@ export default function App() {
         />
       )}
       {dialog === 'examples' && (
-        <ExamplePatchesDialog onOpen={openProject} onClose={() => setDialog(null)} />
+        <ExamplePatchesDialog
+          onOpen={(next) => openProject(next, true)}
+          onClose={() => setDialog(null)}
+        />
       )}
       {dialog === 'module-help' && guideType && (
         <ModuleHelpDialog
           initialType={guideType}
           onClose={() => setDialog(null)}
           onOpen={async (next, instructions) => {
-            await openProject(next);
+            await openProject(next, true);
             setLibraryOpen(false);
             notify(instructions);
             requestAnimationFrame(() =>
@@ -394,7 +399,7 @@ export default function App() {
       )}
       {dialog === 'patches' && (
         <PatchLibraryDialog
-          activeProject={project}
+          activeProject={studio.isTemporary ? undefined : project}
           onDelete={async (id) => {
             if (id === project.id) await audio.stop();
             studio.deleteProject(id);

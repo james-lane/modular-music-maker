@@ -751,6 +751,16 @@ svg {
 .save-indicator.saving {
   opacity: 0.6;
 }
+.save-indicator.temporary {
+  display: inline-flex;
+  white-space: nowrap;
+  color: light-dark(#906237, var(--night-warm));
+}
+@media (max-width: 1250px) {
+  .demo-save-hint {
+    display: none;
+  }
+}
 .history-controls {
   display: flex;
   gap: 2px;

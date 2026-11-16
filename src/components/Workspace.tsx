@@ -29,6 +29,7 @@ import { MODULES } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { DrumSample, Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
+import type { ProjectSaveStatus } from '../domain/project-persistence';
 import { ModuleDrag } from './module-drag';
 import { WorkspaceModule } from './WorkspaceModule';
 import { PatchCable } from './PatchCable';
@@ -56,7 +57,7 @@ interface Props {
   undo: () => void;
   redo: () => void;
   historyNavigation: number;
-  saveStatus: 'saving' | 'saved' | 'error';
+  saveStatus: ProjectSaveStatus;
   cableStyle: CableStyle;
   cableOpacity: number;
   libraryDrag: ModuleLibraryDrag | null;
@@ -471,13 +472,26 @@ export function Workspace({
               )
             }
           />
-          <span className={`save-indicator ${saveStatus}`}>
-            <Check size={13} />
-            {saveStatus === 'saved'
-              ? 'All changes saved'
-              : saveStatus === 'saving'
-                ? 'Saving…'
-                : 'Storage full — export your patch'}
+          <span
+            className={`save-indicator ${saveStatus}`}
+            title={
+              saveStatus === 'temporary'
+                ? 'Temporary demo. Choose Save patch to keep it.'
+                : undefined
+            }
+          >
+            {saveStatus !== 'temporary' && <Check size={13} />}
+            {saveStatus === 'temporary' ? (
+              <>
+                Demo<span className="demo-save-hint"> · Save patch to keep</span>
+              </>
+            ) : saveStatus === 'saved' ? (
+              'All changes saved'
+            ) : saveStatus === 'saving' ? (
+              'Saving…'
+            ) : (
+              'Storage full — export your patch'
+            )}
           </span>
         </div>
         <div className="history-controls">

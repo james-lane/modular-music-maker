@@ -13,7 +13,7 @@ export function PatchLibraryDialog({
   onImport,
   notify,
 }: {
-  activeProject: Project;
+  activeProject?: Project;
   onDelete: (id: string) => Promise<void>;
   onClose: () => void;
   onOpen: (project: Project) => void;
@@ -43,14 +43,15 @@ export function PatchLibraryDialog({
     void listAllProjects()
       .then((result) => {
         if (active)
-          setProjects([
-            activeProject,
-            ...result.filter((project) => project.id !== activeProject.id),
-          ]);
+          setProjects(
+            activeProject
+              ? [activeProject, ...result.filter((project) => project.id !== activeProject.id)]
+              : result,
+          );
       })
       .catch(() => {
         if (active) {
-          setProjects([activeProject]);
+          setProjects(activeProject ? [activeProject] : []);
           notify('The patch library could not be loaded.');
         }
       });
@@ -97,6 +98,8 @@ export function PatchLibraryDialog({
       <div className="saved-patches" ref={list}>
         {projects === null ? (
           <p className="dialog-empty">Opening your patch collection…</p>
+        ) : projects.length === 0 ? (
+          <p className="dialog-empty">No saved patches yet. Choose Save patch to keep a demo.</p>
         ) : (
           projects.map((project) => (
             <div className="saved-patch-entry" key={project.id} data-patch-id={project.id}>
@@ -121,7 +124,7 @@ export function PatchLibraryDialog({
                       month: 'short',
                       year: 'numeric',
                     })}
-                    {project.id === activeProject.id ? ' · Open now' : ''}
+                    {project.id === activeProject?.id ? ' · Open now' : ''}
                   </em>
                 </span>
                 <ArrowUpRight size={18} />
@@ -134,7 +137,7 @@ export function PatchLibraryDialog({
                 >
                   <p>
                     Delete “{project.name}”?
-                    {project.id === activeProject.id
+                    {project.id === activeProject?.id
                       ? ' Audio will stop and an empty patch will open.'
                       : ''}{' '}
                     Recordings are kept.

@@ -3,6 +3,7 @@ import { CONFIG } from '../config';
 import { PatchHistory, type ProjectEdit } from '../domain/history';
 import { SAMPLER_TRIM } from '../domain/modules';
 import { createProject } from '../domain/project';
+import { ProjectPersistence, type ProjectSaveStatus } from '../domain/project-persistence';
 import { deleteLocally, loadActiveProject, saveLocally } from '../domain/storage';
 import type { DrumSample, Project } from '../domain/types';
 import { parseProject } from '../domain/validation';
@@ -16,8 +17,16 @@ export function useStudio() {
   const [project, setProject] = useState(initial.project);
   const current = useRef(project);
   const [history] = useState(() => new PatchHistory(initial.project));
+  const [persistence] = useState(() => {
+    const session = new ProjectPersistence(saveLocally);
+    // The first-visit starter is itself an example, not the user's saved work.
+    session.open(initial.project, initial.isFirstVisit);
+    return session;
+  });
   const [historyNavigation, setHistoryNavigation] = useState(0);
-  const [saveStatus, setSaveStatus] = useState<'saving' | 'saved' | 'error'>('saving');
+  const [saveStatus, setSaveStatus] = useState<ProjectSaveStatus>(
+    initial.isFirstVisit ? 'temporary' : 'saving',
+  );
 
   const commit = useCallback(
     (edit: ProjectEdit, group = '') => {
@@ -110,19 +119,21 @@ export function useStudio() {
   }, [history]);
 
   const openProject = useCallback(
-    (next: Project) => {
+    (next: Project, temporary = false) => {
       // A patch switch may happen before the pending autosave timer has fired.
       try {
-        saveLocally(current.current);
+        persistence.flush(current.current);
       } catch {
         setSaveStatus('error');
       }
       history.open(next);
+      persistence.open(next, temporary);
+      setSaveStatus(temporary ? 'temporary' : 'saving');
       setHistoryNavigation((value) => value + 1);
       current.current = next;
       setProject(next);
     },
-    [history],
+    [history, persistence],
   );
 
   const deleteProject = useCallback(
@@ -133,40 +144,51 @@ export function useStudio() {
       if (next) {
         // Do not use openProject: its preservation save would resurrect the deleted patch.
         history.open(next);
+        persistence.open(next);
         current.current = next;
         setProject(next);
         setHistoryNavigation((value) => value + 1);
         setSaveStatus('saved');
       }
     },
-    [history],
+    [history, persistence],
   );
 
   useEffect(() => {
+    if (persistence.isTemporary(project)) {
+      setSaveStatus('temporary');
+      return;
+    }
     setSaveStatus('saving');
     const timer = setTimeout(() => {
       try {
         // A deleted patch's old debounce may already be queued when replacement wins.
         if (current.current.id !== project.id) return;
-        saveLocally(project);
+        if (!persistence.flush(project)) return;
         setSaveStatus('saved');
       } catch {
         setSaveStatus('error');
       }
     }, CONFIG.autosaveDelayMs);
     return () => clearTimeout(timer);
-  }, [project]);
+  }, [project, persistence]);
+
+  const saveProject = useCallback(() => {
+    const saved = current.current;
+    persistence.save(saved);
+    setSaveStatus('saved');
+    return saved;
+  }, [persistence]);
 
   const flush = useCallback(() => {
-    saveLocally(current.current);
-    setSaveStatus('saved');
-  }, []);
+    if (persistence.flush(current.current)) setSaveStatus('saved');
+  }, [persistence]);
 
   // Persist the most recent edit on a tab close, even within the debounce window.
   useEffect(() => {
     const flush = () => {
       try {
-        saveLocally(current.current);
+        persistence.flush(current.current);
       } catch {
         /* Visible save status handles storage errors. */
       }
@@ -181,7 +203,7 @@ export function useStudio() {
       window.removeEventListener('pagehide', flush);
       document.removeEventListener('visibilitychange', visibilityChanged);
     };
-  }, []);
+  }, [persistence]);
 
   return {
     project,
@@ -193,6 +215,8 @@ export function useStudio() {
     openProject,
     deleteProject,
     saveStatus,
+    isTemporary: persistence.isTemporary(project),
+    saveProject,
     flush,
     beginInteraction,
     endInteraction,
