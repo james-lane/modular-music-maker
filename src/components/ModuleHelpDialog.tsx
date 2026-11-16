@@ -1,8 +1,9 @@
 import { ArrowLeft, ArrowRight, Cable, Lightbulb } from 'lucide-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { MODULE_GUIDES, compatiblePorts } from '../domain/module-guides';
+import { createModuleDemo } from '../domain/module-demos';
 import { MODULES } from '../domain/modules';
-import type { ModuleType, PortDefinition } from '../domain/types';
+import type { ModuleType, PortDefinition, Project } from '../domain/types';
 import { Modal } from './Dialogs';
 import { Waveform } from './Waveform';
 
@@ -58,11 +59,13 @@ function CompatibleSockets({
   );
 }
 
-/** Guide browsing has its own navigation stack and never edits the user's patch. */
+/** Browsing remains silent/read-only. Only the explicit demo action switches patches. */
 export function ModuleHelpDialog({
   initialType,
   onClose,
+  onOpen,
 }: {
+  onOpen: (project: Project, instructions: string) => Promise<void>;
   initialType: ModuleType;
   onClose: () => void;
 }) {
@@ -70,6 +73,8 @@ export function ModuleHelpDialog({
   const type = trail[trail.length - 1];
   const definition = MODULES[type];
   const guide = MODULE_GUIDES[type];
+  const [opening, setOpening] = useState(false);
+  const [error, setError] = useState('');
   const body = useRef<HTMLDivElement>(null);
   const explore = (next: ModuleType) => setTrail((current) => [...current, next]);
 
@@ -78,6 +83,19 @@ export function ModuleHelpDialog({
     body.current?.closest('dialog')?.scrollTo({ top: 0 });
     body.current?.focus({ preventScroll: true });
   }, [type]);
+
+  const loadDemo = async () => {
+    if (opening) return;
+    setOpening(true);
+    setError('');
+    try {
+      const demo = createModuleDemo(type);
+      await onOpen(demo.project, demo.instructions);
+    } catch {
+      setError('Could not open the demo. Your current patch is still available.');
+      setOpening(false);
+    }
+  };
 
   return (
     <Modal
@@ -111,6 +129,21 @@ export function ModuleHelpDialog({
             <span className="guide-category">{definition.category}</span>
             <p>{guide.overview}</p>
           </div>
+        </div>
+        <div className="guide-demo-action">
+          <button
+            className="button primary guide-load-demo"
+            disabled={opening}
+            aria-label={`Load ${definition.name} demo patch`}
+            onClick={() => void loadDemo()}
+          >
+            {opening ? 'Opening…' : 'Load demo patch'}
+          </button>
+          <p className="guide-demo-note">
+            Opens a fresh patch with just this demo. Your current work stays in My patches. Audio
+            waits for Play or a live key/pad.
+          </p>
+          {error && <p role="alert">{error}</p>}
         </div>
         <div className="guide-instructions">
           <section aria-label="How to use this module">

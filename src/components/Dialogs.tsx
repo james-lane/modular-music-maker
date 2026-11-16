@@ -16,6 +16,7 @@ import { deleteRecording, loadRecordings, type Recording } from '../audio/record
 import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
 import type { Project } from '../domain/types';
 import { isCableStyle, isTheme, type CableStyle, type Theme } from '../domain/preferences';
+import { PortGuide } from './PortGuide';
 import { RecordingItem } from './RecordingItem';
 import { useRecordingExport } from '../hooks/useRecordingExport';
 
@@ -395,7 +396,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           [
             '01',
             'Start with a sound',
-            'Choose More → Example patches, then press Play. Open Add modules to find instruments; use + or drag them onto the dotted workspace.',
+            'Choose More → Example patches, then press Play. Open Add modules to find instruments; use + or drag them onto the dotted workspace. Each module’s ? guide also has Load demo patch for a small, ready-wired example.',
           ],
           [
             '02',
@@ -422,6 +423,7 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
+      <PortGuide />
       <div className="shortcut-list">
         <span>
           <kbd>Space</kbd> Play / stop

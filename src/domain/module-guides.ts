@@ -1,5 +1,5 @@
 import { MODULE_LIST, MODULES } from './modules';
-import type { ModuleType, PortDefinition } from './types';
+import type { ModuleType, Parameters, PortDefinition } from './types';
 
 export interface GuideConnection {
   from: { module: ModuleType; port: string };
@@ -13,7 +13,13 @@ export interface ModuleGuide {
   controls: Record<string, string>;
   extraControls?: { label: string; description: string }[];
   tip: string;
-  example: { title: string; description: string; connections: GuideConnection[] };
+  example: {
+    title: string;
+    description: string;
+    connections: GuideConnection[];
+    /** Settings shared by the loadable demo and development fixtures. */
+    parameters?: Partial<Record<ModuleType, Parameters>>;
+  };
 }
 
 const wire = (
@@ -426,6 +432,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     tip: 'Try X for filter colour and Y for oscillator pitch. Centre is zero modulation, not muted audio. This controller does not replace the audio effects console.',
     example: {
       title: 'Two-axis tone and pitch',
+      parameters: { 'xy-controller': { x: 0.45, y: -0.04 } },
       description: 'X moves the Filter while Y bends the Oscillator pitch.',
       connections: [
         wire('xy-controller', 'x', 'filter', 'cutoff'),
@@ -563,6 +570,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     tip: 'Try the Drum machine through the default corners: Filter softens the beat, Grit roughens it, and Echo/Space add tails. Set two corners to the same effect to give it a wider region. The module processes audio; a Keyboard must reach it through an Oscillator.',
     example: {
       title: 'A beat you can reshape',
+      parameters: { 'xy-effects': { x: 0.45, y: 0.35 } },
       description:
         'Press Play, set Mix to taste, and slide from the clean centre towards each corner. Change a corner to Thin for a lighter beat.',
       connections: [
@@ -620,6 +628,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     tip: 'Adding inputs can make the sum louder. Balance them with Input 1–4, then lower Sum level if needed. Connect SUM OUT to another Merger input when you need more than four sources. Pitch, modulation, and trigger cables need their own compatible modules.',
     example: {
       title: 'Combine a band and an echo return',
+      parameters: { merger: { in3: 0.2, in4: 0.45 }, delay: { mix: 1 } },
       description:
         'Blend a synth, drums, filtered noise, and an echoed copy of the synth. Lower Merger Input 3 for subtle noise and Input 4 to balance the echoes; set Delay Mix to 100% for an echo-only return.',
       connections: [

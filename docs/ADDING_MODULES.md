@@ -21,6 +21,8 @@ The library, numeric knobs, initial parameters, socket labels, connection checks
 
 Each module also needs an entry in `MODULE_GUIDES` in `src/domain/module-guides.ts`. Include a plain-language overview, setup steps, explanations keyed by the numeric control IDs, any special controls, a useful tip, and a worked example with explicit module/port endpoints. TypeScript requires a guide for each module type. Tests check that controls remain documented and every example forms a valid patch. Compatible module lists are derived from registry socket directions/signal types; do not maintain a separate hard-coded compatibility list.
 
+Every guide’s **Load demo patch** uses `createModuleDemo` in `domain/module-demos.ts`: its worked connections are the canonical wiring, with optional `example.parameters` for audible starting settings. Do not add a second testing-only patch. The factory creates a fresh empty project containing only the required modules, lays out registry-sized DAG columns, selects cabled Drum kit inputs, preloads local sampler audio, validates through `parseProject`, and declares the transport/keyboard/pad gesture needed to hear it. New sample requirements belong in `domain/demo-samples.ts`, never user recordings or network downloads. Extend the shared factory for new performance types rather than leaving their demos silent. Loading uses the normal project-switch lifecycle and never autoplays; guide browsing stays read-only.
+
 ## 3. Build the audio runtime
 
 Implement a factory in `src/audio/factories.ts`. `AUDIO_FACTORIES` is a complete `Record<ModuleType, Factory>`, so TypeScript flags missing implementations.
@@ -60,7 +62,7 @@ XY Effects demonstrates a control that updates several parameters together. Its 
 
 ## 5. Verify and document
 
-1. Run `npm run check`. The catalog-default test automatically includes new definitions.
+1. Run `npm run check`. The exhaustive `tests/module-demos.test.ts` uses the exact user-facing demo factories; preserve valid wiring, complete Output reachability, independent IDs/data, sample/kit readiness, and non-overlapping layout. The catalog-default test automatically includes new definitions.
 2. Add behavioral tests for new validation rules or pitch math; avoid tests that merely repeat the factory implementation.
 3. In the browser, add and move the module, connect valid sockets, reject incompatible sockets, adjust controls while playing, unplug, and remove it.
 4. Save/export/import and reload a patch using the new instrument.
@@ -94,3 +96,9 @@ Switch demonstrates selection without topology edits: registry-defined audio inp
 Neon chorus is the catalog-wide scale example. When adding a module type, give it a meaningful connected role there or explicitly revise that example's coverage promise. The modulation expansion keeps its original-seventeen promise and uses Moving parts for the four new control sources. Keep the full patch within module/cable/sample limits, every instance connected toward Output, and registry-sized panels non-overlapping. Built-in example samples must be original/local data and every fresh copy must own its editable sample objects.
 
 For new control sources, preserve the legacy 1500-unit full-scale contract. Use normalized source Depth and `boundedModulation` at new receivers, rather than changing the LFO’s existing Hz parameters. Event-based Envelopes use `gate`; tempo sources use `scheduleControl` on the existing audio clock. Keep native nodes and ephemeral random/envelope state out of patch data. A display must meter the actual output via `ControlScope`, not animate a schematic. Keep independently triggered kit sample modulation taps in their hit cleanup path, and silence consumers before disposing producer buses. Add registry-positioned sockets when extending an existing panel so old footer socket positions and dimensions stay unchanged.
+
+## Shared demo regression workflow
+
+For each affected module, open its library **?** guide, confirm browsing leaves the existing patch/audio unchanged, then choose **Load demo patch**. Verify a fresh project with only the demo’s modules, preservation of prior work in My patches, stopped transport/capture and correct instructions. Perform the declared gesture from `createModuleDemo(type)` (transport, Keyboard note, or Pad hit) and check actual output audio, not just a rendered panel. Adjust the subject’s controls, record/play a take when audio changes, save/reload (including offline), and verify removal/Undo/disposal. Load a demo from a related guide to check the currently displayed subject is used. Use these same factory projects in native/browser audio harnesses. Full catalog demo checks are appropriate after changes to shared routing/audio code.
+
+Update Getting started’s `PortGuide` whenever socket semantics change, with plain language for MOD, TRIGGER, PITCH/GATE, AUDIO, KIT and IN/OUT. This fixture and documentation policy is also recorded in AGENTS.md for future sessions.

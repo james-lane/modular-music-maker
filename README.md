@@ -28,7 +28,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 
 - A searchable module library with twenty-one working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, Envelope, Mod sequencer, Sample & Hold, XY controller, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
 - Nine contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
-- Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
+- Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return. **Load demo patch** opens a fresh, ready-wired demonstration of the module currently shown, preserving your current work in My patches. Demos include any needed local sample and wait for Play or live keys/pads; browsing stays silent.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers. Releasing over the toolbar or beyond the workspace keeps the move; press Escape during a drag to cancel it.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, trigger, and kit are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
 - **More → Studio settings → Theme** offers **System** (the default), **Light**, and **Dark**. System follows your device setting as it changes; overrides are remembered in this browser across patches and reloads. The main UI and dotted workspace adapt while instruments retain their colours and materials.
@@ -112,6 +112,20 @@ Use **More → Example patches → Pocket rhythm** for the connected performance
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 
 Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns repeat every eight steps at their selected rate. Each sequencer can run at a different rate. Live rate changes join the shared transport grid without restarting; a short already-queued segment may retain the previous timing. Older patches open at 1/8, preserving their sound. Both pattern types repeat independently of the time-signature display. No physical MIDI device support is included yet.
+
+## Understand the ports
+
+**Getting started** (in More or the module library) explains every cable type with example connections. **OUT sends** and **IN receives**; the types must match.
+
+| Port         | What it carries                                                | Example                                             |
+| ------------ | -------------------------------------------------------------- | --------------------------------------------------- |
+| AUDIO        | The actual sound you hear and record                           | Oscillator → Filter → Output                        |
+| PITCH / GATE | A note and its held/released state                             | Keyboard → Oscillator PITCH or Envelope NOTE / GATE |
+| MOD          | Movement of a setting, rather than audible sound               | LFO MOD OUT → Filter MOD                            |
+| TRIGGER      | A brief hit/restart event, including pad identity and velocity | Pad controller → Drum machine or Mic sampler        |
+| KIT          | Four drum voice assignments and external input buses           | Drum kit → Drum machine KIT IN                      |
+
+Each input takes one cable; an output can feed several inputs. Route audio to Output to hear it. For a focused lesson, open a module’s **?** guide and choose **Load demo patch**. Keyboard/Envelope/Reverb demos use live keys; the Mic sampler demo includes a clap played from pads. Other demos explain whether to press Play or use pads. No demo requests microphone access automatically.
 
 ## Modulate a sound
 
@@ -208,7 +222,7 @@ For an explicit manual recovery deployment, use `npm ci`, `npx wrangler login` i
 - `server/index.ts`: listener; `PORT` and `PATCHWORK_DATA_DIR` environment variables configure the server. See `.env.example`. Set these in your shell; `.env` is documentation only and is not automatically loaded.
 - `.openai/hosting.json`: reserved private Sites preview configuration; no Sites version has been published. It does not affect local development or the Cloudflare deployment.
 
-Start with [the architecture](docs/ARCHITECTURE.md), [the module guide](docs/ADDING_MODULES.md), and [the project status](docs/PROJECT_STATUS.md). Future agent sessions should read [AGENTS.md](AGENTS.md) before editing.
+Start with [the architecture](docs/ARCHITECTURE.md), [the module guide](docs/ADDING_MODULES.md), and [the project status](docs/PROJECT_STATUS.md). The 21 guide demos are also development fixtures: `createModuleDemo` in `src/domain/module-demos.ts` is used by the UI and `tests/module-demos.test.ts`. Reuse these factories for browser/audio checks, including the declared live gesture, instead of inventing parallel test patches. See [adding modules](docs/ADDING_MODULES.md) for the demo checklist. Future agent sessions should read [AGENTS.md](AGENTS.md) before editing.
 
 ## Deliberate first-version boundaries
 

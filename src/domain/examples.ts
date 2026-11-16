@@ -1,5 +1,4 @@
-import { CONFIG } from '../config';
-import { encodeSamplePcm } from './samples';
+import { createDemoClap } from './demo-samples';
 import { DRUM_LANES, DRUM_STEP_COUNT, type DrumSound } from './instruments';
 import { createModule, createPerformanceProject, createProject } from './project';
 import type { Cable, ModuleType, Parameters, PatchModule, Project } from './types';
@@ -292,28 +291,6 @@ function createClockworkProject(): Project {
   };
 }
 
-/** Original, deterministic clap PCM makes the sampler useful on Play, offline and
- * without microphone permission. Generating data here never creates an audio device.
- */
-function popClap() {
-  const frames = new Float32Array(Math.round(CONFIG.samples.sampleRate * 0.18));
-  let seed = 73;
-  let previous = 0;
-  for (let frame = 0; frame < frames.length; frame++) {
-    const time = frame / CONFIG.samples.sampleRate;
-    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-    const noise = seed / 2147483648 - 1;
-    const burst = [0, 0.012, 0.024].reduce(
-      (sum, onset) => sum + (time >= onset ? Math.exp(-(time - onset) / 0.024) : 0),
-      0,
-    );
-    const edge = Math.min(1, frame / 24, (frames.length - 1 - frame) / 120);
-    frames[frame] = (noise - previous) * burst * edge * 0.22;
-    previous = noise;
-  }
-  return { name: 'Synthesized pop clap', pcm: encodeSamplePcm(frames) };
-}
-
 /** A dedicated control lesson keeps the established 38-module performance fixture intact. */
 function createMovingPartsProject(): Project {
   const notes = instrument('sequencer', 40, 40, { rate: '1/4', gate: 0.4 });
@@ -328,7 +305,7 @@ function createMovingPartsProject(): Project {
   const random = instrument('random-mod', 460, 470, { rate: '1/4', depth: 0.3, glide: 0.07 });
   const xy = instrument('xy-controller', 780, 470, { x: 0.9, y: -0.2, depth: 0.7 });
   const sampler = instrument('mic-sampler', 40, 1000, { level: 0.5 });
-  sampler.samples = { clip: popClap() };
+  sampler.samples = { clip: createDemoClap() };
   const sampleFilter = instrument('filter', 400, 1000, { cutoff: 2800, resonance: 0.7 });
   const kit = instrument('drum-kit', 700, 1000, { kick: 'input' });
   const drums = instrument('drum-machine', 1120, 1000, { level: 0.5 });
@@ -384,7 +361,7 @@ function createNeonProject(): Project {
   const drums = instrument('drum-machine', -1220, -1120, { level: 0.54, decay: 0.65 });
   drums.drumPattern = drumPattern({ kick: [0, 4, 8, 12], snare: [4, 12] });
   const sampler = instrument('mic-sampler', -680, -1120, { level: 0.6 });
-  sampler.samples = { clip: popClap() };
+  sampler.samples = { clip: createDemoClap() };
   const kit = instrument('drum-kit', -300, -1120, {
     kick: 'tambourine',
     snare: 'shaker',

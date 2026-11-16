@@ -357,7 +357,20 @@ export default function App() {
         <ExamplePatchesDialog onOpen={openProject} onClose={() => setDialog(null)} />
       )}
       {dialog === 'module-help' && guideType && (
-        <ModuleHelpDialog initialType={guideType} onClose={() => setDialog(null)} />
+        <ModuleHelpDialog
+          initialType={guideType}
+          onClose={() => setDialog(null)}
+          onOpen={async (next, instructions) => {
+            await openProject(next);
+            setLibraryOpen(false);
+            notify(instructions);
+            requestAnimationFrame(() =>
+              document
+                .querySelector<HTMLDivElement>('.canvas-viewport')
+                ?.focus({ preventScroll: true }),
+            );
+          }}
+        />
       )}
       {dialog === 'settings' && (
         <SettingsDialog
