@@ -89,7 +89,8 @@ export function ExamplePatchesDialog({
         {error && <p role="alert">{error}</p>}
       </div>
       <p className="examples-footer">
-        <AudioLines size={16} /> Opens a fresh copy. Your current patch stays in My patches.
+        <AudioLines size={16} /> Temporary until you choose Save patch. Saved work stays in My
+        patches.
       </p>
     </Modal>
   );

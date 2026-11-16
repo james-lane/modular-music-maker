@@ -140,8 +140,8 @@ export function ModuleHelpDialog({
             {opening ? 'Opening…' : 'Load demo patch'}
           </button>
           <p className="guide-demo-note">
-            Opens a fresh patch with just this demo. Your current work stays in My patches. Audio
-            waits for Play or a live key/pad.
+            Opens a temporary demo. Choose Save patch to keep your edits. Saved work stays in My
+            patches. Audio waits for Play or a live key/pad.
           </p>
           {error && <p role="alert">{error}</p>}
         </div>

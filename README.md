@@ -27,8 +27,8 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 ## What works
 
 - A searchable module library with twenty-one working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, Envelope, Mod sequencer, Sample & Hold, XY controller, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
-- Nine contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
-- Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return. **Load demo patch** opens a fresh, ready-wired demonstration of the module currently shown, preserving your current work in My patches. Demos include any needed local sample and wait for Play or live keys/pads; browsing stays silent.
+- Nine contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens a temporary editable copy. Choose Save patch to keep it; your saved work stays in My patches.
+- Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return. **Load demo patch** opens a fresh, ready-wired demonstration of the module currently shown, preserving saved work in My patches. Demos include any needed local sample and wait for Play or live keys/pads; browsing stays silent.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers. Releasing over the toolbar or beyond the workspace keeps the move; press Escape during a drag to cancel it.
 - All patch sockets sit along the bottom of their module. Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, trigger, and kit are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
 - **More → Studio settings → Theme** offers **System** (the default), **Light**, and **Dark**. System follows your device setting as it changes; overrides are remembered in this browser across patches and reloads. The main UI and dotted workspace adapt while instruments retain their colours and materials.
@@ -43,7 +43,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 - Large-patch navigation moves instruments and cables together, while playback lights update independently. Small animated display and pattern regions use separate graphics layers during audio activity to reduce Safari’s full-rack compositing cost. The complete 38-module Neon chorus remains the performance reference; see [current performance work](docs/PROJECT_STATUS.md) for measured improvements and device checks.
 - App labels resist text selection and touch callouts, including double taps and long presses on iPad/iPhone. Patch names and search fields retain normal text editing, selection, and paste.
 - Undo and redo patch changes with the two arrow buttons beside workspace focus. **⌘/Ctrl Z** undoes; **⌘/Ctrl Shift Z** or **Ctrl Y** redoes. Drags and held adjustment keys undo in one step, including slow gestures. Unchanged controls leave history intact. History holds the latest 60 edits for the open patch; opening another patch or reloading starts fresh. Text fields retain normal text undo. Camera movement, live playing, recordings, and cable appearance stay outside patch history.
-- Automatic browser patch saving, manual Node file saving, a patch library with deletion, and validated JSON import/export.
+- Automatic browser saving for your own patches, temporary examples/demos until Save patch, optional Node file saving, a patch library with deletion, and validated JSON import/export.
 - Record live output, play back saved takes, and download **WAV**, **MP3**, or the **original recording**. Recording captures the studio output, **not the microphone**.
 - Install on an iPad/iPhone home screen, Android, or desktop and use the complete studio offline after its first download. **More → Use offline / install** shows readiness and installation steps.
 
@@ -72,7 +72,7 @@ See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, devi
 
 ## Choose a starting point
 
-Open **More → Example patches**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically.
+Open **More → Example patches**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically. Examples, module demos and the first-visit starter stay temporary, even after editing or recording. The Demo label marks them. Choose **Save patch** (or **⌘/Ctrl S**) to keep the current version and enable autosaving for later edits. Leaving or reloading a temporary demo discards its edits and restores your last saved patch. Export still makes a portable copy without adding the demo to My patches.
 
 | Patch            | Sound and approach                                                                                                        |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -94,11 +94,11 @@ Open **More → Example patches**, choose a patch, then press **Play**. Each car
 
 **Clockwork garden** is another large worked patch: two drum machines share a rhythm Mixer, three sequencers drive bass, lead, and answering bells, and one lead sequence fans out to two detuned oscillators. A second Mixer blends that pair; separate filters, LFOs, and eighth/dotted-eighth Delays shape the voices. One Merger gathers the melodies through Reverb, and another combines that bus with the dry rhythm. The four rows run top to bottom: rhythm, bass, layered lead, bells. Use Fit to see the whole patch, then zoom into a row. Try muting either lead Mixer fader to hear what each oscillator adds.
 
-Coastal static is free-running: its LFO Rate controls the wash rather than the composition tempo. The other patches use the transport clock. Choose the same example again for a fresh original; your edited copies remain available in **More → My patches**. Returning visits restore the active saved patch without reopening the chooser.
+Coastal static is free-running: its LFO Rate controls the wash rather than the composition tempo. The other patches use the transport clock. Choose the same example again for a fresh original; copies you explicitly saved remain available in **More → My patches**. Returning visits restore the active saved patch without reopening the chooser.
 
 ## Play drums and keys
 
-Use **More → Example patches → Pocket rhythm** for the connected performance example. Your current patch stays in My patches. The instruments and Drum kit are also available separately in the module library.
+Use **More → Example patches → Pocket rhythm** for the connected performance example. Your saved patch stays in My patches. The instruments and Drum kit are also available separately in the module library.
 
 - **Drum machine:** a 16-step, four-voice sequencer defaulting to kick, snare, clap, and closed hat. Connect a Drum kit to assign different sounds; the numbered voice labels follow your choices. Click switches to edit the rhythm; click a voice name to audition it. **Pattern on/off** mutes the sequencer without disabling live pad hits. Level, tone, and decay are configurable. Press Play to start the pattern at the composition tempo.
 - **Keyboard:** 25 chromatic piano keys with octave and velocity controls. Wire **PITCH / GATE → Oscillator PITCH**, then route the oscillator's audio to an output (directly or through effects/mixer). Tap/hold keys or slide across them with a finger, mouse, or pen. Each finger follows its own key; moving outside the keybed releases that finger's note and moving back plays again. Focus the keys and use **A W S E D F T G Y H U J K O L P ;**. Enter/Space on a focused key plays a short note. Oscillator voices are monophonic: the last held note wins and releasing it returns to the previous held note. Keyboard notes are chromatic, independently of the sequencer's scale.
@@ -183,6 +183,8 @@ The defaults are **Filter** (top left), **Echo** (top right), **Grit** (bottom l
 Focus the pad and use arrow keys to move; hold Shift for fine adjustments, or press Home to centre. The labelled X and Y sliders offer separate axis controls. Reading its **?** field guide is silent. The copper enclosure and recessed glass pad give it its own hardware identity.
 
 ## Saving and privacy
+
+Temporary demos never write the browser library or replace its active saved-patch pointer during autosave, patch switches, backgrounding or page close. Save patch makes the open demo a regular saved patch; imports and New empty patch also use normal autosaving. Existing saved demo copies are kept. Recording takes stay independent of this choice. An in-app update refresh asks you to save the temporary demo or open a saved patch first.
 
 New saves and exports use patch format **v2**, which supports signed positions on the open workspace. Existing v1 patches migrate automatically on loading without changing their IDs, sounds, samples, cables, or positions. Older app releases cannot open v2 exports; update the receiving app before importing them.
 

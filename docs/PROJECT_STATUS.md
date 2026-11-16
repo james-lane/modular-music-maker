@@ -2,6 +2,14 @@
 
 Last updated: **16 November 2026**.
 
+## Temporary examples and guide demos — issue #2 — 16 November 2026
+
+All nine examples, all 21 guide demos and the first-visit Sunday circuits starter remain temporary until explicit **Save patch** or **⌘/Ctrl S**, even after edits, Undo/Redo or recording. A visible **Demo** label identifies them on desktop and phone. My patches omits the unsaved demo; switching away, hiding/closing or reloading never adds it or changes the prior saved active pointer. Reload restores the previous owned patch, or the example chooser if no patch has been saved. Existing saved copies are kept.
+
+`ProjectPersistence` is a session-only gate used by every automatic save path. Successful explicit Save writes the latest demo and enables ordinary autosaving for subsequent edits; failed saves leave it temporary and retryable. New/imported/library patches retain normal persistence. The project format and exports contain no temporary flag; exporting a demo does not save it to My patches, while importing that export creates a normal independent saved copy. Recording storage and stop/capture ownership remain separate. An in-app update refresh requires explicitly saving the demo or opening an owned patch first, so update handling cannot silently preserve or discard it.
+
+Validation: strict types, all **140 tests**, production build, formatting and diff checks pass. New regressions exercise the real example/guide factories, saved active-pointer retention, explicit promotion, embedded samples, ordinary reload/autosave and failed Save/retry. Isolated production-browser QA loaded and edited all nine examples and 21 actual guide demos, checked the temporary starter, switch/pagehide/reload, preceding owned edits, My patches, Undo/Redo, silent browsing, recording completion on demo load, keyboard Save, sample retention, export/import and offline sampled/transport audio. Saved recordings survived temporary switches and reload. Desktop and 390px phone views showed the Demo label without overflow; no microphone requests or browser errors occurred.
+
 ## Shallow preview build repair and PR verification — 16 November 2026
 
 PR #18's Cloudflare check initially failed because its branch build used `npm run build` in a shallow clone, bypassing the existing CI history recovery. The branch trigger has been corrected to `npm run build:ci`. Its next run passed all validation and exposed a second configuration mismatch: `npx wrangler preview` needed the missing `previews` block. The Wrangler configuration now declares that block and enables public preview test links, with the production custom domain unchanged. Every ordinary npm build now also runs a `prebuild` recovery step using the same helper as CI; full checkouts remain offline-capable, source archives retain `+source`, the selected commit is unchanged, and failed recovery still prevents incorrect versioning. No version-number shortcut or manual bump was added.
