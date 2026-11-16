@@ -1,3 +1,4 @@
+import { socketPosition } from './socket-geometry';
 import type { PlaybackPosition } from '../audio/playback-position';
 import {
   Cable as CableIcon,
@@ -65,19 +66,6 @@ interface Props {
   onLibraryToggle: () => void;
   focused: boolean;
   onFocusToggle: () => void;
-}
-
-export function socketPosition(module: PatchModule, portId: string) {
-  const definition = MODULES[module.type];
-  const positioned = definition.ports.find((port) => port.id === portId)?.position;
-  if (positioned) return { x: module.x + positioned.x, y: module.y + positioned.y };
-  const ports = definition.ports.filter((port) => !port.position);
-  const index = ports.findIndex((port) => port.id === portId);
-  // Match the port footer's 12px inset on both sides (see .module-ports).
-  return {
-    x: module.x + 12 + ((definition.width - 24) * (index + 0.5)) / ports.length,
-    y: module.y + definition.height - 22,
-  };
 }
 
 export function Workspace({

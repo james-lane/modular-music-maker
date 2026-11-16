@@ -8,7 +8,7 @@ Patchwork is a modular music-making website using **TypeScript on Node.js**. Use
 
 The user explicitly wants a collection of different physical instruments. Modules may have different colours, materials, sizes, silhouettes, and control styles. Do not return to one uniform panel with a different accent stripe. Keep the skeuomorphic detail: convincing enclosure depth, material texture, screws, recessed sockets, legible printed labels, and tactile controls.
 
-Current examples include a cream/charcoal drum computer, walnut-sided dark keyboard, violet polymer pad controller, ochre oscillator, forest-green filter, blue echo box, plum reverb, graphite noise generator, a narrow brushed-metal mixer with faders, and a petrol-teal four-input Merger with an ivory level dial. Surface palettes and refinements live in `src/components/module-finishes.css`; shared mechanics remain in `src/styles.css`. Keep dimensions in the module registry and preserve socket geometry.
+Current examples include a cream/charcoal drum computer, walnut-sided dark keyboard, violet polymer pad controller, ochre oscillator, forest-green filter, blue echo box, plum reverb, graphite noise generator, a narrow brushed-metal mixer with faders, and a petrol-teal four-input Merger with an ivory level dial. Surface palettes and refinements live in `src/components/module-finishes.css`; shared mechanics remain in `src/styles.css`. Keep dimensions in the module registry and keep cable geometry aligned with the shared bottom socket row.
 
 ## Read before changing code
 
@@ -18,6 +18,8 @@ Current examples include a cream/charcoal drum computer, walnut-sided dark keybo
 4. `docs/PROJECT_STATUS.md` for current capabilities, verification, and future work.
 
 ## Engineering conventions
+
+- **All patch ports belong in the shared bottom footer on every module**, including MOD, pitch, trigger, kit and audio sockets. Never place sockets on a screen, among knobs, on the panel face/sides, or with per-module absolute-position/CSS overrides. Registry port order drives both footer layout and cable geometry. Keep existing port IDs for saved-patch compatibility; if more room is needed, adjust registry dimensions deliberately and check examples/saved-layout overlap. Run the catalog-wide port render/geometry tests and inspect actual socket/cable alignment in module demos after changes.
 
 - Keep strict TypeScript enabled. Avoid `any` and unexplained assertions.
 - Keep serialized patch data, UI interaction state, and live audio nodes separate.

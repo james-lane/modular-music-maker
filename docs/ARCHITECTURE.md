@@ -75,6 +75,7 @@ React controls / workspace
 | `src/components/PatchCable.tsx`           | Classic/braided cable rendering and endpoint-coloured plugs          |
 | `src/components/cable-geometry.ts`        | Cable curves and distance-based over/under braid geometry            |
 | `src/components/ModuleCard.tsx`           | Registry-driven panel and special instrument controls                |
+| `src/components/socket-geometry.ts`       | Shared bottom-row socket centres for cable endpoints                 |
 | `src/components/SequencerPanel.tsx`       | Eight notes, tempo-synced rate selector and per-module playhead      |
 | `src/components/SequencerStep.tsx`        | Tap-to-cycle notes, vertical note gestures and keyboard adjustment   |
 | `src/components/MixerPanel.tsx`           | Vertical channel faders using the existing mixer gain parameters     |
@@ -273,7 +274,7 @@ The visual direction is a collection of distinct physical instruments, as explic
 
 ## Modulation sources and receiver contracts
 
-The catalog now contains 21 types. Envelope (`envelope`), Mod sequencer (`mod-sequencer`), Sample & Hold (`random-mod`) and XY controller (`xy-controller`) produce native control nodes. New controls use the existing numeric parameter map and rate enum; validation checks all bounds and the clock rate. No existing parameter/default, patch version or sample encoding changed. New port definitions may include a registry-owned panel `position`; `ModulePorts` and `socketPosition` exclude these extra sockets from footer distribution. Original receiver footprints and footer positions stay fixed. Only the new modules’ dimensions are new.
+The catalog now contains 21 types. Envelope (`envelope`), Mod sequencer (`mod-sequencer`), Sample & Hold (`random-mod`) and XY controller (`xy-controller`) produce native control nodes. New controls use the existing numeric parameter map and rate enum; validation checks all bounds and the clock rate. No existing parameter/default, patch version or sample encoding changed. Every socket, including new modulation inputs, renders in the shared bottom footer. `PortDefinition` has no position override: `ModulePorts` renders the full registry port order, and `components/socket-geometry.ts` derives matching cable endpoints from the same evenly spaced row. Receiver footprints and saved port IDs stay unchanged; adding ports reflows the footer rather than placing sockets on the panel face.
 
 `audio/modulation.ts` retains the original LFO/Filter control scale: a full-depth new source emits ±1500 units (Filter Hz), with Envelope unipolar. `boundedModulation` normalizes and clamps at new receivers. Oscillator modulation adds ±1200 cents independently of Fine tune and event-driven base frequency. Mic sampler SPEED MOD uses the same bounded detune bus. LEVEL MOD is a clamped 0–1 multiplier of the existing Level, with an unpatched unity bias and a patched zero bias; negative control values mute. No control signal is connected directly to the master audio bus.
 

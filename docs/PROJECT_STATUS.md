@@ -2,6 +2,14 @@
 
 Last updated: **16 November 2026**.
 
+## All patch sockets in bottom footers — 16 November 2026
+
+Moved **Oscillator PITCH MOD** and **Mic sampler SPEED MOD / LEVEL MOD** from the panel face into their modules’ bottom socket rows. Audited all **21 module types**; these were the three exceptions. Oscillator now groups PITCH / PITCH MOD / AUDIO OUT; Mic sampler groups TRIGGER IN / SPEED MOD / LEVEL MOD / AUDIO OUT. Restored the Oscillator’s full-width waveform display. Module dimensions, saved port IDs, patch data and audio behaviour remain unchanged; existing cables reflow to their current bottom sockets.
+
+Removed `PortDefinition.position`, the separate panel-socket render branch and its absolute-position CSS. `ModulePorts` now renders every registry port in one bottom footer, and `components/socket-geometry.ts` supplies matching cable endpoints from the same registry order. AGENTS.md, Adding modules, Architecture and README explicitly require bottom-only ports for all future module types and socket additions, without panel-face/side/CSS-position exceptions.
+
+Validation: all **131 tests**, strict types, production build, formatting and diff checks pass. New exhaustive regressions render each catalog’s port bank and reject sockets outside its footer; geometry checks require every endpoint on the ordered bottom row, including the three corrected MOD inputs and negative world coordinates. Isolated production-browser QA exercised all **21 real guide demos**, performed **214 rendered socket/layout checks**, verified footer containment, label spacing, control clearance and cable-plug alignment, and measured nonzero audio from every demo. Zoom, dragging/Undo, saved patch restoration, and offline reload retained aligned bottom sockets with no microphone requests or browser errors. This change is local and has not been deployed.
+
 ## Delete saved patches — 16 November 2026
 
 **More → My patches** now has a separate **Delete** action on every saved patch, including the open one. A named inline confirmation offers Cancel/Delete patch, with keyboard focus on Cancel and restoration afterwards; Open and Delete are sibling controls. The current patch is marked **Open now**. Deleting another patch leaves the current audio/capture/recording running. Confirming deletion of the active patch stops audio/capture/recording and replaces it with a fresh empty patch/history. Saved recordings and exports remain independent, and example/demo templates still open fresh copies.

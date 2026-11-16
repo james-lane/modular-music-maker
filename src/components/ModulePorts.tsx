@@ -1,7 +1,7 @@
 import type { Endpoint, PatchModule, PortDefinition, Project } from '../domain/types';
 import { MODULES } from '../domain/modules';
 
-/** Positioned sockets are an additive bank: existing footer geometry stays intact. */
+/** Every socket belongs to the shared bottom footer; registry order also drives cables. */
 export function ModulePorts({
   module,
   project,
@@ -24,10 +24,7 @@ export function ModulePorts({
     return (
       <button
         key={port.id}
-        className={`port-button signal-${port.signal} ${port.position ? 'panel-port' : ''} ${connected ? 'connected' : ''} ${active ? 'pending' : ''}`}
-        style={
-          port.position ? { left: port.position.x - 30, top: port.position.y - 27.5 } : undefined
-        }
+        className={`port-button signal-${port.signal} ${connected ? 'connected' : ''} ${active ? 'pending' : ''}`}
         data-port={`${module.id}:${port.id}`}
         aria-label={`${definition.name} ${port.label} ${port.direction} socket${connected ? ', connected' : ''}`}
         title={`${port.label} · ${port.signal} ${port.direction}${connected ? ' · Click input to unplug' : ''}`}
@@ -44,12 +41,5 @@ export function ModulePorts({
       </button>
     );
   };
-  return (
-    <>
-      <footer className="module-ports">
-        {definition.ports.filter((port) => !port.position).map(button)}
-      </footer>
-      {definition.ports.filter((port) => port.position).map(button)}
-    </>
-  );
+  return <footer className="module-ports">{definition.ports.map(button)}</footer>;
 }

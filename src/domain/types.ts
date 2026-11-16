@@ -30,8 +30,6 @@ export interface PortDefinition {
   label: string;
   direction: 'input' | 'output';
   signal: SignalType;
-  /** Extra panel sockets keep existing footer socket coordinates intact. */
-  position?: { x: number; y: number };
 }
 
 export interface ControlDefinition {

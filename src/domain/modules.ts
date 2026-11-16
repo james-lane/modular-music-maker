@@ -55,21 +55,19 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     width: 300,
     height: 480,
     ports: [
+      { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
       {
         id: 'rateMod',
         label: 'SPEED MOD',
         direction: 'input',
         signal: 'control',
-        position: { x: 37, y: 389 },
       },
       {
         id: 'levelMod',
         label: 'LEVEL MOD',
         direction: 'input',
         signal: 'control',
-        position: { x: 263, y: 389 },
       },
-      { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
     ],
     controls: [
@@ -182,14 +180,13 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     width: 244,
     height: 326,
     ports: [
+      { id: 'pitch', label: 'PITCH', direction: 'input', signal: 'pitch' },
       {
         id: 'pitchMod',
         label: 'PITCH MOD',
         direction: 'input',
         signal: 'control',
-        position: { x: 204, y: 101 },
       },
-      { id: 'pitch', label: 'PITCH', direction: 'input', signal: 'pitch' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
     ],
     controls: [

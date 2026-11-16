@@ -2481,14 +2481,6 @@ body,
   }
 }
 
-/* Additive panel sockets do not redistribute legacy footer sockets. */
-.port-button.panel-port {
-  position: absolute;
-  width: 60px;
-  height: 48px;
-  z-index: 1;
-}
-
 .port-guide {
   margin: 28px 0;
   padding: 20px;
