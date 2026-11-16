@@ -6,6 +6,7 @@ import path from 'node:path';
 import test, { type TestContext } from 'node:test';
 import { build, createServer } from 'vite';
 import { appVersion, readAppVersion } from '../scripts/app-version';
+import { ensureFullGitHistory } from '../scripts/git-history';
 
 function git(root: string, ...args: string[]): string {
   return execFileSync(
@@ -115,6 +116,42 @@ test('source archives are explicit and shallow histories cannot silently report 
   assert.throws(() => readAppVersion(shallow), /full Git history/);
   await writeFile(path.join(archive, 'package.json'), '{"version":"invalid"}');
   assert.throws(() => readAppVersion(archive), /major.minor.patch/);
+});
+
+test('build preparation recovers shallow preview history without changing the requested detached commit', async (t) => {
+  const root = await fixture(t);
+  git(root, 'commit', '--allow-empty', '-m', 'Second main commit');
+  git(root, 'checkout', '-b', 'codex/preview');
+  git(root, 'commit', '--allow-empty', '-m', 'Preview change');
+  const expected = readAppVersion(root);
+  const parent = await fixture(t, false);
+  const shallow = path.join(parent, 'preview');
+  git(parent, 'clone', '--branch=codex/preview', '--depth=1', `file://${root}`, shallow);
+  git(shallow, 'checkout', '--detach');
+  assert.throws(() => readAppVersion(shallow), /full Git history/);
+
+  ensureFullGitHistory(shallow);
+  assert.equal(git(shallow, 'rev-parse', '--is-shallow-repository'), 'false');
+  assert.deepEqual(readAppVersion(shallow), expected);
+  assert.equal(git(shallow, 'rev-parse', '--abbrev-ref', 'HEAD'), 'HEAD');
+
+  // Once complete, local/offline builds must not fetch or need a reachable origin.
+  git(shallow, 'remote', 'set-url', 'origin', path.join(parent, 'missing-origin'));
+  ensureFullGitHistory(shallow);
+  assert.deepEqual(readAppVersion(shallow), expected);
+  ensureFullGitHistory(parent);
+  assert.equal(readAppVersion(parent).version, '0.1.0+source');
+});
+
+test('failed history recovery cannot turn a shallow checkout into an incorrectly numbered release', async (t) => {
+  const root = await fixture(t);
+  git(root, 'commit', '--allow-empty', '-m', 'Second');
+  const parent = await fixture(t, false);
+  const shallow = path.join(parent, 'shallow');
+  git(parent, 'clone', '--depth=1', `file://${root}`, shallow);
+  git(shallow, 'remote', 'remove', 'origin');
+  assert.throws(() => ensureFullGitHistory(shallow));
+  assert.throws(() => readAppVersion(shallow), /full Git history/);
 });
 
 test('linked worktrees resolve their own commit and development refreshes after commits', async (t) => {

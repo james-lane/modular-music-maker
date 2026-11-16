@@ -2,6 +2,12 @@
 
 Last updated: **16 November 2026**.
 
+## Shallow preview build repair and PR verification — 16 November 2026
+
+PR #18's Cloudflare check initially failed because its branch build used `npm run build` in a shallow clone, bypassing the existing CI history recovery. The branch trigger has been corrected to `npm run build:ci`. Every ordinary npm build now also runs a `prebuild` recovery step using the same helper as CI; full checkouts remain offline-capable, source archives retain `+source`, the selected commit is unchanged, and failed recovery still prevents incorrect versioning. No version-number shortcut or manual bump was added.
+
+Two regression tests cover detached shallow preview clones, exact revision/count recovery, full-history builds with an unreachable origin, source archives and failed recovery. The complete **137-test** suite, strict types and production build pass. Build changes additionally require a clean shallow-clone reproduction of the actual provider command. AGENTS.md and deployment documentation now require successful remote checks on the latest pushed commit before declaring a PR ready or starting the next issue.
+
 ## Neon chorus Safari playback layers — issue #1 — 16 November 2026
 
 Playback now gives the small waveform/meter, modulation/response screens and drum/note-pattern regions their own graphics layers while audio is active. Static enclosures and cables retain the shared navigation surface and their full finishes. Stop removes the extra promotions. The full 38-module / 41-cable example, audio graph, clock and saved format are unchanged.
