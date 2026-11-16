@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: **15 November 2026**.
+Last updated: **16 November 2026**.
 
 ## Loadable module-guide demos and port glossary — 16 November 2026
 
