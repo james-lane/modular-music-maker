@@ -3,7 +3,7 @@ import { CONFIG } from '../config';
 import { PatchHistory, type ProjectEdit } from '../domain/history';
 import { SAMPLER_TRIM } from '../domain/modules';
 import { createProject } from '../domain/project';
-import { loadActiveProject, saveLocally } from '../domain/storage';
+import { deleteLocally, loadActiveProject, saveLocally } from '../domain/storage';
 import type { DrumSample, Project } from '../domain/types';
 import { parseProject } from '../domain/validation';
 
@@ -125,10 +125,29 @@ export function useStudio() {
     [history],
   );
 
+  const deleteProject = useCallback(
+    (id: string) => {
+      const deletingOpenPatch = current.current.id === id;
+      const next = deletingOpenPatch ? createProject(true) : undefined;
+      deleteLocally(id, next);
+      if (next) {
+        // Do not use openProject: its preservation save would resurrect the deleted patch.
+        history.open(next);
+        current.current = next;
+        setProject(next);
+        setHistoryNavigation((value) => value + 1);
+        setSaveStatus('saved');
+      }
+    },
+    [history],
+  );
+
   useEffect(() => {
     setSaveStatus('saving');
     const timer = setTimeout(() => {
       try {
+        // A deleted patch's old debounce may already be queued when replacement wins.
+        if (current.current.id !== project.id) return;
         saveLocally(project);
         setSaveStatus('saved');
       } catch {
@@ -172,6 +191,7 @@ export function useStudio() {
     undo,
     redo,
     openProject,
+    deleteProject,
     saveStatus,
     flush,
     beginInteraction,

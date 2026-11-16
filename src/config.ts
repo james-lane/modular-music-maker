@@ -12,6 +12,7 @@ export const CONFIG = {
   },
   storageKey: 'patchwork.projects.v1',
   activeProjectKey: 'patchwork.active.v1',
+  deletedProjectsKey: 'patchwork.deleted-projects.v1',
   appearance: {
     themeKey: 'patchwork.theme.v1',
     defaultTheme: 'system',

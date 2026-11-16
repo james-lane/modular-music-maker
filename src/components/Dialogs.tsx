@@ -1,19 +1,8 @@
-import {
-  ArrowDownToLine,
-  ArrowUpRight,
-  AudioLines,
-  Check,
-  Clock3,
-  FolderOpen,
-  Headphones,
-  Plus,
-  Upload,
-  X,
-} from 'lucide-react';
+import { ArrowDownToLine, AudioLines, Check, Clock3, Headphones, X } from 'lucide-react';
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { CONFIG, ROOT_NOTES } from '../config';
 import { deleteRecording, loadRecordings, type Recording } from '../audio/recordings';
-import { downloadFile, fileSlug, listAllProjects } from '../domain/storage';
+import { downloadFile, fileSlug } from '../domain/storage';
 import type { Project } from '../domain/types';
 import { isCableStyle, isTheme, type CableStyle, type Theme } from '../domain/preferences';
 import { PortGuide } from './PortGuide';
@@ -210,84 +199,6 @@ export function Modal({
       </div>
       {children}
     </dialog>
-  );
-}
-
-export function PatchLibraryDialog({
-  onClose,
-  onOpen,
-  onNew,
-  onImport,
-  notify,
-}: {
-  onClose: () => void;
-  onOpen: (project: Project) => void;
-  onNew: () => void;
-  onImport: () => void;
-  notify: (message: string) => void;
-}) {
-  const [projects, setProjects] = useState<Project[] | null>(null);
-  useEffect(() => {
-    let active = true;
-    void listAllProjects()
-      .then((result) => {
-        if (active) setProjects(result);
-      })
-      .catch(() => {
-        if (active) setProjects([]);
-        notify('The patch library could not be loaded.');
-      });
-    return () => {
-      active = false;
-    };
-  }, [notify]);
-  return (
-    <Modal title="Your little collection." eyebrow="MY PATCHES" onClose={onClose} wide>
-      <p className="dialog-intro">
-        Good ideas deserve another listen. Your patches are saved on this device.
-      </p>
-      <div className="dialog-toolbar">
-        <button className="button primary" onClick={onNew}>
-          <Plus size={16} /> New patch
-        </button>
-        <button className="button" onClick={onImport}>
-          <Upload size={16} /> Import patch
-        </button>
-      </div>
-      <div className="saved-patches">
-        {projects === null ? (
-          <p className="dialog-empty">Opening your patch collection…</p>
-        ) : !projects.length ? (
-          <p className="dialog-empty">Your first patch is waiting to happen.</p>
-        ) : (
-          projects.map((project) => (
-            <button className="saved-patch" key={project.id} onClick={() => onOpen(project)}>
-              <span className="saved-patch-art">
-                <AudioLines size={27} />
-              </span>
-              <span>
-                <strong>{project.name}</strong>
-                <small>
-                  {project.modules.length} modules · {project.tempo} BPM · {project.rootNote}{' '}
-                  {project.scale}
-                </small>
-                <em>
-                  {new Date(project.updatedAt).toLocaleDateString('en-GB', {
-                    day: 'numeric',
-                    month: 'short',
-                    year: 'numeric',
-                  })}
-                </em>
-              </span>
-              <ArrowUpRight size={18} />
-            </button>
-          ))
-        )}
-      </div>
-      <p className="dialog-footnote">
-        <FolderOpen size={14} /> Export a patch to keep a portable backup or share it with a friend.
-      </p>
-    </Modal>
   );
 }
 

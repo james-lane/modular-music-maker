@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, unlink, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parseProject } from '../src/domain/validation';
 import type { Project } from '../src/domain/types';
@@ -23,6 +23,14 @@ export class ProjectRepository {
     await writeFile(temporary, JSON.stringify(project, null, 2), { mode: 0o600 });
     await rename(temporary, filename);
     return project;
+  }
+
+  async delete(id: string): Promise<void> {
+    try {
+      await unlink(this.filename(id));
+    } catch (error) {
+      if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+    }
   }
 
   async list(): Promise<Project[]> {

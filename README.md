@@ -43,7 +43,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 - Large-patch navigation moves instruments and cables together, while playback lights update independently. The complete 38-module Neon chorus remains the performance reference; see [current performance work](docs/PROJECT_STATUS.md) for measured improvements and device checks.
 - App labels resist text selection and touch callouts, including double taps and long presses on iPad/iPhone. Patch names and search fields retain normal text editing, selection, and paste.
 - Undo and redo patch changes with the two arrow buttons beside workspace focus. **⌘/Ctrl Z** undoes; **⌘/Ctrl Shift Z** or **Ctrl Y** redoes. Drags and held adjustment keys undo in one step, including slow gestures. Unchanged controls leave history intact. History holds the latest 60 edits for the open patch; opening another patch or reloading starts fresh. Text fields retain normal text undo. Camera movement, live playing, recordings, and cable appearance stay outside patch history.
-- Automatic browser patch saving, manual Node file saving, a patch library, and validated JSON import/export.
+- Automatic browser patch saving, manual Node file saving, a patch library with deletion, and validated JSON import/export.
 - Record live output, play back saved takes, and download **WAV**, **MP3**, or the **original recording**. Recording captures the studio output, **not the microphone**.
 - Install on an iPad/iPhone home screen, Android, or desktop and use the complete studio offline after its first download. **More → Use offline / install** shows readiness and installation steps.
 
@@ -112,6 +112,14 @@ Use **More → Example patches → Pocket rhythm** for the connected performance
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 
 Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns repeat every eight steps at their selected rate. Each sequencer can run at a different rate. Live rate changes join the shared transport grid without restarting; a short already-queued segment may retain the previous timing. Older patches open at 1/8, preserving their sound. Both pattern types repeat independently of the time-signature display. No physical MIDI device support is included yet.
+
+## Delete saved patches
+
+Open **More → My patches**, choose **Delete** beside a patch, then confirm **Delete patch**. **Cancel** keeps it. The full patch name appears in the confirmation, and the open patch is labelled **Open now**.
+
+Deleting the open patch stops playback, microphone capture and recording, then opens a fresh empty patch. A recording in progress finishes saving; saved takes and downloaded exports are kept. Deleting another patch leaves the current performance running. Patch deletion clears that patch’s undo history when it is open; export a backup first if you want to keep a copy.
+
+Deletion works offline and survives reloads. Deleted IDs cannot be restored by a pending autosave or a stale server list. When using the optional local Node server, its matching file is also removed when the verified server is reachable; offline cleanup is retried on a later library visit. Public installs make no server requests. Example and module-demo templates remain available and open fresh copies.
 
 ## Understand the ports
 

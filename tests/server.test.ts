@@ -26,6 +26,11 @@ test('repository writes real patch files atomically and tolerates a corrupt neig
     await writeFile(path.join(directory, 'corrupt.json'), 'not json');
     assert.deepEqual(await repository.list(), [project]);
     await assert.rejects(() => repository.save({ ...project, id: '../../outside' }));
+    await assert.rejects(() => repository.delete('../../outside'));
+    await repository.delete(project.id);
+    await repository.delete(project.id);
+    assert.deepEqual(await repository.list(), []);
+    await assert.rejects(readFile(path.join(directory, `${project.id}.json`)), { code: 'ENOENT' });
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -238,6 +243,28 @@ test('HTTP API saves/lists patches and rejects mismatched IDs and invalid payloa
     assert.deepEqual(await (await fetch(`${base}/api/projects`)).json(), [withSamples]);
     kit.samples.kick.pcm = 'invalid';
     assert.equal((await put(withSamples)).status, 400);
+    assert.equal(
+      (await fetch(`${base}/api/projects/not-a-uuid`, { method: 'DELETE' })).status,
+      400,
+    );
+    assert.equal(
+      (
+        await fetch(`${base}/api/projects/${project.id}`, {
+          method: 'DELETE',
+          headers: { Origin: 'https://untrusted.example' },
+        })
+      ).status,
+      403,
+    );
+    assert.equal(
+      (await fetch(`${base}/api/projects/${project.id}`, { method: 'DELETE' })).status,
+      204,
+    );
+    assert.equal(
+      (await fetch(`${base}/api/projects/${project.id}`, { method: 'DELETE' })).status,
+      204,
+    );
+    assert.deepEqual(await (await fetch(`${base}/api/projects`)).json(), []);
   } finally {
     await new Promise<void>((resolve, reject) =>
       server.close((error) => (error ? reject(error) : resolve())),

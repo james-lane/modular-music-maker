@@ -1,7 +1,7 @@
 import { CONFIG } from '../src/config';
 import express from 'express';
 import path from 'node:path';
-import { ZodError } from 'zod';
+import { z, ZodError } from 'zod';
 import { ProjectRepository } from './repository';
 import { localAccess } from './local-access';
 
@@ -29,6 +29,11 @@ export function createApp(dataDirectory = path.resolve(process.env.PATCHWORK_DAT
     }
     response.json(await repository.save(request.body));
   });
+  app.delete('/api/projects/:id', async (request, response) => {
+    const id = z.uuid().parse(request.params.id);
+    await repository.delete(id);
+    response.status(204).end();
+  });
   app.use('/api', (_request, response) =>
     response.status(404).json({ error: 'Unknown API endpoint.' }),
   );
@@ -55,7 +60,7 @@ export function createApp(dataDirectory = path.resolve(process.env.PATCHWORK_DAT
       }
       console.error('Patchwork server error:', error);
       response.status(500).json({
-        error: 'The server could not save this patch. Your browser copy is still available.',
+        error: 'The local server could not complete this patch request.',
       });
     },
   );

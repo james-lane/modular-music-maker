@@ -1,14 +1,9 @@
+import { PatchLibraryDialog } from './components/PatchLibraryDialog';
 import { Cable, Check, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { loadRecordings } from './audio/recordings';
 import { AppVersion } from './components/AppVersion';
-import {
-  ExportDialog,
-  HelpDialog,
-  PatchLibraryDialog,
-  RecordingsDialog,
-  SettingsDialog,
-} from './components/Dialogs';
+import { ExportDialog, HelpDialog, RecordingsDialog, SettingsDialog } from './components/Dialogs';
 import { ModuleLibrary } from './components/ModuleLibrary';
 import type { ModuleLibraryDrag } from './hooks/useModuleLibraryDrag';
 import { ModuleHelpDialog } from './components/ModuleHelpDialog';
@@ -31,7 +26,7 @@ import {
 } from './domain/preferences';
 import { createModule, createProject } from './domain/project';
 import { findOpenPosition, type Point } from './domain/workspace';
-import { saveLocally, saveToServer } from './domain/storage';
+import { saveLocally, saveToServer, syncDeletedProjects } from './domain/storage';
 import type { ModuleType, Project } from './domain/types';
 import { parseProject } from './domain/validation';
 import { useAudio } from './hooks/useAudio';
@@ -399,6 +394,12 @@ export default function App() {
       )}
       {dialog === 'patches' && (
         <PatchLibraryDialog
+          activeProject={project}
+          onDelete={async (id) => {
+            if (id === project.id) await audio.stop();
+            studio.deleteProject(id);
+            void syncDeletedProjects();
+          }}
           onClose={() => setDialog(null)}
           onOpen={(next) => void openProject(next)}
           onNew={newProject}
