@@ -254,3 +254,78 @@ test('empty linked samplers stay silent and imported samples also keep full sour
   assert.deepEqual(nodes.find((node) => node.started)!.stops, [4]);
   runtime.dispose();
 });
+
+test('processed sampler hits use private effect racks and preserve overlapping sources and rack ownership', async () => {
+  const { KitEffects } = await import('../src/audio/kit-effects');
+  const { kitSamplerSources } = await import('../src/domain/instruments');
+  const { createProject } = await import('../src/domain/project');
+  const { context, nodes } = audioSpy();
+  const sampler = createModule('mic-sampler', 0, 0);
+  sampler.samples = { clip: { name: 'Tone', pcm: encodeSamplePcm(new Float32Array(24000)) } };
+  const filter = createModule('filter', 350, 0);
+  const kit = createModule('drum-kit', 700, 0);
+  kit.parameters.kick = 'input';
+  const machine = createModule('drum-machine', 1000, 0);
+  const second = createModule('drum-machine', 1000, 500);
+  const project = createProject(true);
+  project.modules = [sampler, filter, kit, machine, second];
+  project.cables = [
+    {
+      id: crypto.randomUUID(),
+      from: { moduleId: sampler.id, portId: 'out' },
+      to: { moduleId: filter.id, portId: 'in' },
+    },
+    {
+      id: crypto.randomUUID(),
+      from: { moduleId: filter.id, portId: 'out' },
+      to: { moduleId: kit.id, portId: 'kick' },
+    },
+    ...[machine, second].map((m) => ({
+      id: crypto.randomUUID(),
+      from: { moduleId: kit.id, portId: 'kit' },
+      to: { moduleId: m.id, portId: 'kit' },
+    })),
+  ];
+  const firstRuntime = createDrumRuntime(context);
+  const secondRuntime = createDrumRuntime(context);
+  const previousNode = Object.getOwnPropertyDescriptor(globalThis, 'AudioNode');
+  Object.defineProperty(globalThis, 'AudioNode', { value: Node, configurable: true });
+  try {
+    const racks = new KitEffects(
+      context,
+      project,
+      new Map([
+        [machine.id, firstRuntime],
+        [second.id, secondRuntime],
+      ]),
+    );
+    const firstInput = racks.inputs.get(machine.id)!.kick as unknown as Node;
+    const secondInput = racks.inputs.get(second.id)!.kick as unknown as Node;
+    assert.notEqual(firstInput, secondInput);
+    firstRuntime.configureKit!(kit, kitSamplerSources(project, kit), racks.inputs.get(machine.id));
+    firstRuntime.trigger!('kick', 1, 0.1);
+    firstRuntime.trigger!('kick', 1, 0.2);
+    const players = nodes.filter((n) => n.started);
+    assert.equal(players.length, 2);
+    for (const player of players) {
+      const gain = [...player.connections][0];
+      assert.deepEqual([...gain.connections], [firstInput]);
+      assert.equal(player.stops[0], player.startTime + 1);
+      assert.equal(player.stops.length, 1);
+    }
+    filter.parameters.cutoff = 500;
+    racks.update(project);
+    assert.equal(firstInput.frequency.value, 500);
+    assert.equal(secondInput.frequency.value, 500);
+    // Finishing one source leaves the shared effect tail connected for later hits.
+    players[0].onended?.();
+    assert.ok(firstInput.connections.has(firstRuntime.outputs.out as unknown as Node));
+    firstRuntime.dispose();
+    secondRuntime.dispose();
+    racks.dispose();
+    assert.ok(nodes.every((n) => n.connections.size === 0));
+  } finally {
+    if (previousNode) Object.defineProperty(globalThis, 'AudioNode', previousNode);
+    else Reflect.deleteProperty(globalThis, 'AudioNode');
+  }
+});

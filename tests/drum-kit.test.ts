@@ -162,3 +162,39 @@ test('only direct sampler cables supply kit clips, with combined trim/speed/Tone
   project.cables = project.cables.filter((cable) => cable.from.moduleId !== sampler.id);
   assert.deepEqual(kitSamplerSources(project, kit), {});
 });
+
+test('sampler resolution crosses serial effects, retains timing and saved wiring, and excludes mixed sources', () => {
+  const { project, drums, kit } = kitPatch();
+  const sampler = createModule('mic-sampler', 0, 0);
+  const filter = createModule('filter', 0, 500);
+  const delay = createModule('delay', 350, 500);
+  const mixer = createModule('mixer', 700, 500);
+  sampler.samples = { clip: { name: 'Long', pcm: encodeSamplePcm(new Float32Array(96000)) } };
+  sampler.parameters.rate = 0.5;
+  drums.parameters.tone = -12;
+  kit.parameters.kick = 'input';
+  project.modules.push(sampler, filter, delay, mixer);
+  const wire = (from: typeof sampler, to: typeof sampler, portId: string) => ({
+    id: crypto.randomUUID(),
+    from: { moduleId: from.id, portId: 'out' },
+    to: { moduleId: to.id, portId },
+  });
+  project.cables.push(
+    wire(sampler, filter, 'in'),
+    wire(filter, delay, 'in'),
+    wire(delay, kit, 'kick'),
+  );
+  assert.equal(kitSamplerSources(project, kit).kick, sampler);
+  assert.equal(drumLiveTailMs(project), CONFIG.audio.liveTailMs + 16000);
+  const saved = parseProject(JSON.parse(JSON.stringify(project)));
+  assert.equal(
+    kitSamplerSources(
+      saved,
+      saved.modules.find((m) => m.id === kit.id),
+    ).kick?.id,
+    sampler.id,
+  );
+  project.cables = project.cables.filter((c) => c.to.moduleId !== kit.id || c.to.portId !== 'kick');
+  project.cables.push(wire(delay, mixer, 'a'), wire(mixer, kit, 'kick'));
+  assert.equal(kitSamplerSources(project, kit).kick, undefined);
+});

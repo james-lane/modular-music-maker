@@ -2,6 +2,12 @@
 
 Last updated: **15 November 2026**.
 
+## Mic sampler through effects into Drum kit — 16 November 2026
+
+Fixed silence when a saved Mic sampler snippet reaches a Drum kit through Filter, Delay, Reverb, or XY Effects. Serial chains now resolve the saved clip and play independent overlapping hits through a persistent effect rack per drum machine/lane. Sampler trim/Speed/Level, drum Tone/Decay/Level, effect controls, and external modulation are preserved. Finishing a sample retains the effect tail; graph disposal removes the private rack and its modulation connections. Mixer/Merger/Switch routes continue to gate live audio. No schema, socket, or microphone-permission changes.
+
+Validation: strict types, all **113 automated tests**, production build, formatting and diff checks pass. Regressions cover multi-effect clip resolution, saved wiring, combined idle duration, exclusion of mixed sources, independent machine racks, complete overlapping source lengths, live effect updates and disposal. Isolated production-browser checks passed Sampler → Filter → Drum kit → Drum machine → Output and a four-effect Filter → Delay → Reverb → XY Effects chain: nonzero live signal without sampler audition, eight complete overlapping four-second hits, Decay tail shaping, slowed/tuned eight-second hits surviving later trim edits, export/import, offline reload, sampler removal/Undo, and zero microphone requests or browser errors. These changes are local and have not been deployed; physical iPad/Safari verification remains outstanding.
+
 ## Automatic Cloudflare deployment — prepared, connection pending
 
 Prepared Cloudflare Workers Builds for the existing `patchwork-studio` Worker and `james-lane/modular-music-maker` repository. The intended production trigger is every push to `main`, including documentation-only commits; other-branch builds/Previews stay disabled. `npm run build:ci` restores shallow Git history, requires a clean checkout, and runs formatting plus strict types, all tests and the production build before Cloudflare can deploy. `.node-version` selects Node 22. The deploy command is `npx wrangler deploy`; `npm run deploy` is retained for manual recovery only. App identity, static-only hosting, local Node API isolation and session-safe offline updates are unchanged.

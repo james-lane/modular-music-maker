@@ -40,7 +40,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       level: 'Sets the volume of the whole kit.',
       tone: 'Tunes the drum sounds up or down in semitones.',
       decay:
-        'For built-in drums and ordinary live inputs, multiplies the envelope length. For imported samples and directly connected Mic sampler clips, shapes the tail fade without shortening playback: 1× or higher preserves the natural tail; lower values fade earlier. Each sampled hit overlaps independently.',
+        'For built-in drums and ordinary live inputs, multiplies the envelope length. For imported samples and Mic sampler clips connected directly or through serial effects, shapes the tail fade without shortening playback: 1× or higher preserves the natural tail; lower values fade earlier. Each sampled hit overlaps independently.',
     },
     extraControls: [
       {
@@ -89,7 +89,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
           'Play snippet restarts a direct dry preview of the selected part each time, using trim, Speed, and Level. It works while the studio is stopped or playing, without cables and even with Output muted. It bypasses patch effects and master volume and is excluded from studio recordings. Pad hits use connected cables. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
       },
     ],
-    tip: 'Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence this recording, connect AUDIO OUT directly to a Drum kit IN socket, select its Audio input voice, and link KIT OUT to Drum machine KIT IN. Each drum hit plays the full trimmed clip independently, with overlaps; no manual sampler playback is needed. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',
+    tip: 'Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence this recording, connect AUDIO OUT to a Drum kit IN socket, optionally through Filter, Delay, Reverb, or XY Effects, select its Audio input voice, and link KIT OUT to Drum machine KIT IN. Each drum hit plays the full trimmed clip independently, with overlaps; no manual sampler playback is needed. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',
     example: {
       title: 'Echo a found sound',
       description:
@@ -107,11 +107,11 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Connect KIT OUT to Drum machine KIT IN, then Drum machine AUDIO OUT to Output AUDIO IN.',
       'Choose a sound for each numbered voice. The drum machine updates its lane labels while keeping your steps.',
-      'For Imported sample, use Load audio. For Audio input, connect a source to the matching numbered input. A directly connected Mic sampler is retriggered from its saved recording on each hit; do not press Play snippet. Other sources use their current live audio. Press Play or click a voice button to audition through the drum machine.',
+      'For Imported sample, use Load audio. For Audio input, connect a source to the matching numbered input. A Mic sampler connected directly or through serial effects is retriggered from its saved recording on each hit; do not press Play snippet. Other sources use their current live audio. Press Play or click a voice button to audition through the drum machine.',
     ],
     controls: {
       length:
-        'Sets the envelope length for ordinary live audio inputs such as Noise. Drum machine Decay multiplies this length. A directly connected Mic sampler supplies its saved clip instead: each hit plays the full selected section independently, using sampler Speed/Level plus drum Tone/Level. Input decay does not gate saved clips; drum Decay fades their tails.',
+        'Sets the envelope length for ordinary live audio inputs such as Noise. Drum machine Decay multiplies this length. A Mic sampler connected directly or through serial effects supplies its saved clip instead: each hit plays the full selected section independently, using sampler Speed/Level plus drum Tone/Level. Input decay does not gate saved clips; drum Decay fades their tails.',
     },
     extraControls: [
       {
@@ -134,7 +134,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     example: {
       title: 'Build a hybrid kit',
       description:
-        'Connect the kit and choose Audio input 4 for the fourth voice. Noise becomes a short burst on each hat step; the other voices keep their built-in sounds. Try a sample on voice 2 next. For a recorded snippet, connect a Mic sampler directly instead of Noise; its full trimmed clip will retrigger and overlap on every hit.',
+        'Connect the kit and choose Audio input 4 for the fourth voice. Noise becomes a short burst on each hat step; the other voices keep their built-in sounds. Try a sample on voice 2 next. For a recorded snippet, connect a Mic sampler instead of Noise, optionally through serial effects; its full trimmed clip will retrigger and overlap on every hit.',
       connections: [
         wire('noise', 'out', 'drum-kit', 'closed-hat'),
         wire('drum-kit', 'kit', 'drum-machine', 'kit'),

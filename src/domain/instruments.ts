@@ -1,4 +1,5 @@
 import { CONFIG } from '../config';
+import { MODULES } from './modules';
 import { sampleRegion } from './samples';
 import type { PatchModule, Project } from './types';
 
@@ -38,25 +39,50 @@ export function connectedDrumKit(project: Project, drumId: string): PatchModule 
 
 export type KitSamplerSources = Partial<Record<DrumLane, PatchModule>>;
 
-/** A direct sampler cable supplies its saved clip per hit, not a running audio stream.
- * Effects and other audio sources retain the normal live-input envelope contract.
- */
+export interface KitSamplerPath {
+  sampler: PatchModule;
+  /** Ordered from the sampler toward the kit. Only serial audio effects qualify. */
+  effects: PatchModule[];
+}
+
+export function kitSamplerPaths(
+  project: Project,
+  kit: PatchModule | undefined,
+): Partial<Record<DrumLane, KitSamplerPath>> {
+  const paths: Partial<Record<DrumLane, KitSamplerPath>> = {};
+  if (!kit) return paths;
+  for (const lane of DRUM_LANES) {
+    let target = { moduleId: kit.id, portId: lane as string };
+    const effects: PatchModule[] = [];
+    const visited = new Set<string>();
+    while (true) {
+      const cable = project.cables.find(
+        (item) => item.to.moduleId === target.moduleId && item.to.portId === target.portId,
+      );
+      const module = project.modules.find((item) => item.id === cable?.from.moduleId);
+      if (!module || cable?.from.portId !== 'out' || visited.has(module.id)) break;
+      visited.add(module.id);
+      if (module.type === 'mic-sampler') {
+        paths[lane] = { sampler: module, effects: effects.reverse() };
+        break;
+      }
+      // Summing/selection remains live audio: never guess which mixed source a hit owns.
+      if (MODULES[module.type].category !== 'Effects') break;
+      effects.push(module);
+      target = { moduleId: module.id, portId: 'in' };
+    }
+  }
+  return paths;
+}
+
+/** Resolve saved clips through serial effects without starting the audition player. */
 export function kitSamplerSources(
   project: Project,
   kit: PatchModule | undefined,
 ): KitSamplerSources {
-  const sources: KitSamplerSources = {};
-  if (!kit) return sources;
-  for (const lane of DRUM_LANES) {
-    const cable = project.cables.find(
-      (item) => item.to.moduleId === kit.id && item.to.portId === lane,
-    );
-    const sampler = project.modules.find(
-      (module) => module.id === cable?.from.moduleId && module.type === 'mic-sampler',
-    );
-    if (sampler && cable?.from.portId === 'out') sources[lane] = sampler;
-  }
-  return sources;
+  return Object.fromEntries(
+    Object.entries(kitSamplerPaths(project, kit)).map(([lane, path]) => [lane, path.sampler]),
+  );
 }
 
 export function drumVoiceLabel(kit: PatchModule | undefined, lane: DrumLane): string {

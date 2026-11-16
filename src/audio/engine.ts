@@ -1,3 +1,4 @@
+import { KitEffects } from './kit-effects';
 import { CONFIG } from '../config';
 import { stepFrequency } from '../domain/project';
 import { sequencerRate } from '../domain/modules';
@@ -28,6 +29,7 @@ export class AudioEngine {
   private recordingDestination?: MediaStreamAudioDestinationNode;
   private runtimes = new Map<string, AudioRuntime>();
   private project?: Project;
+  private kitEffects?: KitEffects;
   private samplePreview?: { moduleId: string; runtime: AudioRuntime };
   private graphSignature = '';
   private scheduler?: ReturnType<typeof setInterval>;
@@ -117,6 +119,8 @@ export class AudioEngine {
     ]);
     if (signature !== this.graphSignature) {
       this.keyboardNotes.clear();
+      this.kitEffects?.dispose();
+      this.kitEffects = undefined;
       this.runtimes.forEach((runtime) => runtime.dispose());
       this.runtimes.clear();
       for (const module of project.modules)
@@ -143,8 +147,10 @@ export class AudioEngine {
           }
         }
       }
+      this.kitEffects = new KitEffects(this.context, project, this.runtimes);
       this.graphSignature = signature;
     }
+    this.kitEffects?.update(project);
     this.master.gain.setTargetAtTime(project.masterVolume, this.context.currentTime, 0.025);
     for (const module of project.modules) {
       const runtime = this.runtimes.get(module.id)!;
@@ -152,7 +158,11 @@ export class AudioEngine {
       runtime.configureSample?.(module.samples?.clip);
       if (runtime.configureKit) {
         const kit = connectedDrumKit(project, module.id);
-        runtime.configureKit(kit, kitSamplerSources(project, kit));
+        runtime.configureKit(
+          kit,
+          kitSamplerSources(project, kit),
+          this.kitEffects?.inputs.get(module.id),
+        );
       }
       if (
         runtime.voice &&
@@ -354,6 +364,8 @@ export class AudioEngine {
     this.visualTimers.forEach((timer) => clearTimeout(timer));
     this.visualTimers.clear();
     this.keyboardNotes.clear();
+    this.kitEffects?.dispose();
+    this.kitEffects = undefined;
     this.runtimes.forEach((runtime) => runtime.dispose());
     this.runtimes.clear();
     this.disposeSamplePreview();

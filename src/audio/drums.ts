@@ -2,6 +2,7 @@ import { CONFIG } from '../config';
 import {
   DRUM_LANES,
   DRUM_SOUNDS,
+  type DrumLane,
   type DrumSound,
   type KitSamplerSources,
 } from '../domain/instruments';
@@ -93,6 +94,7 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
   const silentBuffer = context.createBuffer(1, 1, context.sampleRate);
   let kit: PatchModule | undefined;
   let samplers: KitSamplerSources = {};
+  let effectInputs: Partial<Record<DrumLane, AudioNode>> = {};
   const sampleBuffers = new Map<string, { pcm: string; buffer: AudioBuffer }>();
   const active = new Set<ActiveHit>();
   let parameters: Parameters = { tone: 0, decay: 0.8, level: 0.7 };
@@ -111,7 +113,8 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
 
   return {
     inputs: Object.fromEntries(DRUM_LANES.map((lane) => [`kit-${lane}`, inputs[lane]])),
-    configureKit(next, nextSamplers = {}) {
+    configureKit(next, nextSamplers = {}, nextEffectInputs = {}) {
+      effectInputs = nextEffectInputs;
       kit = next;
       samplers = nextSamplers;
       for (const lane of DRUM_LANES) {
@@ -204,7 +207,9 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
         gain.gain.linearRampToValueAtTime(level, start + edge);
         gain.gain.setValueAtTime(level, end - release);
         gain.gain.linearRampToValueAtTime(0, end);
-        gain.connect(output);
+        // The private effect rack returns to this machine's output, preserving tails
+        // and isolating fan-out to other lanes, drum machines and ordinary audio routes.
+        gain.connect((lane && effectInputs[lane]) || output);
         player.buffer = sample;
         player.playbackRate.value = rate;
         player.connect(gain);
