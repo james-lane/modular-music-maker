@@ -454,6 +454,13 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       rate: 'Controls how fast the modulation repeats, in cycles per second (Hz).',
       depth: 'Sets how far the Filter cutoff moves, in Hz. Smaller values make a subtler change.',
     },
+    extraControls: [
+      {
+        label: 'Display',
+        description:
+          'While stopped, a two-second preview responds to Rate and Depth without starting audio. During playback it shows measured MOD output history. Zero Depth is flat; no decorative caption covers the trace.',
+      },
+    ],
     tip: 'The LFO changes a setting rather than producing your main audio. You still need a sound source in the Filter audio path.',
     example: {
       title: 'Give a sustained tone movement',
@@ -480,6 +487,11 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
         'Emphasizes frequencies around the cutoff point. Higher settings give a more pronounced peak.',
     },
     extraControls: [
+      {
+        label: 'Response display',
+        description:
+          'Shows the filter’s frequency response on a fixed logarithmic frequency scale. Cutoff, Resonance and mode update the curve even while stopped. During playback it also follows the connected MOD signal; reduced motion uses the base control response. This is a response curve, not an audio waveform.',
+      },
       {
         label: 'Filter mode',
         description:
@@ -510,6 +522,13 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       feedback: 'Sends some echo back into the delay to create more repeats.',
       mix: 'Blends the original dry signal with the echoes. Zero is dry; full Mix is the delayed sound.',
     },
+    extraControls: [
+      {
+        label: 'Echo display',
+        description:
+          'The millisecond readout follows Time. The four-second impulse preview shows dry sound at the start and repeated echoes: Time changes spacing, Feedback changes later echo heights, and Mix balances dry/wet amplitudes. It previews the controls rather than monitoring incoming audio.',
+      },
+    ],
     tip: 'Try short Time and low Mix for a subtle doubling effect. The Feedback knob creates repeats without needing a cable loop.',
     example: {
       title: 'Add echoes to a beat',

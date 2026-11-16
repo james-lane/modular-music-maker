@@ -2,6 +2,14 @@
 
 Last updated: **16 November 2026**.
 
+## Responsive displays and compact Noise/Reverb — 16 November 2026
+
+**LFO** now previews Rate/Depth on a fixed two-second scale while stopped and shows measured MOD output while active. Zero Depth is flat. **Filter** now plots its actual biquad response on a logarithmic frequency scale, following Cutoff, Resonance and mode even while stopped; active MOD moves the response using the existing upstream control meter. Reduced motion retains the base response, including when the preference changes during playback. Passive previews never create an AudioContext or processing node. **Delay** now has a useful four-second impulse preview driven by Time, Feedback and Mix, alongside its millisecond readout. Redundant screen captions are removed.
+
+**Noise** is now **168×220** (previously 212×274) and **Reverb 180×220** (previously 220×270), roughly a third less panel area each. Both keep their full-sized dial, physical finish, printed labels and bottom sockets, with no screen, blank grille or screen-shaped inset. Their sound, parameters, IDs and saved positions remain unchanged; socket/cable geometry follows the smaller registry footprints. README, module guides, Architecture, Adding modules and AGENTS.md record the purpose of each retained display and require compact, screen-optional future instruments.
+
+Validation: strict types, all **135 tests**, production build, formatting and diff checks pass. New display regressions cover dial responses, zero/dry limits, filter modes/Q conventions and finite plots at control/sample-rate extremes. Native browser comparisons agree with `BiquadFilterNode.getFrequencyResponse` across **810 points** (maximum relative error below 0.000001). Isolated production-browser QA verified stopped/live dial changes, external MOD, dynamic reduced-motion changes, no passive audio initialization, Delay controls, compact Noise/Reverb without insets, nonzero sound, offline editing/playback and desktop/390px access. The full **21 real guide demos** also passed **214 rendered socket/layout checks**, control/footer clearance, cable-plug alignment and nonzero audio, plus zoom, dragging/Undo and saved/offline restoration, with no microphone requests or browser errors. These changes are local and have not been deployed.
+
 ## All patch sockets in bottom footers — 16 November 2026
 
 Moved **Oscillator PITCH MOD** and **Mic sampler SPEED MOD / LEVEL MOD** from the panel face into their modules’ bottom socket rows. Audited all **21 module types**; these were the three exceptions. Oscillator now groups PITCH / PITCH MOD / AUDIO OUT; Mic sampler groups TRIGGER IN / SPEED MOD / LEVEL MOD / AUDIO OUT. Restored the Oscillator’s full-width waveform display. Module dimensions, saved port IDs, patch data and audio behaviour remain unchanged; existing cables reflow to their current bottom sockets.

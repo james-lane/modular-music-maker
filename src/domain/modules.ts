@@ -204,8 +204,8 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Sources',
     color: '#bd8b67',
     code: 'NS–01',
-    width: 212,
-    height: 274,
+    width: 168,
+    height: 220,
     ports: [{ id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' }],
     controls: [
       { id: 'level', label: 'Level', min: 0, max: 0.5, step: 0.01, default: 0.12, unit: '%' },
@@ -379,8 +379,8 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     category: 'Effects',
     color: '#b58aa4',
     code: 'RVB–01',
-    width: 220,
-    height: 270,
+    width: 180,
+    height: 220,
     ports: [
       { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },

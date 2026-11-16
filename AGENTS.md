@@ -19,6 +19,8 @@ Current examples include a cream/charcoal drum computer, walnut-sided dark keybo
 
 ## Engineering conventions
 
+- Screens are optional, not a default decoration. Add one only for a useful measured signal, parameter response/preview, waveform/sample editor or necessary readout. Retained displays must respond to the controls they illustrate; never present an unchanging decorative trace as a working display, or fill screens with slogans/redundant labels. Passive previews must not start audio or create live audio contexts. Prefer compact single-control enclosures for simple modules (Noise and Reverb have no screens or screen-shaped insets). Keep dimensions in the registry and validate control/footer clearance, cable alignment and saved/example layouts after resizing.
+
 - **All patch ports belong in the shared bottom footer on every module**, including MOD, pitch, trigger, kit and audio sockets. Never place sockets on a screen, among knobs, on the panel face/sides, or with per-module absolute-position/CSS overrides. Registry port order drives both footer layout and cable geometry. Keep existing port IDs for saved-patch compatibility; if more room is needed, adjust registry dimensions deliberately and check examples/saved-layout overlap. Run the catalog-wide port render/geometry tests and inspect actual socket/cable alignment in module demos after changes.
 
 - Keep strict TypeScript enabled. Avoid `any` and unexplained assertions.

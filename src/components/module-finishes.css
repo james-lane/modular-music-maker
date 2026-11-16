@@ -410,7 +410,7 @@
   border-radius: 4px;
 }
 
-/* Graphite noise generator: perforated steel grille and a machined dial. */
+/* Compact graphite noise box with one machined Level dial. */
 .module-noise {
   --panel-face: var(--enclosure-noise);
   --panel-end: #2d3538;
@@ -426,23 +426,21 @@
   --trace-ink: #b6cba4;
   border-radius: 3px;
 }
-.module-noise .trace-display::before {
-  background: radial-gradient(#9aaba43b 1px, transparent 1px);
-  background-size: 4px 4px;
-}
-.module-noise .trace-display,
-.module-lfo .trace-display,
-.module-reverb .trace-display {
+.module-lfo .lfo-display {
   height: 43px;
 }
-.module-noise .trace-display svg,
-.module-lfo .trace-display svg,
-.module-reverb .trace-display svg {
-  height: 35px;
+.module-lfo .lfo-display svg,
+.module-lfo .lfo-display .control-scope,
+.module-lfo .lfo-display canvas {
+  height: 100%;
 }
-.module-noise .module-knobs,
-.module-lfo .module-knobs,
-.module-reverb .module-knobs {
+.module-lfo .lfo-display .control-scope {
+  border-width: 1px;
+}
+.trace-display.filter-response svg {
+  height: 100%;
+}
+.module-lfo .module-knobs {
   margin-top: 11px;
 }
 .module-noise .knob-assembly,
@@ -1642,4 +1640,22 @@
 }
 .mod-steps input {
   height: 95px;
+}
+
+/* These single-control boxes need neither a display nor a display-shaped inset. */
+.module-noise .module-content,
+.module-reverb .module-content {
+  padding-top: 12px;
+}
+.module-noise .module-knobs,
+.module-reverb .module-knobs {
+  margin-top: 0;
+}
+.module-lfo .trace-display.lfo-display {
+  background: #1c302a;
+  color: #d4edab;
+  border-color: var(--panel-edge);
+}
+.module-delay .delay-display svg {
+  margin-top: 15px;
 }

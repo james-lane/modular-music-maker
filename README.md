@@ -135,6 +135,10 @@ Deletion works offline and survives reloads. Deleted IDs cannot be restored by a
 
 Each input takes one cable; an output can feed several inputs. Route audio to Output to hear it. For a focused lesson, open a module’s **?** guide and choose **Load demo patch**. Keyboard/Envelope/Reverb demos use live keys; the Mic sampler demo includes a clap played from pads. Other demos explain whether to press Play or use pads. No demo requests microphone access automatically.
 
+## Read the instrument displays
+
+Displays serve a specific purpose rather than appearing on every module. **LFO** previews Rate/Depth while stopped and shows measured modulation during playback. **Filter** shows a response curve that follows Cutoff, Resonance and mode, plus its MOD input while playing. You can adjust either while stopped without starting audio. **Delay** previews echo spacing, feedback and mix alongside its millisecond readout. **Noise** and **Reverb** are compact single-dial boxes with no screen or blank display-shaped inset.
+
 ## Modulate a sound
 
 The LFO is joined by four control instruments, each with a guide and a live screen showing measured MOD output:

@@ -68,6 +68,17 @@ export const CONFIG = {
   },
   audio: {
     modulation: { reference: 1500, pitchCents: 1200, curveSamples: 2049 },
+    displays: {
+      width: 360,
+      height: 90,
+      points: 181,
+      lfoPreviewSeconds: 2,
+      delayPreviewSeconds: 4,
+      filterMinHz: 20,
+      filterMaxHz: 20000,
+      filterMinDb: -48,
+      filterMaxDb: 18,
+    },
     visualizationIntervalMs: 32,
     schedulerIntervalMs: 25,
     scheduleAheadSeconds: 0.12,

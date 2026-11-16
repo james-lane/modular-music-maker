@@ -1,3 +1,6 @@
+import { DelayDisplay } from './DelayDisplay';
+import { LfoDisplay } from './LfoDisplay';
+import { FilterDisplay } from './FilterDisplay';
 import { ModulePorts } from './ModulePorts';
 import { ModulationPanel } from './ModulationPanel';
 import { XYControllerPanel } from './XYControllerPanel';
@@ -208,10 +211,16 @@ export function ModuleCard({
         )}
         {module.type === 'filter' && (
           <>
-            <div className="trace-display filter-trace">
-              <Waveform type="filter" />
-              <span>FREQUENCY RESPONSE</span>
-            </div>
+            <FilterDisplay
+              parameters={module.parameters}
+              engine={engine}
+              active={audioActive}
+              modulation={
+                project.cables.find(
+                  (cable) => cable.to.moduleId === module.id && cable.to.portId === 'cutoff',
+                )?.from
+              }
+            />
             <div className="mode-selector">
               {[
                 ['lowpass', 'LOW PASS'],
@@ -236,15 +245,7 @@ export function ModuleCard({
             <LevelMeter engine={engine} playing={audioActive} />
           </>
         )}
-        {module.type === 'delay' && (
-          <div className="delay-display">
-            <span>STEREO ECHO</span>
-            <Waveform type="delay" />
-            <strong>
-              {Math.round(Number(module.parameters.time) * 1000)} <small>ms</small>
-            </strong>
-          </div>
-        )}
+        {module.type === 'delay' && <DelayDisplay parameters={module.parameters} />}
         {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
         {module.type === 'switch' && (
           <SwitchPanel module={module} project={project} onParameter={onParameter} />
@@ -252,11 +253,8 @@ export function ModuleCard({
         {module.type === 'merger' && (
           <MergerPanel module={module} project={project} onParameter={onParameter} />
         )}
-        {['noise', 'lfo', 'reverb'].includes(module.type) && (
-          <div className="trace-display">
-            <Waveform type={module.type} />
-            <span>{definition.subtitle.toUpperCase()}</span>
-          </div>
+        {module.type === 'lfo' && (
+          <LfoDisplay module={module} engine={engine} active={audioActive} />
         )}
         {![
           'sequencer',

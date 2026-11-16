@@ -10,11 +10,13 @@ export function ControlScope({
   moduleId,
   ports = 'out',
   active,
+  showReadout = true,
 }: {
   engine: AudioEngine;
   moduleId: string;
   ports?: string;
   active: boolean;
+  showReadout?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const readout = useRef<HTMLOutputElement>(null);
@@ -80,7 +82,7 @@ export function ControlScope({
         height={90}
         aria-label="Measured modulation output history"
       />
-      <output ref={readout}>MOD · IDLE</output>
+      {showReadout && <output ref={readout}>MOD · IDLE</output>}
     </div>
   );
 }
