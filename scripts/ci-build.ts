@@ -1,13 +1,10 @@
 import { execFileSync } from 'node:child_process';
 import { readAppVersion } from './app-version';
+import { ensureFullGitHistory } from './git-history';
 
 // Workers Builds may provide a shallow checkout. Recover the actual history before
 // versioning; a CI-specific version shortcut would disagree with local releases.
-const shallow = execFileSync('git', ['rev-parse', '--is-shallow-repository'], {
-  encoding: 'utf8',
-}).trim();
-if (shallow === 'true')
-  execFileSync('git', ['fetch', '--unshallow', 'origin'], { stdio: 'inherit' });
+ensureFullGitHistory(process.cwd());
 
 const version = readAppVersion(process.cwd());
 if (!version.revision || version.dirty)

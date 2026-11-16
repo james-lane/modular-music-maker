@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "concurrently -k -n web,server \"vite --host 127.0.0.1\" \"tsx watch server/index.ts\"",
+    "prebuild": "tsx scripts/prepare-build.ts",
     "build": "npm run typecheck && vite build",
     "build:ci": "tsx scripts/ci-build.ts",
     "deploy": "npm run build && wrangler deploy",

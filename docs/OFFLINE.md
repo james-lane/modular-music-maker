@@ -42,7 +42,7 @@ Without explicit refresh, closing every client still applies the update naturall
 
 ## Cloudflare hosting
 
-The production studio is **https://patchwork.jameslane.dev**, served by the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` points Workers Static Assets at `dist/`, with no application Worker script, bindings, database, paid services, or Node compatibility layer. It declares `patchwork.jameslane.dev` as a Custom Domain, allowing Cloudflare to manage its DNS record and HTTPS certificate. Separate `workers.dev` and preview URLs are disabled. Missing assets return 404; unknown API URLs are not rewritten to the app. `public/_headers` supplies update-cache headers plus the shared browser security baseline (same-origin scripts/connections, no framing, content-type protection, and same-origin microphone permission). Blob recording playback remains permitted; the Node production server uses the same baseline.
+The production studio is **https://patchwork.jameslane.dev**, served by the **patchwork-studio** Cloudflare Worker. `wrangler.jsonc` points Workers Static Assets at `dist/`, with no application Worker script, bindings, database, paid services, or Node compatibility layer. It declares `patchwork.jameslane.dev` as a Custom Domain, allowing Cloudflare to manage its DNS record and HTTPS certificate. The production `workers.dev` URL stays disabled. Branch previews use public `workers.dev` test links, enabled by `preview_urls` and the empty `previews` block; these serve only built static studio assets and do not publish to the production custom domain. Missing assets return 404; unknown API URLs are not rewritten to the app. `public/_headers` supplies update-cache headers plus the shared browser security baseline (same-origin scripts/connections, no framing, content-type protection, and same-origin microphone permission). Blob recording playback remains permitted; the Node production server uses the same baseline.
 
 ### Automatic deployment
 
@@ -50,19 +50,23 @@ Connect the **existing** `patchwork-studio` Worker to the GitHub repository `jam
 
 Use these settings:
 
-| Setting                              | Value                              |
-| ------------------------------------ | ---------------------------------- |
-| Production branch                    | `main`                             |
-| Repository root                      | `/`                                |
-| Build command                        | `npm run build:ci`                 |
-| Deploy command                       | `npx wrangler deploy`              |
-| Builds for other branches / Previews | Disabled                           |
-| Included paths                       | All files, including documentation |
-| Node                                 | 22, from `.node-version`           |
+| Setting                               | Value                                           |
+| ------------------------------------- | ----------------------------------------------- |
+| Production branch                     | `main`                                          |
+| Repository root                       | `/`                                             |
+| Build command                         | `npm run build:ci`                              |
+| Deploy command                        | `npx wrangler deploy`                           |
+| Builds for review branches / Previews | `npm run build:ci`, then `npx wrangler preview` |
+| Included paths                        | All files, including documentation              |
+| Node                                  | 22, from `.node-version`                        |
 
 Cloudflare installs dependencies using the committed npm lockfile before the build command. Do not set `NODE_ENV=production` or omit development dependencies during installation: TypeScript, Vite, tests and Wrangler are build tools. Deployment authentication stays in Cloudflare's build-token storage; never put tokens in the repository or GitHub workflow files. No GitHub Actions deployment or local post-commit hook is needed.
 
-`scripts/ci-build.ts` restores full history with `git fetch --unshallow origin` only when required, then verifies the checkout is clean and runs `npm run format:check` and `npm run check`. This retains the shared commit-count/hash version calculation and runs the real HTTP tests before publication. Cloudflare only runs the deploy command after a successful build. GitHub pushes to `main` then publish to the existing custom domain automatically; local commits and other branches leave production unchanged. Documentation-only commits also produce a correctly versioned release. Failed builds leave the last successful deployment available.
+`scripts/ci-build.ts` uses the shared `scripts/git-history.ts` helper to restore full history with `git fetch --unshallow origin` only when required, then verifies the checkout is clean and runs `npm run format:check` and `npm run check`. This retains the shared commit-count/hash version calculation and runs the real HTTP tests before publication. Cloudflare only runs the deploy command after a successful build. GitHub pushes to `main` then publish to the existing custom domain automatically; local commits and review-branch previews leave production unchanged. Configure each review-branch trigger to build with `npm run build:ci` and publish with `npx wrangler preview`. Documentation-only commits also produce a correctly versioned release. Failed builds leave the last successful deployment available.
+
+The ordinary `npm run build` also runs history recovery through npm's `prebuild` lifecycle, so a provider using its default build command cannot accidentally produce a shortened version count or fail solely because its checkout is shallow. Full checkouts do not fetch; source archives retain their explicit `+source` identity. This backstop does not replace setting every production/preview build command to `npm run build:ci`, which additionally enforces formatting and tests.
+
+For each pull request, inspect the build trigger's actual command, reproduce build changes in a clean shallow checkout, and wait for all GitHub checks on the exact latest pushed commit to succeed before calling the PR ready or starting the next issue. A local build does not establish that the hosting configuration is correct.
 
 For initial verification, push a reviewed commit to `main`, watch its build in the Worker's **Deployments** tab, and confirm the hosted `/version.json` revision equals that GitHub commit with `dirty: false`. Check the installed update notice, public API 404 responses and offline playback. Do not run `npm run deploy` as well: that would create a second manual release. The existing session-safe offline update lifecycle remains in place.
 
