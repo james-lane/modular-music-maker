@@ -21,9 +21,9 @@ function routingSignature(project: Project) {
   });
 }
 
-test('eight distinct examples are valid, fully connected and laid out without covering another module', () => {
-  assert.equal(EXAMPLE_PATCHES.length, 8);
-  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 8);
+test('nine distinct examples are valid, fully connected and laid out without covering another module', () => {
+  assert.equal(EXAMPLE_PATCHES.length, 9);
+  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 9);
   const signatures = new Set<string>();
   for (const example of EXAMPLE_PATCHES) {
     const project = example.create();
@@ -54,7 +54,7 @@ test('eight distinct examples are valid, fully connected and laid out without co
       }
     }
   }
-  assert.equal(signatures.size, 8, 'Each example teaches a different routing arrangement');
+  assert.equal(signatures.size, 9, 'Each example teaches a different routing arrangement');
 });
 
 test('opening and editing an example cannot change its recipe or another saved copy', () => {
@@ -149,7 +149,7 @@ test('the ensemble layers a shared-pitch voice, independent rhythms, and separat
   );
 });
 
-test('the final pop example is the largest, covers the whole catalog, and has a ready-to-play sampled backbeat', () => {
+test('the final pop example is the largest, retains the original catalog, and has a ready-to-play sampled backbeat', () => {
   const example = EXAMPLE_PATCHES.at(-1)!;
   assert.equal(example.id, 'neon-chorus');
   const project = example.create();
@@ -161,7 +161,11 @@ test('the final pop example is the largest, covers the whole catalog, and has a 
   );
   assert.deepEqual(
     [...new Set(project.modules.map((module) => module.type))].sort(),
-    Object.keys(MODULES).sort(),
+    Object.keys(MODULES)
+      .filter(
+        (type) => !['envelope', 'mod-sequencer', 'random-mod', 'xy-controller'].includes(type),
+      )
+      .sort(),
   );
   assert.equal(project.scale, 'major');
   const kit = project.modules.find((module) => module.type === 'drum-kit')!;

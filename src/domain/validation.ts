@@ -142,8 +142,12 @@ export const projectSchema = z
             issue(`Unknown XY Effects ${corner.label} effect.`);
         }
       }
-      if (module.type === 'sequencer') {
-        if (!module.steps) issue('A sequencer needs eight steps.');
+      if (
+        module.type === 'sequencer' ||
+        module.type === 'mod-sequencer' ||
+        module.type === 'random-mod'
+      ) {
+        if (module.type === 'sequencer' && !module.steps) issue('A sequencer needs eight steps.');
         if (!SEQUENCER_RATES.some((rate) => rate.value === module.parameters.rate))
           issue('Unknown sequencer step rate.');
       }

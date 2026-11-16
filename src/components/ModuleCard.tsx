@@ -1,3 +1,6 @@
+import { ModulePorts } from './ModulePorts';
+import { ModulationPanel } from './ModulationPanel';
+import { XYControllerPanel } from './XYControllerPanel';
 import type { PlaybackPosition } from '../audio/playback-position';
 import { GripVertical, X } from 'lucide-react';
 import type { CSSProperties, PointerEvent } from 'react';
@@ -157,6 +160,25 @@ export function ModuleCard({
             onStep={onStep}
           />
         )}
+        {['envelope', 'mod-sequencer', 'random-mod'].includes(module.type) && (
+          <ModulationPanel
+            module={module}
+            playing={playing}
+            position={playbackPosition}
+            engine={engine}
+            audioActive={audioActive}
+            live={live}
+            onParameters={onParameters}
+          />
+        )}
+        {module.type === 'xy-controller' && (
+          <XYControllerPanel
+            module={module}
+            onParameters={onParameters}
+            engine={engine}
+            audioActive={audioActive}
+          />
+        )}
         {module.type === 'oscillator' && (
           <>
             <div className="trace-display">
@@ -236,7 +258,16 @@ export function ModuleCard({
             <span>{definition.subtitle.toUpperCase()}</span>
           </div>
         )}
-        {!['sequencer', 'mixer', 'xy-effects', 'switch'].includes(module.type) && (
+        {![
+          'sequencer',
+          'mixer',
+          'xy-effects',
+          'switch',
+          'envelope',
+          'mod-sequencer',
+          'random-mod',
+          'xy-controller',
+        ].includes(module.type) && (
           <div className={`module-knobs ${definition.controls.length === 1 ? 'single-knob' : ''}`}>
             {definition.controls
               .filter(
@@ -257,35 +288,7 @@ export function ModuleCard({
           </div>
         )}
       </div>
-      <footer className="module-ports">
-        {definition.ports.map((port) => {
-          const connected = project.cables.some((cable) =>
-            [cable.from, cable.to].some(
-              (endpoint) => endpoint.moduleId === module.id && endpoint.portId === port.id,
-            ),
-          );
-          const active = pending?.moduleId === module.id && pending.portId === port.id;
-          return (
-            <button
-              key={port.id}
-              className={`port-button signal-${port.signal} ${connected ? 'connected' : ''} ${active ? 'pending' : ''}`}
-              data-port={`${module.id}:${port.id}`}
-              aria-label={`${definition.name} ${port.label} ${port.direction} socket${connected ? ', connected' : ''}`}
-              title={`${port.label} · ${port.signal} ${port.direction}${connected ? ' · Click input to unplug' : ''}`}
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onPort({ moduleId: module.id, portId: port.id });
-              }}
-            >
-              <span>{port.label}</span>
-              <i className="socket">
-                <b />
-              </i>
-            </button>
-          );
-        })}
-      </footer>
+      <ModulePorts module={module} project={project} pending={pending} onPort={onPort} />
     </article>
   );
 }

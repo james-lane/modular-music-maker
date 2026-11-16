@@ -22,8 +22,10 @@ class Parameter {
     this.value = value;
   }
   cancelScheduledValues() {}
+  cancelAndHoldAtTime() {}
 }
 class Node {
+  offset = new Parameter();
   gain = new Parameter();
   frequency = new Parameter();
   detune = new Parameter();
@@ -59,6 +61,7 @@ class Context {
   gains: Node[] = [];
   oscillators: Node[] = [];
   sources: Node[] = [];
+  constants: Node[] = [];
   recording = new Node();
   createBuffer(_channels: number, length: number, rate: number) {
     return { duration: length / rate, copyToChannel() {} };
@@ -73,6 +76,14 @@ class Context {
     const node = new Node();
     this.gains.push(node);
     return node;
+  }
+  createConstantSource() {
+    const node = new Node();
+    this.constants.push(node);
+    return node;
+  }
+  createWaveShaper() {
+    return new Node();
   }
   createOscillator() {
     const node = new Node();
@@ -172,7 +183,7 @@ test('independent sequencer rates schedule notes, rests, gates and lights on the
     }
     for (const [index, duration] of [0.5, 0.25, 0.125].entries()) {
       const frequency = context.oscillators[index].frequency.values;
-      const envelope = context.gains[index + 1].gain;
+      const envelope = [...context.oscillators[index].connections][0].gain;
       const expected = Array.from({ length: Math.ceil((4.145 - 0.03) / duration) }, (_, step) => ({
         time: 0.03 + step * duration,
         degree: [0, -1, 2, 3, 4, 5, 6, 7][step % 8],
@@ -278,7 +289,7 @@ test('the fastest rate keeps attack, hold and release ordered at both gate extre
     for (const gate of [0.1, 0.95]) {
       sequencer.parameters.gate = gate;
       await engine.play(project);
-      const envelope = context.gains[1].gain;
+      const envelope = [...context.oscillators[0].connections][0].gain;
       const hold = envelope.values.filter(({ value }) => value > 0).at(-1)!;
       const attack = envelope.ramps.filter(({ value }) => value > 0).at(-1)!;
       const release = envelope.ramps.filter(({ value }) => value === 0).at(-1)!;
@@ -311,7 +322,7 @@ test('keyboard last-note priority, held octave edits, release and Stop control t
   try {
     await engine.activate(project);
     const voice = context.oscillators[0];
-    const envelope = context.gains[1].gain;
+    const envelope = [...context.oscillators[0].connections][0].gain;
     engine.noteOn(keyboard.id, 48, 0.8);
     assert.equal(voice.frequency.value, midiFrequency(48));
     assert.ok(envelope.value > 0);
@@ -402,9 +413,9 @@ test('sampler preview cleanup follows module/project lifetime while pad hits ret
     engine.hitSample(sampler.id);
     engine.hitDrum(sampler.id, 'kick', 1);
     const [preview, pad] = context.sources;
-    const previewOutput = [...[...preview.connections][0].connections][0];
+    const previewOutput = [...[...[...preview.connections][0].connections][0].connections][0];
     assert(previewOutput.connections.has(context.destination));
-    const routedOutput = [...[...pad.connections][0].connections][0];
+    const routedOutput = [...[...[...pad.connections][0].connections][0].connections][0];
     assert.equal(routedOutput.connections.size, 0, 'pad hit remains at the unpatched AUDIO OUT');
     engine.update({ ...project, modules: [] });
     assert.equal(preview.connections.size, 0, 'removing module stops preview');
@@ -418,4 +429,44 @@ test('sampler preview cleanup follows module/project lifetime while pad hits ret
   } finally {
     await engine.dispose();
   }
+});
+
+test('Keyboard notes fan out to envelopes while note release, parameter edits and Stop preserve event ownership', async () => {
+  const context = new Context();
+  const engine = new AudioEngine(() => context.asAudioContext());
+  const keys = createModule('keyboard', 0, 0);
+  const envelope = createModule('envelope', 400, 0);
+  const project = {
+    ...createProject(true),
+    modules: [keys, envelope],
+    cables: [
+      {
+        id: crypto.randomUUID(),
+        from: { moduleId: keys.id, portId: 'pitch' },
+        to: { moduleId: envelope.id, portId: 'gate' },
+      },
+    ],
+  };
+  try {
+    await engine.activate(project);
+    engine.noteOn(keys.id, 60, 0.8);
+    assert.equal(context.constants[0].offset.ramps.at(-1)!.value, 600);
+    const events = context.constants[0].offset.ramps.length;
+    engine.update({
+      ...project,
+      modules: [keys, { ...envelope, parameters: { ...envelope.parameters, release: 0.8 } }],
+    });
+    assert.equal(
+      context.constants[0].offset.ramps.length,
+      events,
+      'editing does not retrigger a held gate',
+    );
+    engine.noteOff(keys.id, 60);
+    assert.equal(context.constants[0].offset.ramps.at(-1)!.value, 0);
+    await engine.stop();
+    assert.equal(context.constants[0].offset.value, 0);
+  } finally {
+    await engine.dispose();
+  }
+  assert(context.constants[0].stops.length > 0);
 });

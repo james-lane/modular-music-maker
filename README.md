@@ -26,8 +26,8 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 
 ## What works
 
-- A searchable module library with seventeen working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
-- Eight contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
+- A searchable module library with twenty-one working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, Envelope, Mod sequencer, Sample & Hold, XY controller, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
+- Nine contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens an editable copy and keeps your current work in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return.
 - Open **Add modules** for a compact module list with category filters. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers. Releasing over the toolbar or beyond the workspace keeps the move; press Escape during a drag to cancel it.
 - Click an output socket, then a matching input socket to connect them. Audio, pitch, modulation, trigger, and kit are separate signal types. Click a connected input to reroute its cable; double-click a cable to unplug it.
@@ -74,18 +74,21 @@ See [offline design and deployment](docs/OFFLINE.md) for lifecycle details, devi
 
 Open **More → Example patches**, choose a patch, then press **Play**. Each card describes the sound and suggests something to change first. Opening an example stops playback; it never starts sound automatically.
 
-| Patch            | Sound and approach                                                                                             |
-| ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| Sunday circuits  | Warm C-minor sequenced melody at 108 BPM, with filtering and delay                                             |
-| Pocket rhythm    | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads                                     |
-| Warehouse pulse  | Driving drums and a clipped F-minor bass line at 128 BPM                                                       |
-| Coastal static   | Ambient noise, slowly swept by an LFO through a filter and reverb                                              |
-| Tiny arcade      | Two independent sequencers playing square/triangle voices in G at 152 BPM                                      |
-| Copper currents  | 94 BPM D-pentatonic dub with a hybrid Drum kit, Merger and hands-on XY Effects                                 |
-| Clockwork garden | A 23-module E-minor ensemble at 118 BPM with layered voices and rhythm/effect submixes                         |
-| Neon chorus      | Pop in C major at 116 BPM: 38 modules, every module type, chord progression, hook, sampled claps and live keys |
+| Patch            | Sound and approach                                                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Sunday circuits  | Warm C-minor sequenced melody at 108 BPM, with filtering and delay                                                        |
+| Pocket rhythm    | Drum groove at 108 BPM with a swappable kit, keyboard, and percussion pads                                                |
+| Warehouse pulse  | Driving drums and a clipped F-minor bass line at 128 BPM                                                                  |
+| Coastal static   | Ambient noise, slowly swept by an LFO through a filter and reverb                                                         |
+| Tiny arcade      | Two independent sequencers playing square/triangle voices in G at 152 BPM                                                 |
+| Copper currents  | 94 BPM D-pentatonic dub with a hybrid Drum kit, Merger and hands-on XY Effects                                            |
+| Clockwork garden | A 23-module E-minor ensemble at 118 BPM with layered voices and rhythm/effect submixes                                    |
+| Moving parts     | A 104 BPM melody and sampled claps demonstrating all four new modulation sources                                          |
+| Neon chorus      | Pop in C major at 116 BPM: 38 modules, the original seventeen types, chord progression, hook, sampled claps and live keys |
 
-**Neon chorus** is the largest example: 38 modules across five rows (rhythm, bass, chords, hook, live performance), using all seventeen module types. Five quarter-note sequencers play a two-bar C–G–Am–F progression, bass and a layered hook. Two drum machines combine a kick/snare beat with percussion, noise hats and a Mic sampler preloaded with an original synthesized clap. Everything is included locally; no microphone recording or permission is needed. The burgundy **Switch** selects **1** echoed hook, **2** live Keyboard, **3** dry hook, or **4** hook/keyboard duet, while the backing keeps playing. Choose 2 or 4 to play the keys; use the Pad controller for fills. Fit to see the whole studio, then zoom into a row.
+**Moving parts** demonstrates all four new modulation modules in one playable 13-module patch. Envelope shapes a melodic Filter, Mod sequencer adds a small pitch contour, Sample & Hold changes the sampled-clap Filter, and XY controller opens the claps’ level (X) and changes their speed (Y). A saved original clap is included; no microphone access is required. Open it under **More → Example patches**.
+
+**Neon chorus** is the largest example: 38 modules across five rows (rhythm, bass, chords, hook, live performance), using the original seventeen module types. Five quarter-note sequencers play a two-bar C–G–Am–F progression, bass and a layered hook. Two drum machines combine a kick/snare beat with percussion, noise hats and a Mic sampler preloaded with an original synthesized clap. Everything is included locally; no microphone recording or permission is needed. The burgundy **Switch** selects **1** echoed hook, **2** live Keyboard, **3** dry hook, or **4** hook/keyboard duet, while the backing keeps playing. Choose 2 or 4 to play the keys; use the Pad controller for fills. Fit to see the whole studio, then zoom into a row.
 
 **Switch** is also available under **Add modules → Utility**. Connect up to four audio sources to IN 1–4 and route AUDIO OUT onward. Press a numbered ivory key to select one source, with a brief smooth changeover. An unpatched selection is silent. Tab and Enter/Space work on the keys; selection supports Undo/Redo and saves with the patch.
 
@@ -109,6 +112,21 @@ Use **More → Example patches → Pocket rhythm** for the connected performance
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 
 Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns repeat every eight steps at their selected rate. Each sequencer can run at a different rate. Live rate changes join the shared transport grid without restarting; a short already-queued segment may retain the previous timing. Older patches open at 1/8, preserving their sound. Both pattern types repeat independently of the time-signature display. No physical MIDI device support is included yet.
+
+## Modulate a sound
+
+The LFO is joined by four control instruments, each with a guide and a live screen showing measured MOD output:
+
+- **Envelope:** Attack/hold/Release sweeps. Keyboard or Step sequencer **PITCH → NOTE / GATE** holds the peak until note release. Pad controller **TRIGGER OUT → TRIGGER IN** or **Trigger envelope** makes a one-shot sweep. Velocity sets the peak.
+- **Mod sequencer:** eight signed fader values repeat at **1/4**, **1/8**, or **1/16** on the project tempo. **Depth** sets amount; **Glide** smooths transitions. It sends control values rather than notes, leaving Step sequencer behaviour unchanged.
+- **Sample & Hold:** random held values at the selected step rate. A patched **TRIGGER IN** replaces its transport clock with pad hits; **New random value** also works while stopped. This is control randomness, not recorded audio.
+- **XY controller:** independent **X MOD** and **Y MOD** outputs, with shared Depth. Drag the pad, use arrow keys (Shift for fine), or use the axis sliders. **Centre/Home** resets both axes; positions save with the patch. It sends control signals, while the separate **XY Effects** module still processes audio.
+
+All five sources can drive **Filter MOD**, **Oscillator PITCH MOD**, or **Mic sampler SPEED MOD / LEVEL MOD**. New source Depth at 100% spans ±1500 Hz at Filter, or up to ±one octave at pitch/speed inputs. Existing LFO Depth retains its original Hz scale and existing filter patches retain their sound. Use small depths for vibrato. Pitch/speed receivers clamp their range even if a control signal is too large.
+
+**LEVEL MOD** opens 0–100% of the sampler’s Level; zero or negative signals mute it, so an Envelope can open from silence. With no cable, Level works as before. **SPEED MOD** changes pitch and duration while the selected frames play, bounded to half/double the selected base speed. Both signals also reach independent Drum kit sample hits, including through serial effects; dry **Play snippet** preview continues to bypass patch routing and MOD cables. With live speed modulation the player ends at the selected frame boundary and reserves the slowest possible duration for its fade/idle safety limit.
+
+Control cables cannot enter audio, note, or trigger sockets. Fan-out is supported; each input still accepts one cable and feedback loops remain rejected. Live screens read the audio engine and never set its timing. Reduced-motion mode uses a stationary signal trace, and idle screens stop refreshing.
 
 ## Record a sound from your microphone
 

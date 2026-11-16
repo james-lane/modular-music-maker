@@ -8,7 +8,7 @@ import {
 } from '../domain/instruments';
 import { decodeSamplePcm, sampleRegion } from '../domain/samples';
 import type { Parameters, PatchModule } from '../domain/types';
-import type { AudioRuntime } from './factories';
+import type { AudioRuntime, SampleModulation } from './factories';
 
 interface Tone {
   frequency: number;
@@ -78,6 +78,7 @@ interface ActiveHit {
   sources: AudioScheduledSourceNode[];
   nodes: AudioNode[];
   endTime?: number;
+  modulationConnections?: { source: AudioNode; target: AudioParam }[];
   inputConnection?: { input: AudioNode; gain: GainNode };
 }
 
@@ -95,6 +96,7 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
   let kit: PatchModule | undefined;
   let samplers: KitSamplerSources = {};
   let effectInputs: Partial<Record<DrumLane, AudioNode>> = {};
+  let modulation: Partial<Record<DrumLane, SampleModulation>> = {};
   const sampleBuffers = new Map<string, { pcm: string; buffer: AudioBuffer }>();
   const active = new Set<ActiveHit>();
   let parameters: Parameters = { tone: 0, decay: 0.8, level: 0.7 };
@@ -102,6 +104,7 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
   const clean = (hit: ActiveHit) => {
     // Stop and a later onended callback can both reach cleanup.
     if (!active.has(hit)) return;
+    hit.modulationConnections?.forEach(({ source, target }) => source.disconnect(target));
     if (hit.inputConnection) hit.inputConnection.input.disconnect(hit.inputConnection.gain);
     hit.nodes.forEach((node) => node.disconnect());
     active.delete(hit);
@@ -113,7 +116,8 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
 
   return {
     inputs: Object.fromEntries(DRUM_LANES.map((lane) => [`kit-${lane}`, inputs[lane]])),
-    configureKit(next, nextSamplers = {}, nextEffectInputs = {}) {
+    configureKit(next, nextSamplers = {}, nextEffectInputs = {}, nextModulation = {}) {
+      modulation = nextModulation;
       effectInputs = nextEffectInputs;
       kit = next;
       samplers = nextSamplers;
@@ -195,7 +199,8 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
             ? sampleRegion(clip.pcm, sampler.parameters)
             : { startSeconds: 0, duration: sample.duration };
         const rate = pitch * (sampler ? Number(sampler.parameters.rate) : 1);
-        const duration = region.duration / rate;
+        const mod = sampler && lane ? modulation[lane] : undefined;
+        const duration = (region.duration / rate) * (mod?.pitchActive ? 2 : 1);
         const end = start + duration;
         const edge = Math.min(CONFIG.audio.samplerFadeSeconds, duration / 2);
         const release = Math.min(
@@ -209,14 +214,29 @@ export function createDrumRuntime(context: AudioContext): AudioRuntime {
         gain.gain.linearRampToValueAtTime(0, end);
         // The private effect rack returns to this machine's output, preserving tails
         // and isolating fan-out to other lanes, drum machines and ordinary audio routes.
-        gain.connect((lane && effectInputs[lane]) || output);
+        const destination = (lane && effectInputs[lane]) || output;
+        hit.modulationConnections = [];
+        if (mod?.levelActive) {
+          const modGain = context.createGain();
+          modGain.gain.value = 0;
+          mod.level.connect(modGain.gain);
+          hit.modulationConnections.push({ source: mod.level, target: modGain.gain });
+          gain.connect(modGain);
+          modGain.connect(destination);
+          hit.nodes.push(modGain);
+        } else gain.connect(destination);
+        if (mod?.pitchActive) {
+          mod.pitch.connect(player.detune);
+          hit.modulationConnections.push({ source: mod.pitch, target: player.detune });
+        }
         player.buffer = sample;
         player.playbackRate.value = rate;
         player.connect(gain);
         hit.sources.push(player);
         hit.nodes.push(player, gain);
         hit.endTime = end;
-        player.start(start, region.startSeconds);
+        if (mod?.pitchActive) player.start(start, region.startSeconds, region.duration);
+        else player.start(start, region.startSeconds);
         player.stop(end);
       } else if (source === 'input') {
         const player = context.createBufferSource();

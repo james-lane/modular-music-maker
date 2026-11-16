@@ -66,6 +66,7 @@ export const CONFIG = {
     autoPanPixelsPerSecond: 650,
   },
   audio: {
+    modulation: { reference: 1500, pitchCents: 1200, curveSamples: 2049 },
     visualizationIntervalMs: 32,
     schedulerIntervalMs: 25,
     scheduleAheadSeconds: 0.12,

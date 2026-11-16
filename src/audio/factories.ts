@@ -1,3 +1,10 @@
+import {
+  boundedModulation,
+  createEnvelope,
+  createModSequencer,
+  createRandomMod,
+  createXYController,
+} from './modulation';
 import { CONFIG } from '../config';
 import type { DrumSample, ModuleType, Parameters, PatchModule } from '../domain/types';
 import type { DrumLane, DrumSound, KitSamplerSources } from '../domain/instruments';
@@ -5,6 +12,13 @@ import { createDrumRuntime } from './drums';
 import { MODULES } from '../domain/modules';
 import { createMicSampler } from './mic-sampler';
 import { createXYEffects } from './xy-effects';
+
+export interface SampleModulation {
+  pitch: AudioNode;
+  level: AudioNode;
+  pitchActive: boolean;
+  levelActive: boolean;
+}
 
 export interface AudioRuntime {
   inputs: Record<string, AudioNode | AudioParam>;
@@ -14,6 +28,11 @@ export interface AudioRuntime {
   /** Only pitched voices expose an envelope and frequency for the note scheduler. */
   voice?: { frequency: AudioParam; envelope: AudioParam };
   trigger?: (sound: DrumSound, velocity: number, time: number) => void;
+  gate?: (on: boolean, velocity: number, time: number) => void;
+  scheduleControl?: (tick: number, time: number) => void;
+  configureConnections?: (ports: ReadonlySet<string>) => void;
+  /** Shared control buses also reach independently owned Drum kit sampler hits. */
+  sampleModulation?: SampleModulation;
   silence?: () => void;
   remainingTailSeconds?: () => number;
   configureSample?: (sample: DrumSample | undefined) => void;
@@ -21,6 +40,7 @@ export interface AudioRuntime {
     kit: PatchModule | undefined,
     samplers?: KitSamplerSources,
     effectInputs?: Partial<Record<DrumLane, AudioNode>>,
+    modulation?: Partial<Record<DrumLane, SampleModulation>>,
   ) => void;
 }
 
@@ -34,6 +54,10 @@ const smooth = (parameter: AudioParam, target: number, context: AudioContext) =>
  * Every owned source/node must be released in dispose(), including feedback connections.
  */
 export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
+  envelope: createEnvelope,
+  'mod-sequencer': createModSequencer,
+  'random-mod': (context) => createRandomMod(context),
+  'xy-controller': createXYController,
   'xy-effects': createXYEffects,
   'mic-sampler': createMicSampler,
   'drum-machine': createDrumRuntime,
@@ -60,12 +84,14 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
 
   oscillator(context) {
     const oscillator = context.createOscillator();
+    const modulation = boundedModulation(context, CONFIG.audio.modulation.pitchCents);
+    modulation.output.connect(oscillator.detune);
     const amplitude = context.createGain();
     amplitude.gain.value = 0;
     oscillator.connect(amplitude);
     oscillator.start();
     return {
-      inputs: {},
+      inputs: { pitchMod: modulation.input },
       outputs: { out: amplitude },
       voice: { frequency: oscillator.frequency, envelope: amplitude.gain },
       update(parameters) {
@@ -73,6 +99,7 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
         smooth(oscillator.detune, value(parameters, 'detune'), context);
       },
       dispose() {
+        modulation.dispose();
         oscillator.stop();
         oscillator.disconnect();
         amplitude.disconnect();

@@ -22,12 +22,19 @@ test('every guide explains the current controls without leaving stale or missing
 test('compatibility guidance separates live pitch, drum triggers, modulation and audible sources', () => {
   const endpoints = (type: ModuleType, port: string) =>
     compatiblePorts(type, port).map((match) => `${match.module}:${match.port.id}`);
-  assert.deepEqual(endpoints('keyboard', 'pitch'), ['oscillator:pitch']);
+  assert.deepEqual(endpoints('keyboard', 'pitch'), ['oscillator:pitch', 'envelope:gate']);
   assert.deepEqual(endpoints('pad-controller', 'trigger'), [
     'drum-machine:trigger',
     'mic-sampler:trigger',
+    'envelope:trigger',
+    'random-mod:trigger',
   ]);
-  assert.deepEqual(endpoints('lfo', 'out'), ['filter:cutoff']);
+  assert.deepEqual(endpoints('lfo', 'out'), [
+    'mic-sampler:rateMod',
+    'mic-sampler:levelMod',
+    'oscillator:pitchMod',
+    'filter:cutoff',
+  ]);
   const audioSources = endpoints('output', 'in');
   assert.ok(audioSources.includes('drum-machine:out'));
   assert.ok(audioSources.includes('oscillator:out'));

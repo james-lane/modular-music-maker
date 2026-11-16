@@ -30,6 +30,10 @@ export class AudioEngine {
   private runtimes = new Map<string, AudioRuntime>();
   private project?: Project;
   private kitEffects?: KitEffects;
+  private controlAnalysers = new Map<
+    string,
+    { source: AudioNode; analyser: AnalyserNode; data: Float32Array<ArrayBuffer> }
+  >();
   private samplePreview?: { moduleId: string; runtime: AudioRuntime };
   private graphSignature = '';
   private scheduler?: ReturnType<typeof setInterval>;
@@ -119,6 +123,9 @@ export class AudioEngine {
     ]);
     if (signature !== this.graphSignature) {
       this.keyboardNotes.clear();
+      this.disposeControlAnalysers();
+      // Consumers detach per-hit modulation taps before producer buses disconnect.
+      this.runtimes.forEach((runtime) => runtime.silence?.());
       this.kitEffects?.dispose();
       this.kitEffects = undefined;
       this.runtimes.forEach((runtime) => runtime.dispose());
@@ -152,16 +159,35 @@ export class AudioEngine {
     }
     this.kitEffects?.update(project);
     this.master.gain.setTargetAtTime(project.masterVolume, this.context.currentTime, 0.025);
+    // Configure all source flags before kits read their shared modulation buses.
+    for (const module of project.modules) {
+      this.runtimes
+        .get(module.id)
+        ?.configureConnections?.(
+          new Set(
+            project.cables
+              .filter((cable) => cable.to.moduleId === module.id)
+              .map((cable) => cable.to.portId),
+          ),
+        );
+    }
     for (const module of project.modules) {
       const runtime = this.runtimes.get(module.id)!;
       runtime.update(module.parameters);
       runtime.configureSample?.(module.samples?.clip);
       if (runtime.configureKit) {
         const kit = connectedDrumKit(project, module.id);
+        const samplers = kitSamplerSources(project, kit);
         runtime.configureKit(
           kit,
-          kitSamplerSources(project, kit),
+          samplers,
           this.kitEffects?.inputs.get(module.id),
+          Object.fromEntries(
+            Object.entries(samplers).flatMap(([lane, sampler]) => {
+              const modulation = this.runtimes.get(sampler.id)?.sampleModulation;
+              return modulation ? [[lane, modulation]] : [];
+            }),
+          ),
         );
       }
       if (
@@ -190,26 +216,28 @@ export class AudioEngine {
     notes.delete(note);
     notes.set(note, velocity);
     this.keyboardNotes.set(controllerId, notes);
-    this.updateKeyboardVoice(controllerId);
+    this.updateKeyboardVoice(controllerId, true);
   }
 
   noteOff(controllerId: string, note: number) {
     this.keyboardNotes.get(controllerId)?.delete(note);
-    this.updateKeyboardVoice(controllerId);
+    this.updateKeyboardVoice(controllerId, true);
   }
 
   releaseKeyboard(controllerId: string) {
     this.keyboardNotes.delete(controllerId);
-    this.updateKeyboardVoice(controllerId);
+    this.updateKeyboardVoice(controllerId, true);
   }
 
-  private updateKeyboardVoice(controllerId: string) {
+  private updateKeyboardVoice(controllerId: string, gateChanged = false) {
     if (!this.context || !this.project) return;
     const controller = this.project.modules.find((module) => module.id === controllerId);
     const held = [...(this.keyboardNotes.get(controllerId) ?? [])].at(-1);
     for (const id of controllerTargets(this.project, controllerId, 'pitch')) {
       const target = this.project.modules.find((module) => module.id === id);
-      const voice = this.runtimes.get(id)?.voice;
+      const runtime = this.runtimes.get(id);
+      if (gateChanged) runtime?.gate?.(Boolean(held), held?.[1] ?? 0, this.context.currentTime);
+      const voice = runtime?.voice;
       if (!voice || !target || !controller) continue;
       const now = this.context.currentTime;
       // Cancel the previous envelope so releasing or changing a held note cannot leave a drone.
@@ -280,15 +308,16 @@ export class AudioEngine {
       const tick = this.tickIndex;
       const drumStep = this.tickIndex % 16;
       for (const module of project.modules) {
+        this.runtimes.get(module.id)?.scheduleControl?.(tick, this.nextStepTime);
         for (const sound of drumHitsAtStep(module, drumStep))
           this.runtimes.get(module.id)?.trigger?.(sound, 0.85, this.nextStepTime);
       }
       for (const cable of project.cables) {
-        if (cable.to.portId !== 'pitch') continue;
+        if (cable.to.portId !== 'pitch' && cable.to.portId !== 'gate') continue;
         const sequencer = project.modules.find((module) => module.id === cable.from.moduleId);
-        const oscillator = project.modules.find((module) => module.id === cable.to.moduleId);
+        const targetModule = project.modules.find((module) => module.id === cable.to.moduleId);
         const voice = this.runtimes.get(cable.to.moduleId)?.voice;
-        if (sequencer?.type !== 'sequencer' || !sequencer.steps || !oscillator || !voice) continue;
+        if (sequencer?.type !== 'sequencer' || !sequencer.steps || !targetModule) continue;
         const ticksPerStep = sequencerRate(sequencer.parameters.rate).ticks;
         if (tick % ticksPerStep !== 0) continue;
         const step = Math.floor(tick / ticksPerStep) % sequencer.steps.length;
@@ -296,18 +325,26 @@ export class AudioEngine {
         const degree = sequencer.steps[step];
         const start = this.nextStepTime;
         const gate = stepSeconds * Number(sequencer.parameters.gate);
+        const runtime = this.runtimes.get(cable.to.moduleId);
+        if (runtime?.gate) {
+          if (degree >= 0) {
+            runtime.gate(true, 1, start);
+            runtime.gate(false, 0, start + gate);
+          } else runtime.gate(false, 0, start);
+        }
+        if (!voice) continue;
         voice.envelope.cancelScheduledValues(start);
         voice.envelope.setValueAtTime(0, start);
         if (degree >= 0) {
           voice.frequency.setValueAtTime(
-            stepFrequency(project, degree, Number(oscillator.parameters.octave)),
+            stepFrequency(project, degree, Number(targetModule.parameters.octave)),
             start,
           );
           voice.envelope.linearRampToValueAtTime(
-            Number(oscillator.parameters.level),
+            Number(targetModule.parameters.level),
             start + Math.min(0.008, gate * 0.8),
           );
-          voice.envelope.setValueAtTime(Number(oscillator.parameters.level), start + gate);
+          voice.envelope.setValueAtTime(Number(targetModule.parameters.level), start + gate);
           // Leave silence before the next onset, but keep release after the hold even
           // at 1/16, maximum tempo and a long gate. Reversed events can leave a drone.
           const endGap = Math.min(0.005, (stepSeconds - gate) / 2);
@@ -340,6 +377,32 @@ export class AudioEngine {
     );
   }
 
+  /** Lazily meter requested control screens; these taps never reach the speakers. */
+  readControl(moduleId: string, portId: string): number {
+    if (!this.context) return 0;
+    const key = `${moduleId}:${portId}`;
+    let meter = this.controlAnalysers.get(key);
+    if (!meter) {
+      const source = this.runtimes.get(moduleId)?.outputs[portId];
+      if (!source) return 0;
+      const analyser = this.context.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+      meter = { source, analyser, data: new Float32Array(256) };
+      this.controlAnalysers.set(key, meter);
+    }
+    meter.analyser.getFloatTimeDomainData(meter.data);
+    return meter.data.reduce((sum, value) => sum + value, 0) / meter.data.length;
+  }
+
+  private disposeControlAnalysers() {
+    for (const { source, analyser } of this.controlAnalysers.values()) {
+      source.disconnect(analyser);
+      analyser.disconnect();
+    }
+    this.controlAnalysers.clear();
+  }
+
   readWaveform(data: Uint8Array<ArrayBuffer>) {
     this.analyser?.getByteTimeDomainData(data);
   }
@@ -364,6 +427,8 @@ export class AudioEngine {
     this.visualTimers.forEach((timer) => clearTimeout(timer));
     this.visualTimers.clear();
     this.keyboardNotes.clear();
+    this.disposeControlAnalysers();
+    this.runtimes.forEach((runtime) => runtime.silence?.());
     this.kitEffects?.dispose();
     this.kitEffects = undefined;
     this.runtimes.forEach((runtime) => runtime.dispose());

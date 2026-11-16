@@ -183,6 +183,8 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
     cancelScheduledValues() {}
   }
   class Node {
+    offset = new Parameter();
+    detune = new Parameter();
     gain = new Parameter();
     playbackRate = new Parameter();
     buffer: unknown;
@@ -190,7 +192,7 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
     onended: (() => void) | null = null;
     stopped = false;
     startTime = -1;
-    offset = -1;
+    startOffset = -1;
     stopTime = -1;
     connect(node: Node) {
       this.connections.add(node);
@@ -199,7 +201,7 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
       this.connections.clear();
     }
     start(time: number, offset = 0) {
-      this.offset = offset;
+      this.startOffset = offset;
       this.startTime = time;
     }
     stop(time = 0) {
@@ -215,6 +217,12 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
       const node = new Node();
       nodes.push(node);
       return node;
+    },
+    createConstantSource() {
+      return this.createGain();
+    },
+    createWaveShaper() {
+      return this.createGain();
     },
     createBufferSource() {
       const node = new Node();
@@ -237,7 +245,7 @@ test('sampler retriggers are bounded and replacement, Stop, and disposal release
   assert.equal(sources[0].stopTime, 10.1);
   runtime.update({ level: 0.7, rate: 0.5, trimStart: 0.25, trimEnd: 0.75 });
   runtime.trigger?.('kick', 1, 2.2);
-  assert.equal(sources[1].offset, 1);
+  assert.equal(sources[1].startOffset, 1);
   assert.equal(
     sources[1].stopTime,
     6.2,

@@ -314,8 +314,67 @@ function popClap() {
   return { name: 'Synthesized pop clap', pcm: encodeSamplePcm(frames) };
 }
 
+/** A dedicated control lesson keeps the established 38-module performance fixture intact. */
+function createMovingPartsProject(): Project {
+  const notes = instrument('sequencer', 40, 40, { rate: '1/4', gate: 0.4 });
+  const oscillator = instrument('oscillator', 360, 40, { waveform: 'triangle', level: 0.24 });
+  const filter = instrument('filter', 660, 40, { cutoff: 750, resonance: 0.7 });
+  const envelope = instrument('envelope', 960, 40, { attack: 0.02, release: 0.3, depth: 0.65 });
+  const modulation = instrument('mod-sequencer', 40, 470, {
+    rate: '1/8',
+    depth: 0.025,
+    glide: 0.04,
+  });
+  const random = instrument('random-mod', 460, 470, { rate: '1/4', depth: 0.3, glide: 0.07 });
+  const xy = instrument('xy-controller', 780, 470, { x: 0.9, y: -0.2, depth: 0.7 });
+  const sampler = instrument('mic-sampler', 40, 1000, { level: 0.5 });
+  sampler.samples = { clip: popClap() };
+  const sampleFilter = instrument('filter', 400, 1000, { cutoff: 2800, resonance: 0.7 });
+  const kit = instrument('drum-kit', 700, 1000, { kick: 'input' });
+  const drums = instrument('drum-machine', 1120, 1000, { level: 0.5 });
+  drums.drumPattern = drumPattern({ kick: [0, 4, 8, 12] });
+  const merger = instrument('merger', 1300, 40, { level: 0.7 });
+  const output = instrument('output', 1700, 40);
+  return {
+    ...createProject(true),
+    name: 'Moving parts',
+    tempo: 104,
+    modules: [
+      notes,
+      oscillator,
+      filter,
+      envelope,
+      modulation,
+      random,
+      xy,
+      sampler,
+      sampleFilter,
+      kit,
+      drums,
+      merger,
+      output,
+    ],
+    cables: [
+      wire(notes, 'pitch', oscillator, 'pitch'),
+      wire(notes, 'pitch', envelope, 'gate'),
+      wire(envelope, 'out', filter, 'cutoff'),
+      wire(modulation, 'out', oscillator, 'pitchMod'),
+      wire(oscillator, 'out', filter, 'in'),
+      wire(filter, 'out', merger, 'in1'),
+      wire(xy, 'x', sampler, 'levelMod'),
+      wire(xy, 'y', sampler, 'rateMod'),
+      wire(random, 'out', sampleFilter, 'cutoff'),
+      wire(sampler, 'out', sampleFilter, 'in'),
+      wire(sampleFilter, 'out', kit, 'kick'),
+      wire(kit, 'kit', drums, 'kit'),
+      wire(drums, 'out', merger, 'in2'),
+      wire(merger, 'out', output, 'in'),
+    ],
+  };
+}
+
 /** Five instrument rows run rhythm, bass, chords, hook, then live performance.
- * All seventeen module types have a job; Switch chooses hook, keys, dry hook or duet.
+ * The original seventeen module types have a job; Switch chooses hook, keys, dry hook or duet.
  * Quarter-note sequences share a two-bar I–V–vi–IV progression in C major.
  */
 function createNeonProject(): Project {
@@ -564,11 +623,23 @@ export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
     create: createClockworkProject,
   },
   {
+    id: 'moving-parts',
+    name: 'Moving parts',
+    style: 'Modulation · 13 modules',
+    description:
+      'A shaped melody and sampled rhythm: Envelope, Mod sequencer, Sample & Hold, and XY controller each move a different part.',
+    tryThis:
+      'Move the XY pad: left/right opens the sampled claps, up/down changes their speed. Try the eight modulation faders next.',
+    color: '#52757a',
+    artwork: 'xy',
+    create: createMovingPartsProject,
+  },
+  {
     id: 'neon-chorus',
     name: 'Neon chorus',
     style: 'Pop · 38 modules',
     description:
-      'A bright C-major pop arrangement at 116 BPM. Every module type, with layered chords, a synth hook and sampled claps.',
+      'A bright C-major pop arrangement at 116 BPM. The original seventeen instruments, with layered chords, a synth hook and sampled claps.',
     tryThis:
       'Switch: 1 hook, 2 live keys, 3 dry hook, 4 duet. Choose 2 or 4 and play the Keyboard over the backing.',
     color: '#ad627a',

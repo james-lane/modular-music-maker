@@ -89,7 +89,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
           'Play snippet restarts a direct dry preview of the selected part each time, using trim, Speed, and Level. It works while the studio is stopped or playing, without cables and even with Output muted. It bypasses patch effects and master volume and is excluded from studio recordings. Pad hits use connected cables. Playback does not follow the transport automatically. Clear removes the saved clip; Undo restores it. Empty modules are silent.',
       },
     ],
-    tip: 'Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence this recording, connect AUDIO OUT to a Drum kit IN socket, optionally through Filter, Delay, Reverb, or XY Effects, select its Audio input voice, and link KIT OUT to Drum machine KIT IN. Each drum hit plays the full trimmed clip independently, with overlaps; no manual sampler playback is needed. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',
+    tip: 'SPEED MOD bends pitch and length by up to an octave each way; LEVEL MOD opens 0–100% of Level (negative values mute). These also reach independently triggered Drum kit clips. Dry Play snippet preview bypasses MOD cables. Try a clap through Delay for a homemade percussion hit. All pads trigger the same snippet. To sequence this recording, connect AUDIO OUT to a Drum kit IN socket, optionally through Filter, Delay, Reverb, or XY Effects, select its Audio input voice, and link KIT OUT to Drum machine KIT IN. Each drum hit plays the full trimmed clip independently, with overlaps; no manual sampler playback is needed. Mic capture requires browser permission; saved sounds work offline without microphone access. Headphones keep your backing track out of the recording.',
     example: {
       title: 'Echo a found sound',
       description:
@@ -250,6 +250,11 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
     extraControls: [
       {
+        label: 'PITCH MOD',
+        description:
+          'Adds bounded pitch bend independently of PITCH notes and Fine tune. A full-scale control signal bends up to one octave; a zero signal preserves the original note.',
+      },
+      {
         label: 'Waveform buttons',
         description:
           'Sine is smooth, triangle is mellow, sawtooth is bright, and square is hollow and buzzy.',
@@ -288,9 +293,151 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       ],
     },
   },
+  envelope: {
+    overview:
+      'An attack/hold/release control envelope. Notes hold its peak until release; a pad or Trigger envelope button plays one attack/release sweep. It produces control data, not sound.',
+    steps: [
+      'Connect MOD OUT to Filter MOD, Oscillator PITCH MOD, or Mic sampler LEVEL MOD.',
+      'Connect Keyboard PITCH / GATE or Step sequencer PITCH to NOTE / GATE. For one-shot sweeps, connect Pad controller TRIGGER OUT to TRIGGER IN.',
+      'Set Attack, Release and Depth, then play a note or press Trigger envelope.',
+    ],
+    controls: {
+      attack: 'Time to rise from the current value to the peak.',
+      release: 'Time to return to zero after note release or the one-shot peak.',
+      depth:
+        'Peak amount. 100% is 1500 Hz at Filter MOD, one octave at pitch/speed inputs, or full sampler Level at LEVEL MOD. Velocity scales the peak.',
+    },
+    extraControls: [
+      {
+        label: 'Trigger envelope',
+        description:
+          'Auditions a one-shot control sweep without starting the transport. A connected audio source and Output are needed to hear the change.',
+      },
+    ],
+    tip: 'For a plucked filter sound, use a short Attack and longer Release. NOTE / GATE and TRIGGER IN share one envelope; simultaneous events retrigger it from its current value.',
+    example: {
+      title: 'Play a filter envelope',
+      description:
+        'The Keyboard sends notes to both the Oscillator and Envelope. The second cable shapes the Filter without changing note pitch.',
+      connections: [
+        wire('keyboard', 'pitch', 'oscillator', 'pitch'),
+        wire('keyboard', 'pitch', 'envelope', 'gate'),
+        wire('envelope', 'out', 'filter', 'cutoff'),
+        wire('oscillator', 'out', 'filter', 'in'),
+        wire('filter', 'out', 'output', 'in'),
+      ],
+    },
+  },
+  'mod-sequencer': {
+    overview:
+      'Eight bipolar control values repeat at the project tempo. This is a modulation pattern; the Step sequencer remains the separate note and gate instrument.',
+    steps: [
+      'Connect MOD OUT to a MOD input, then press Play.',
+      'Move the eight faders above or below zero to draw a repeating control pattern.',
+      'Choose a step rate; adjust Depth and Glide for strong steps or smooth movement.',
+    ],
+    controls: {
+      ...Object.fromEntries(
+        Array.from({ length: 8 }, (_, index) => [
+          `step${index + 1}`,
+          `Signed value for step ${index + 1}, from −1 to +1. Zero leaves the destination at its base setting.`,
+        ]),
+      ),
+      depth:
+        'Scales the pattern. At 100%, ±1 means ±1500 Hz for Filter MOD or ±one octave for pitch/speed MOD. Sampler LEVEL MOD clamps values to 0–100% of Level.',
+      glide: 'Smoothing time for changes between steps. Zero retains a tiny click-prevention ramp.',
+    },
+    extraControls: [
+      {
+        label: 'Step rate',
+        description:
+          'Quarter, eighth, or sixteenth notes on the shared audio clock. Changes join the existing transport grid; Stop clears the held value and Play restarts at step 1.',
+      },
+    ],
+    tip: 'Keep the note sequencer for melody and use this module for a repeating filter or pitch contour. It never emits notes, triggers, or audio.',
+    example: {
+      title: 'A stepped filter groove',
+      description: 'A sustained Oscillator is sculpted by an independent modulation pattern.',
+      connections: [
+        wire('mod-sequencer', 'out', 'filter', 'cutoff'),
+        wire('oscillator', 'out', 'filter', 'in'),
+        wire('filter', 'out', 'output', 'in'),
+      ],
+    },
+  },
+  'random-mod': {
+    overview:
+      'Sample & Hold chooses a random bipolar control value and holds it until the next clock step or pad hit. Glide softens the transitions. It does not sample or store microphone audio.',
+    steps: [
+      'Connect MOD OUT to a MOD input.',
+      'Press Play for tempo-synced random changes. A cable at TRIGGER IN replaces that clock with pad hits.',
+      'Try New random value while stopped, then set Depth and Glide.',
+    ],
+    controls: {
+      depth:
+        'Scales random values within ±1500 Hz at Filter MOD or ±one octave at pitch/speed MOD when at 100%. Sampler level is always bounded to 0–100% of its Level.',
+      glide:
+        'Smoothing time toward the next random value. Higher settings wander rather than jump.',
+    },
+    extraControls: [
+      {
+        label: 'Step rate',
+        description:
+          'Quarter, eighth or sixteenth-note random updates while transport runs, unless TRIGGER IN is patched.',
+      },
+      {
+        label: 'New random value',
+        description:
+          'Chooses one new value without starting transport. The value is ephemeral; reload starts at zero.',
+      },
+    ],
+    tip: 'Unlike the LFO, values do not follow a repeating wave. Unlike Mic sampler, this module captures no sound and requests no device permission.',
+    example: {
+      title: 'Random filter colours',
+      description: 'Noise keeps sounding while random control values move its Filter.',
+      connections: [
+        wire('random-mod', 'out', 'filter', 'cutoff'),
+        wire('noise', 'out', 'filter', 'in'),
+        wire('filter', 'out', 'output', 'in'),
+      ],
+    },
+  },
+  'xy-controller': {
+    overview:
+      'A hands-on two-axis controller with independent X MOD and Y MOD outputs. It sends no audio and applies no built-in effects; XY Effects remains the separate audio processor.',
+    steps: [
+      'Connect X MOD and/or Y MOD to control inputs on other modules.',
+      'Slide the pad, use its arrow keys, or adjust the accessible X/Y sliders.',
+      'Set Depth to control the range. Centre returns both axes to zero.',
+    ],
+    controls: {
+      x: 'Horizontal position from −1 (left) to +1 (right).',
+      y: 'Vertical position from −1 (bottom) to +1 (top).',
+      depth:
+        'Shared scale for both outputs. 100% spans ±1500 Hz at Filter MOD or ±one octave at pitch/speed MOD. Sampler level clamps to 0–100% of Level.',
+    },
+    extraControls: [
+      {
+        label: 'Pad and Centre',
+        description:
+          'Position stays on release and saves with the patch. Arrow keys move; Shift is finer; Home or Centre resets both axes. X and Y remain independent and can fan out.',
+      },
+    ],
+    tip: 'Try X for filter colour and Y for oscillator pitch. Centre is zero modulation, not muted audio. This controller does not replace the audio effects console.',
+    example: {
+      title: 'Two-axis tone and pitch',
+      description: 'X moves the Filter while Y bends the Oscillator pitch.',
+      connections: [
+        wire('xy-controller', 'x', 'filter', 'cutoff'),
+        wire('xy-controller', 'y', 'oscillator', 'pitchMod'),
+        wire('oscillator', 'out', 'filter', 'in'),
+        wire('filter', 'out', 'output', 'in'),
+      ],
+    },
+  },
   lfo: {
     overview:
-      'A slow modulation wave that moves another module’s setting over time. It currently controls the Filter’s cutoff through its MOD socket.',
+      'A slow modulation wave that moves another module’s setting over time. It controls Filter cutoff, Oscillator pitch, or Mic sampler speed/level through their MOD sockets.',
     steps: [
       'Build an audio path: Oscillator AUDIO OUT to Filter AUDIO IN, then Filter AUDIO OUT to Output AUDIO IN.',
       'Connect LFO MOD OUT to Filter MOD.',

@@ -125,7 +125,9 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   const noteOn = useCallback(
     (moduleId: string, note: number) => {
       if (!controllerTargets(latest.current, moduleId, 'pitch').length) {
-        notifyRef.current('Connect Keyboard PITCH / GATE to an Oscillator PITCH input.');
+        notifyRef.current(
+          'Connect Keyboard PITCH / GATE to an Oscillator PITCH or Envelope NOTE / GATE input.',
+        );
         return;
       }
       const token = `${moduleId}:${note}`;
@@ -171,7 +173,7 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     (moduleId: string, sound: DrumSound) => {
       if (!controllerTargets(latest.current, moduleId, 'trigger').length) {
         notifyRef.current(
-          'Connect Pad controller TRIGGER OUT to a Drum machine or Mic sampler TRIGGER IN.',
+          'Connect Pad controller TRIGGER OUT to a Drum machine, Mic sampler, Envelope, or Sample & Hold TRIGGER IN.',
         );
         return;
       }
