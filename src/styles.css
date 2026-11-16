@@ -799,6 +799,20 @@ svg {
   inset: 0;
   transform-origin: top left;
 }
+/* Safari otherwise recomposites the whole rack (including filtered cables) when
+   these small regions repaint. Promote only bounded playback visuals, keeping
+   the static hardware on the shared navigation surface. Stop releases the layers. */
+.canvas-viewport[data-audio-active='true']
+  :is(
+    .oscilloscope,
+    .level-meter,
+    .control-scope,
+    .filter-response,
+    .drum-pattern,
+    .sequence-steps
+  ) {
+  transform: translateZ(0);
+}
 .canvas-controls {
   display: flex;
   align-items: center;

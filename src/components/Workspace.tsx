@@ -515,6 +515,7 @@ export function Workspace({
         className={`canvas-viewport ${dragOver || placement ? 'drag-over' : ''} ${handMode ? 'hand-mode' : ''}`}
         aria-label="Module workspace"
         data-zoom={zoom}
+        data-audio-active={audioActive}
         style={{
           backgroundSize: `${gridSize}px ${gridSize}px`,
           backgroundPosition: `${(-view.x * zoom) % gridSize}px ${(-view.y * zoom) % gridSize}px`,
