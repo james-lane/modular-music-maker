@@ -7,6 +7,7 @@ import { encodeSamplePcm } from '../src/domain/samples';
 import { AUDIO_FACTORIES } from '../src/audio/factories';
 import { CONFIG } from '../src/config';
 import { setPadCount } from '../src/domain/pad-controller';
+import { ticksPerBar } from '../src/domain/switch-schedule';
 
 class Parameter {
   value = 0;
@@ -117,6 +118,162 @@ class Context {
     return this as unknown as AudioContext;
   }
 }
+
+test('Switch cues use the shared future audio ticks in 4/4, 3/4 and 6/8', async (t) => {
+  for (const timeSignature of ['4/4', '3/4', '6/8'] as const)
+    await t.test(timeSignature, async (t) => {
+      t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
+      const context = new Context(),
+        engine = new AudioEngine(() => context.asAudioContext());
+      const selector = createModule('switch', 0, 0);
+      selector.parameters.automatic = true;
+      const clock = createModule('noise', 400, 0);
+      const ticks: { tick: number; time: number }[] = [],
+        cues: { input: number; time: number; queued: number }[] = [];
+      t.mock.method(AUDIO_FACTORIES, 'noise', () => ({
+        inputs: {},
+        outputs: {},
+        update() {},
+        dispose() {},
+        scheduleControl(tick: number, time: number) {
+          ticks.push({ tick, time });
+        },
+      }));
+      t.mock.method(AUDIO_FACTORIES, 'switch', () => ({
+        inputs: {},
+        outputs: {},
+        update() {},
+        dispose() {},
+        resetSelection() {},
+        selectInput(input: number, time: number) {
+          cues.push({ input, time, queued: context.currentTime });
+        },
+      }));
+      try {
+        await engine.play({
+          ...createProject(true),
+          modules: [selector, clock],
+          tempo: 120,
+          timeSignature,
+        });
+        for (let step = 1; step <= 200; step++) {
+          context.currentTime = step * 0.025;
+          t.mock.timers.tick(25);
+        }
+        const starts = ticks.filter((item) => item.tick % ticksPerBar(timeSignature) === 0);
+        assert.deepEqual(
+          cues.map((cue) => ({ input: cue.input, time: cue.time })),
+          starts.map((item) => ({
+            input: (Math.floor(item.tick / ticksPerBar(timeSignature)) % 2) + 1,
+            time: item.time,
+          })),
+        );
+        assert(cues.length >= 3);
+        assert(
+          cues.every(
+            (cue) =>
+              cue.time > cue.queued && cue.time <= cue.queued + CONFIG.audio.scheduleAheadSeconds,
+          ),
+        );
+      } finally {
+        await engine.dispose();
+      }
+    });
+});
+
+test('Switch edits replace queued cues, ignore unrelated edits, and clear on manual takeover/Stop/restart', async (t) => {
+  t.mock.timers.enable({ apis: ['setInterval', 'setTimeout'] });
+  const context = new Context(),
+    engine = new AudioEngine(() => context.asAudioContext());
+  const selector = createModule('switch', 0, 0);
+  selector.parameters.automatic = true;
+  const project = { ...createProject(true), modules: [selector], tempo: 120 };
+  const cues: { input: number; time: number }[] = [],
+    resets: { input: number; time: number }[] = [];
+  let silenced = 0;
+  t.mock.method(AUDIO_FACTORIES, 'switch', () => ({
+    inputs: {},
+    outputs: {},
+    update() {},
+    dispose() {},
+    silence() {
+      silenced++;
+    },
+    resetSelection(input: number) {
+      resets.push({ input, time: context.currentTime });
+    },
+    selectInput(input: number, time: number) {
+      cues.push({ input, time });
+    },
+  }));
+  const advance = (steps: number) => {
+    for (let i = 0; i < steps; i++) {
+      context.currentTime += 0.025;
+      t.mock.timers.tick(25);
+    }
+  };
+  try {
+    await engine.play(project);
+    advance(77);
+    assert.equal(cues.at(-1)!.input, 2, 'bar 2 is already queued before it sounds');
+    const queuedTime = cues.at(-1)!.time,
+      count = resets.length;
+    engine.update({ ...project, masterVolume: 0.5 });
+    assert.equal(resets.length, count, 'ordinary edits do not interrupt pending cues');
+    const edited = {
+      ...project,
+      modules: [
+        {
+          ...selector,
+          switchCues: [
+            { bar: 1, input: 1 },
+            { bar: 2, input: 3 },
+          ],
+        },
+      ],
+    };
+    engine.update(edited);
+    assert.deepEqual(resets.at(-1), { input: 1, time: context.currentTime });
+    assert.deepEqual(
+      cues.at(-1),
+      { input: 3, time: queuedTime },
+      'edited input replaces the queued boundary',
+    );
+    engine.update({ ...edited, tempo: 60 });
+    assert.deepEqual(
+      cues.at(-1),
+      { input: 3, time: queuedTime },
+      'tempo edits retain the already queued clock boundary',
+    );
+    const manual = {
+      ...edited,
+      modules: [
+        {
+          ...edited.modules[0],
+          parameters: { ...selector.parameters, automatic: false, selected: 4 },
+        },
+      ],
+    };
+    engine.update(manual);
+    assert.deepEqual(resets.at(-1), { input: 4, time: context.currentTime });
+    const manualCount = cues.length;
+    advance(100);
+    assert.equal(cues.length, manualCount);
+    await engine.stop();
+    assert(silenced > 0);
+    const stoppedCount = cues.length;
+    advance(100);
+    assert.equal(cues.length, stoppedCount);
+    await engine.play(edited);
+    assert.deepEqual(
+      cues.at(-1),
+      { input: 1, time: context.currentTime + 0.03 },
+      'Play starts again at bar 1',
+    );
+  } finally {
+    await engine.dispose();
+  }
+});
 
 test('independent pad outputs trigger only their receivers at the live audio time and retain ALL', async () => {
   const context = new Context();

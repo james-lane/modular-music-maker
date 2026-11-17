@@ -70,14 +70,16 @@ export function createModuleDemo(type: ModuleType): ModuleDemo {
       ? 'pads'
       : 'transport';
   const instructions =
-    interaction === 'keyboard'
-      ? 'Play the Keyboard keys to hear this demo. No need to press Play.'
-      : interaction === 'pads'
-        ? type === 'pad-controller'
-          ? 'Tap pad 1 for a kick and pad 2 for the included clap. Each output plays only its own instrument; no need to press Play.'
-          : modules.has('mic-sampler')
-            ? 'Tap the Pad controller to play the included clap. You can replace it with your own recording.'
-            : 'Tap the Pad controller, or press Play for its backing rhythm.'
-        : 'Press Play to hear this demo, then try the module’s controls.';
+    type === 'switch'
+      ? 'Press Play to alternate one bar of drums and one bar of melody. Schedule edits the cues; numbered keys take manual control.'
+      : interaction === 'keyboard'
+        ? 'Play the Keyboard keys to hear this demo. No need to press Play.'
+        : interaction === 'pads'
+          ? type === 'pad-controller'
+            ? 'Tap pad 1 for a kick and pad 2 for the included clap. Each output plays only its own instrument; no need to press Play.'
+            : modules.has('mic-sampler')
+              ? 'Tap the Pad controller to play the included clap. You can replace it with your own recording.'
+              : 'Tap the Pad controller, or press Play for its backing rhythm.'
+          : 'Press Play to hear this demo, then try the module’s controls.';
   return { project, interaction, instructions };
 }

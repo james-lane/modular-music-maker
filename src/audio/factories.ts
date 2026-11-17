@@ -30,6 +30,8 @@ export interface AudioRuntime {
   trigger?: (sound: DrumSound, velocity: number, time: number) => void;
   gate?: (on: boolean, velocity: number, time: number) => void;
   scheduleControl?: (tick: number, time: number) => void;
+  selectInput?: (selected: number, time: number) => void;
+  resetSelection?: (selected: number) => void;
   configureConnections?: (ports: ReadonlySet<string>) => void;
   /** Shared control buses also reach independently owned Drum kit sampler hits. */
   sampleModulation?: SampleModulation;
@@ -298,16 +300,34 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
           return [port.id, input];
         }),
     );
+    const selectInput = (selected: number, time: number) => {
+      for (const [id, input] of Object.entries(inputs))
+        input.gain.setTargetAtTime(
+          id === `in${selected}` ? 1 : 0,
+          time,
+          CONFIG.audio.parameterRampSeconds,
+        );
+    };
+    const resetSelection = (selected: number) => {
+      // Clear queued cues while retaining the current crossfade value for a smooth takeover.
+      for (const input of Object.values(inputs))
+        input.gain.cancelAndHoldAtTime(context.currentTime);
+      selectInput(selected, context.currentTime);
+    };
     return {
       inputs,
       outputs: { out: output },
+      selectInput,
+      resetSelection,
       update(parameters) {
-        // Retargeting these gains preserves the graph, source clocks and effect tails.
-        // The shared smoothing time also keeps rapid changes continuous.
-        for (const [id, input] of Object.entries(inputs))
-          smooth(input.gain, id === `in${parameters.selected}` ? 1 : 0, context);
+        resetSelection(Number(parameters.selected));
+      },
+      silence() {
+        resetSelection(0);
       },
       dispose() {
+        for (const input of Object.values(inputs))
+          input.gain.cancelScheduledValues(context.currentTime);
         Object.values(inputs).forEach((input) => input.disconnect());
         output.disconnect();
       },

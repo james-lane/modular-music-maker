@@ -1011,7 +1011,7 @@
   justify-content: center;
   gap: 8px;
   min-width: 0;
-  height: 97px;
+  height: 85px;
   padding: 8px 2px;
   color: #513b36;
   border: 1px solid #b9a68a;
@@ -1060,7 +1060,7 @@
   font: 7px monospace;
 }
 .switch-console p {
-  margin: 17px 0 0;
+  margin: 10px 0 0;
   color: #d3b9a9;
   font: 6px monospace;
   letter-spacing: 0.6px;
@@ -1679,4 +1679,73 @@
   .mixer-toolbar select {
     font-size: 16px;
   }
+}
+
+.switch-legend button {
+  min-height: 28px;
+  padding: 4px 9px;
+  border: 1px solid var(--panel-rule);
+  border-radius: 4px;
+  background: var(--panel-end);
+  color: var(--panel-ink);
+  font-size: 10px;
+}
+.switch-auto[aria-pressed='true'] {
+  color: #ffcd70;
+  box-shadow: inset 0 0 0 1px #ffcd7040;
+}
+.switch-cue-form,
+.switch-cue-rows {
+  display: grid;
+  gap: 12px;
+}
+.switch-cue-rows {
+  max-height: min(42vh, 330px);
+  overflow-y: auto;
+  padding: 4px;
+}
+.switch-cue-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+.switch-cue-row label {
+  display: grid;
+  gap: 5px;
+  font-size: 12px;
+}
+.switch-cue-row input,
+.switch-cue-row select,
+.switch-repeat-controls input[type='number'] {
+  min-width: 0;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--ink);
+  background: var(--paper);
+}
+.switch-cue-row button {
+  min-height: 38px;
+}
+.switch-repeat-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+.switch-repeat-controls label {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  font-size: 12px;
+}
+.switch-repeat-controls input[type='number'] {
+  width: 68px;
+}
+.switch-cue-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
 }

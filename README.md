@@ -174,6 +174,12 @@ Add **Merger** from **Utility** in the module library. Connect up to four instru
 
 For more than four sources, connect one Merger's SUM OUT to another Merger input. Adding sources adds their levels, so balance them with the individual input knobs and lower Sum level if needed; use **Mixer** for **2–8 inputs** when you prefer faders. Choose its input count before connecting extra sources. Reducing the count unplugs removed input cables; Undo restores them, and the fader settings are kept. Pitch, modulation, and trigger signals retain their existing socket types: route a Keyboard through an Oscillator, or pads through a Drum machine, before merging their audio. The Merger's **?** guide includes a four-input example with an echo return.
 
+## Switch between parts
+
+Connect up to four sound paths to **Switch IN 1–4**, then send its **AUDIO OUT** to Output. **Schedule…** lets you choose which input takes over at the start of specific bars: for example, input 1 at bar 1 and input 2 at bar 5. Keep **Repeat schedule** on and choose 8 bars to alternate those four-bar parts. With Repeat off, the final input stays selected. Schedules support up to 16 cues at bars 1–128, including a bar 1 cue for the starting sound.
+
+**Use schedule** enables Auto without starting playback. Press Play to run it; Stop clears queued changes, and the next Play starts at bar 1. The lights follow the routed input. Tap a numbered key to take manual control; **Auto** rejoins the schedule at the current bar. Cue edits and manual choices support Undo/Redo, while automatic changes leave the saved manual selection and history alone. Switching follows project tempo and time signature and keeps upstream instruments/loops running. Existing patches stay in Manual mode. The guide demo alternates a bar of drums and a bar of melody.
+
 ## Blend effects with a touch
 
 Add **XY Effects** from **Effects**. Connect an instrument's AUDIO OUT → XY Effects AUDIO IN, then XY Effects AUDIO OUT → Output AUDIO IN. Tap or drag the point around the four-quadrant pad. The centre is clean; moving towards an edge brings in the surrounding corners, and a corner isolates its effect. Release to keep the position. **Mix** sets the maximum processed amount; **Centre** restores clean audio.

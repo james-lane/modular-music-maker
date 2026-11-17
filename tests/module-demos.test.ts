@@ -60,6 +60,7 @@ test('demo copies have fresh IDs and independent editable notes, parameters and 
       if (module.drumPattern)
         Object.values(module.drumPattern).forEach((steps) => steps.fill(false));
       if (module.samples) for (const sample of Object.values(module.samples)) sample.pcm = 'AAAA';
+      if (module.switchCues) module.switchCues.forEach((cue) => (cue.input = 4));
     }
     assert.deepEqual(first, snapshot);
     const next = createModuleDemo(definition.type).project;

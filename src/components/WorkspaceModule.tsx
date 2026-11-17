@@ -10,6 +10,7 @@ import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { ModuleCard } from './ModuleCard';
 
 interface Props {
+  onSwitchSchedule: (id: string) => void;
   module: PatchModule;
   project: Project;
   originX: number;
@@ -36,6 +37,7 @@ interface Props {
  * Keep every prop honest: edits, routing, live handlers and capture state still update normally.
  */
 export const WorkspaceModule = memo(function WorkspaceModule({
+  onSwitchSchedule,
   module,
   project,
   originX,
@@ -59,6 +61,7 @@ export const WorkspaceModule = memo(function WorkspaceModule({
 }: Props) {
   return (
     <ModuleCard
+      onSwitchSchedule={() => onSwitchSchedule(module.id)}
       module={module}
       project={project}
       position={{ x: module.x - originX, y: module.y - originY }}

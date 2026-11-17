@@ -21,4 +21,8 @@ export class PlaybackPosition {
   step(ticksPerStep: number, count: number): number {
     return this.tick < 0 ? -1 : Math.floor(this.tick / ticksPerStep) % count;
   }
+
+  bar(ticksPerBar: number): number {
+    return this.tick < 0 ? -1 : Math.floor(this.tick / ticksPerBar);
+  }
 }

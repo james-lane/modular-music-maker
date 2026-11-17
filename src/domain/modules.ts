@@ -1,4 +1,12 @@
-import type { ModuleDefinition, ModuleType, PatchModule } from './types';
+import type { ModuleDefinition, ModuleType, PatchModule, SwitchCue } from './types';
+
+export const SWITCH_SCHEDULE = { maxBar: 128, maxCues: 16, defaultLoopBars: 2 } as const;
+export function defaultSwitchCues(selected = 1): SwitchCue[] {
+  return [
+    { bar: 1, input: selected },
+    { bar: 2, input: (selected % 4) + 1 },
+  ];
+}
 
 export const MIXER_INPUT_COUNTS = [2, 3, 4, 5, 6, 7, 8] as const;
 export const MIXER_CHANNEL_IDS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
@@ -509,6 +517,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
     ],
     controls: [{ id: 'selected', label: 'Selected input', min: 1, max: 4, step: 1, default: 1 }],
+    defaults: { automatic: false, repeat: true, loopBars: SWITCH_SCHEDULE.defaultLoopBars },
   },
   output: {
     type: 'output',
