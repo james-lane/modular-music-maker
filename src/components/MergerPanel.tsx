@@ -26,7 +26,10 @@ export function MergerPanel({
       </div>
       <div className="merger-routing-inputs" aria-label="Merger input connections">
         {controls.map((input) => (
-          <div key={input.id} className={`merger-input ${connected.has(input.id) ? 'wired' : ''}`}>
+          <div
+            key={input.id}
+            className={`merger-input ${input.id === 'level' ? 'merger-sum' : ''} ${connected.has(input.id) ? 'wired' : ''}`}
+          >
             {input.id !== 'level' && (
               <span
                 className="merger-input-indicator"

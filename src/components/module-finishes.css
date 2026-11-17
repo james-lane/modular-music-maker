@@ -921,6 +921,15 @@
 .merger-input {
   position: relative;
 }
+.module-merger .merger-sum {
+  --knob-ridge: #8d512f;
+  --knob-ridge-light: #c58a5f;
+  --knob-highlight: #e8b587;
+  --knob-face: #c27c4d;
+  --knob-shade: #8b4f2f;
+  --knob-border: #824a30;
+  --knob-pointer: #fff4d6;
+}
 .merger-input .knob-assembly {
   width: 48px;
   height: 48px;

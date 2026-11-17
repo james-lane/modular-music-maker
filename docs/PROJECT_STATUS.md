@@ -6,7 +6,7 @@ Last updated: **17 November 2026**.
 
 Mixer offers 2–8 inputs with individual faders and a registry-derived width. The default remains two inputs in the existing 184×270 footprint. Old A/B gains, IDs and positions are preserved; added channels keep their fader settings when hidden. Shrinking removes discarded input cables in the same Undo edit as count/resize changes. Eight independent runtime gains ramp active values, mute hidden channels, and dispose together. The guide demo uses three audible sources to demonstrate an extra channel.
 
-Merger’s four input knobs and Sum level now form a single row, each directly above its matching bottom socket. The enclosure shrinks from 320×336 to 320×248 while preserving saved positions, port IDs and audio behavior.
+Merger’s four ivory input knobs and distinct copper Sum level knob form a single row, each directly above its matching bottom socket. The enclosure shrinks from 320×336 to 320×248 while preserving saved positions, port IDs and audio behavior.
 
 Validation: all **151 tests**, strict types, production build, formatting and diff checks pass. New tests cover 2–8 active port sets, count bounds, old A/B patch migration, inactive ports, channel-removal Undo, independent ramped gains, hidden-channel muting and disposal. Browser checks passed all Mixer counts and footer clearance, audible independent H gain/mute, resize/cable Undo during playback, a decoded 0.72-second audible recording, saved reload, all five Merger knob/socket centres, Sum-level mute, cable alignment, offline playback, and dark desktop/phone layouts. No browser errors or microphone requests. The user requested a direct push to main without a PR or post-release live checks.
 
