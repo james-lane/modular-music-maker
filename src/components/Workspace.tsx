@@ -120,6 +120,7 @@ export function Workspace({
       setDragPreview(null);
     },
     audioActive ? CONFIG.canvas.playbackGestureIntervalMs : 0,
+    handMode,
   );
   const { view, size, zoom, setView, zoomAt, panByScreen, screenToWorld } = gestures;
   useLayoutEffect(() => {
@@ -590,7 +591,16 @@ export function Workspace({
           event.currentTarget.scrollLeft = 0;
           event.currentTarget.scrollTop = 0;
         }}
-        onPointerDownCapture={gestures.onPointerDownCapture}
+        onPointerDownCapture={(event) => {
+          gestures.onPointerDownCapture(event);
+          if (event.isPropagationStopped() || !handMode || event.button !== 0) return;
+          // Hand mode navigates over controls too, before they can play/edit anything.
+          event.stopPropagation();
+          event.preventDefault();
+          event.currentTarget.focus({ preventScroll: true });
+          event.currentTarget.setPointerCapture(event.pointerId);
+          pan.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+        }}
         onPointerMoveCapture={gestures.onPointerMoveCapture}
         onPointerUpCapture={(event) => {
           gestures.endTouch(event);
@@ -598,7 +608,19 @@ export function Workspace({
           finishDrag(event);
         }}
         onPointerCancelCapture={gestures.endTouch}
-        onClickCapture={gestures.onClickCapture}
+        onClickCapture={(event) => {
+          gestures.onClickCapture(event);
+          if (handMode && event.detail !== 0) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }}
+        onDoubleClickCapture={(event) => {
+          if (handMode) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }}
         onPointerMove={onPointerMove}
         onPointerCancel={cancelPointer}
         onLostPointerCapture={(event) => {
@@ -808,8 +830,9 @@ export function Workspace({
           <button
             className={!handMode ? 'active' : ''}
             onClick={() => setHandMode(false)}
-            title="Select and move modules"
+            title="Play and edit · Use multiple controls together · Pinch empty space to zoom"
             aria-label="Select tool"
+            aria-description="Play keys and adjust several controls together. Pinch empty workspace to zoom."
             aria-pressed={!handMode}
           >
             <MousePointer2 size={17} />
@@ -817,13 +840,15 @@ export function Workspace({
           <button
             className={handMode ? 'active' : ''}
             onClick={() => setHandMode(true)}
-            title="Pan the workspace"
+            title="Pan and zoom anywhere · Protect instrument controls"
             aria-label="Pan tool"
+            aria-description="Drag or pinch anywhere, including over instruments, to move the view without changing controls."
             aria-pressed={handMode}
           >
             <Hand size={17} />
           </button>
         </div>
+        <span className="canvas-mode-label">{handMode ? 'Pan / zoom' : 'Play / edit'}</span>
         <span className="control-divider" />
         <button onClick={() => zoomAt(zoom / CONFIG.canvas.zoomButtonFactor)} aria-label="Zoom out">
           <Minus size={16} />

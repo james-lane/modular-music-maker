@@ -73,9 +73,9 @@
     box-shadow 0.07s;
 }
 .white-key {
-  left: calc(var(--key-position) * 100% / 15);
+  left: calc(var(--key-position) * 100% / var(--white-keys, 15));
   top: 0;
-  width: calc(100% / 15);
+  width: calc(100% / var(--white-keys, 15));
   height: 100%;
   background: linear-gradient(90deg, #dddfd3, #fffef3 18%, #f5f5e9 80%, #e6e7d9);
   border: 1px solid #939e82;
@@ -94,9 +94,9 @@
   color: #a0aa90;
 }
 .black-key {
-  left: calc(var(--key-position) * 100% / 15 - 2.1%);
+  left: calc(var(--key-position) * 100% / var(--white-keys, 15) - 31.5% / var(--white-keys, 15));
   top: -1px;
-  width: 4.2%;
+  width: calc(63% / var(--white-keys, 15));
   height: 61%;
   z-index: 2;
   background: linear-gradient(90deg, #252f20, #4c5742 25%, #3b4830 78%, #1f2c19);
@@ -107,14 +107,12 @@
     1px 4px 4px #1f2d1a78,
     inset 0 1px 1px #a9b19845;
 }
-.white-key.held,
-.white-key:active {
+.white-key.held {
   background: linear-gradient(#e3e7d7, #dce5c7);
   border-bottom-width: 2px;
   box-shadow: inset 0 6px 13px #4a603235;
 }
-.black-key.held,
-.black-key:active {
+.black-key.held {
   background: #54653e;
   border-bottom-width: 2px;
   box-shadow: 0 1px 2px #1f2d1a78;
@@ -370,6 +368,32 @@
 }
 @media (pointer: coarse) {
   .pad-toolbar select {
+    font-size: 16px;
+  }
+}
+
+/* Held state follows actual notes; native :active sticks to a touch's first key. */
+.keyboard-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font: 9px monospace;
+  color: var(--panel-ink);
+}
+.keyboard-size select {
+  border: 1px solid var(--panel-rule);
+  border-radius: 3px;
+  background: var(--panel-end);
+  color: var(--panel-ink);
+  padding: 3px 5px;
+  font: inherit;
+}
+@media (pointer: coarse) {
+  .keyboard-readout {
+    height: 28px;
+    margin-bottom: 6px;
+  }
+  .keyboard-size select {
     font-size: 16px;
   }
 }

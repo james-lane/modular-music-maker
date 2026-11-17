@@ -131,7 +131,6 @@ export function drumLiveTailMs(project: Project): number {
 
 export const DRUM_STEP_COUNT = 16;
 export const KEYBOARD_BASE_MIDI = 48; // C3 before the octave shift.
-export const KEYBOARD_NOTE_COUNT = 25;
 // Shortcuts are local to a focused instrument; text fields keep their ordinary behavior.
 export const KEYBOARD_SHORTCUTS = [
   'a',

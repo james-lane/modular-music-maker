@@ -6,6 +6,7 @@ import {
   SWITCH_SCHEDULE,
   defaultSwitchCues,
   MIXER_INPUT_COUNTS,
+  KEYBOARD_KEY_COUNTS,
   DEFAULT_PAD_LAYOUT,
   PAD_LAYOUTS,
   SAMPLER_TRIM,
@@ -114,6 +115,11 @@ export const projectSchema = z
       ]);
       if (Object.keys(module.parameters).some((key) => !allowed.has(key)))
         issue('Unknown module parameter.');
+      if (
+        module.type === 'keyboard' &&
+        !KEYBOARD_KEY_COUNTS.some((count) => count === module.parameters.keyCount)
+      )
+        issue('Keyboard needs 25, 37, 49 or 61 keys.');
       if (module.type === 'switch') {
         if (
           typeof module.parameters.automatic !== 'boolean' ||
@@ -254,6 +260,8 @@ function migrateProject(value: unknown, expandedPads: Set<string>): unknown {
       const parameters = module.parameters;
       if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters))
         return module;
+      if (module.type === 'keyboard' && !('keyCount' in parameters))
+        return { ...module, parameters: { ...parameters, keyCount: KEYBOARD_KEY_COUNTS[0] } };
       if (
         module.type === 'switch' &&
         !('switchCues' in module) &&

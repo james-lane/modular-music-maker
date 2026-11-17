@@ -776,6 +776,15 @@ svg {
 .canvas-viewport.hand-mode {
   cursor: grab;
 }
+.canvas-viewport.hand-mode .module-panel * {
+  cursor: inherit;
+}
+.canvas-mode-label {
+  width: 53px;
+  text-align: center;
+  font-size: 9px;
+  color: var(--muted);
+}
 .canvas-viewport.hand-mode:active {
   cursor: grabbing;
 }

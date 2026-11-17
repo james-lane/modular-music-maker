@@ -2,6 +2,14 @@
 
 Last updated: **17 November 2026**.
 
+## Wider keyboards and distinct touch tools — issues #9/#10 — 17 November 2026
+
+Keyboard offers 25, 37, 49 or 61 keys, with registry-derived widths of 428/610/792/974px and the original 360px height. The default/legacy width stays unchanged. Count validation, explicit legacy migration, atomic resize/clearance Undo and stable pitch routes use the existing configured-instance path. The actual field-guide demo uses 37 keys. Held-note styling replaces sticky native `:active`; focus on another instrument preserves physical holds, and resizing releases held notes.
+
+The bottom-left arrow (Play / edit) supports independent simultaneous module controls; pinches beginning entirely on empty workspace still navigate. The hand (Pan / zoom) pans/pinches over instruments before their controls can play/edit, while retaining keyboard access. Tool changes cancel held touch owners and transient edits. Shared knobs retain their own pointer IDs, and global release/blur/hidden cleanup prevents stale gesture ownership. Tool/camera state remains outside patch data/history.
+
+Validation: strict types, all **162 tests**, production build, formatting and diff checks pass. New domain regressions cover count bounds, legacy migration, stable routes, overlap clearance and resize Undo/Redo; catalog-wide footer/render/geometry tests include every keyboard width. Chromium’s native touch checks passed swipe appearance, simultaneous keyboard/knob and two-knob edits, independent holds across two keyboards, tool-change release, Hand pan/pinch without edits, partial release, empty-space pinch, held-note resize, saved/offline audio and dark tablet/phone controls. Every width retained 7px control/footer clearance and sub-pixel cable/socket alignment. A decoded 1.26-second take contained audible output. WebKit 26.5 passed native swipe/touch styling, audible held/reloaded notes, Hand protection, all widths and dark tablet/phone layouts. No browser errors or microphone requests occurred. Physical iPad multi-control remains available for testing through the PR preview.
+
 ## Bar-start Switch arrangements — issue #13 — 17 November 2026
 
 Switch can select inputs automatically at chosen bar starts, once or as a repeating pattern. Its Schedule dialog edits up to 16 cues over bars 1–128 with a bar 1 starting cue and optional repeat length. Apply enables Auto without autoplay; numbered keys take manual control, Auto rejoins the current bar, and Stop/Play restarts at bar 1. The compact burgundy panel retains its original 320×300 footprint, port IDs and saved/example positions. Its key lights/readout follow the transport without driving audio timing.

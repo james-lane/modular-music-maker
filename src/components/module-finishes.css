@@ -648,13 +648,11 @@
   border-color: #141b13;
   border-bottom-color: #0f160f;
 }
-.module-keyboard .white-key.held,
-.module-keyboard .white-key:active {
+.module-keyboard .white-key.held {
   background: linear-gradient(#e5dec8, #e8c690);
   border-bottom-width: 2px;
 }
-.module-keyboard .black-key.held,
-.module-keyboard .black-key:active {
+.module-keyboard .black-key.held {
   background: #736046;
   border-bottom-width: 2px;
 }

@@ -1,15 +1,21 @@
 import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
 import type { LiveControls } from '../audio/live';
-import {
-  KEYBOARD_BASE_MIDI,
-  KEYBOARD_NOTE_COUNT,
-  KEYBOARD_SHORTCUTS,
-  midiLabel,
-} from '../domain/instruments';
+import { KEYBOARD_BASE_MIDI, KEYBOARD_SHORTCUTS, midiLabel } from '../domain/instruments';
 import type { PatchModule } from '../domain/types';
+import { KEYBOARD_KEY_COUNTS, keyboardKeyCount } from '../domain/modules';
 
 /** Pointer capture, key-up, focus loss and window blur all have explicit note-off paths. */
-export function KeyboardPanel({ module, live }: { module: PatchModule; live: LiveControls }) {
+export function KeyboardPanel({
+  module,
+  live,
+  onCount,
+}: {
+  module: PatchModule;
+  live: LiveControls;
+  onCount: (count: number) => void;
+}) {
+  const count = keyboardKeyCount(module.parameters.keyCount);
+  const whiteKeys = ((count - 1) / 12) * 7 + 1;
   const held = useRef(new Map<string, number>());
   // A pointer remains playable after leaving the keybed and sliding back onto a key.
   const pointers = useRef(new Set<number>());
@@ -37,6 +43,11 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
       release();
     };
   }, []);
+
+  // A resize can remove a held key. Keep no stale note or pointer across layouts.
+  useEffect(() => {
+    releaseAll.current();
+  }, [count]);
 
   const press = (token: string, note: number) => {
     const previous = held.current.get(token);
@@ -73,7 +84,7 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
     release(`pointer:${event.pointerId}`);
   };
   let whitePosition = -1;
-  const keys = Array.from({ length: KEYBOARD_NOTE_COUNT }, (_, offset) => {
+  const keys = Array.from({ length: count }, (_, offset) => {
     const note = KEYBOARD_BASE_MIDI + offset;
     const black = [1, 3, 6, 8, 10].includes(note % 12);
     if (!black) whitePosition++;
@@ -88,16 +99,30 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
   return (
     <div className="keyboard-instrument">
       <div className="keyboard-readout">
-        <span>CHROMATIC · 25 KEYS</span>
+        <label className="keyboard-size">
+          Keys
+          <select
+            aria-label="Keyboard key count"
+            value={count}
+            onChange={(event) => onCount(Number(event.target.value))}
+          >
+            {KEYBOARD_KEY_COUNTS.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
         <strong>
           {notes.length
             ? midiLabel(shifted(notes.at(-1)!))
-            : `${midiLabel(shifted(KEYBOARD_BASE_MIDI))} — ${midiLabel(shifted(KEYBOARD_BASE_MIDI + 24))}`}
+            : `${midiLabel(shifted(KEYBOARD_BASE_MIDI))} — ${midiLabel(shifted(KEYBOARD_BASE_MIDI + count - 1))}`}
         </strong>
         <i className={`tiny-led ${notes.length ? 'on' : ''}`} />
       </div>
       <div
         className="piano-keybed"
+        style={{ '--white-keys': whiteKeys } as CSSProperties}
         role="group"
         aria-label="Keyboard performance keys"
         tabIndex={0}
@@ -106,7 +131,12 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
         onPointerCancel={endPointer}
         onLostPointerCapture={endPointer}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) releaseAll.current();
+          if (!event.currentTarget.contains(event.relatedTarget)) {
+            // Focusing a second instrument must not steal a finger still holding this one.
+            // Physical pointers retain capture; keyboard/tap tokens follow focus instead.
+            for (const token of held.current.keys())
+              if (!token.startsWith('pointer:')) release(token);
+          }
         }}
         onKeyDown={(event) => {
           if (event.metaKey || event.ctrlKey || event.altKey) return;
@@ -136,7 +166,7 @@ export function KeyboardPanel({ module, live }: { module: PatchModule; live: Liv
               if (event.button !== 0) return;
               event.preventDefault();
               event.stopPropagation();
-              event.currentTarget.focus();
+              event.currentTarget.focus({ preventScroll: true });
               // One stable owner per keyboard lets several fingers cross the same keys.
               event.currentTarget.parentElement?.setPointerCapture(event.pointerId);
               pointers.current.add(event.pointerId);

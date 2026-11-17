@@ -150,7 +150,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
   },
   keyboard: {
     overview:
-      'A two-octave controller for playing melodies. It sends notes and note releases to an Oscillator, which creates the sound.',
+      'A 25-, 37-, 49- or 61-key controller for playing melodies. It sends notes and note releases to an Oscillator, which creates the sound.',
     steps: [
       'Connect PITCH / GATE to an Oscillator PITCH input.',
       'Connect the Oscillator AUDIO OUT to an Output AUDIO IN socket.',
@@ -163,14 +163,20 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
     extraControls: [
       {
+        label: 'Keys',
+        description:
+          'Choose 25, 37, 49 or 61 keys. Extra octaves widen the enclosure without shrinking the keys. Resizing releases held notes and keeps the pitch cable; Undo restores size and any clearance move together.',
+      },
+      {
         label: 'Piano keys',
         description:
           'Each finger can slide independently between white and black keys. Moving outside the keybed releases its note; sliding back plays again. Release to end the note. Enter or Space on a focused piano key plays a short note.',
       },
     ],
-    tip: 'Live playing works with the transport stopped. Notes are chromatic, and the last held note takes priority on each oscillator.',
+    tip: 'Choose the bottom-left arrow (Play / edit) to hold notes while using other modules. The hand (Pan / zoom) navigates over instruments without playing or editing them. Live playing works with the transport stopped. Notes are chromatic, and the last held note takes priority on each oscillator.',
     example: {
       title: 'Play your first melody',
+      parameters: { keyboard: { keyCount: 37 } },
       description:
         'The pitch cable controls the note; the audio cable carries the sound to your speakers.',
       connections: [
