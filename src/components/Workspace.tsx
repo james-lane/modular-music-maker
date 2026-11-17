@@ -449,7 +449,7 @@ export function Workspace({
     CONFIG.canvas.grid * zoom * Math.max(1, Math.ceil(8 / (CONFIG.canvas.grid * zoom)));
 
   return (
-    <main className="workspace">
+    <main className={`workspace ${libraryOpen ? 'library-open' : ''}`}>
       <div className="workspace-heading">
         <div className="patch-breadcrumb">
           <button

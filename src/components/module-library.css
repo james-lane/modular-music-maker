@@ -3,6 +3,23 @@
   width: min(340px, 92%);
   padding: 12px 12px 0;
 }
+/* Navigation remains reachable while the non-modal drawer is open. On phones,
+   leave a strip of canvas below it rather than covering the controls with rows. */
+.workspace.library-open .canvas-controls {
+  left: auto;
+  right: 16px;
+}
+@media (max-width: 760px) {
+  .module-library {
+    bottom: 88px;
+    border-bottom: 1px solid var(--line);
+    border-bottom-right-radius: 8px;
+  }
+  .workspace.library-open .canvas-controls {
+    left: 15px;
+    right: auto;
+  }
+}
 .library-heading {
   flex-shrink: 0;
 }
@@ -107,11 +124,6 @@
 .library-module-actions button {
   width: 30px;
   height: 36px;
-}
-/* The backdrop must not intercept pointer hit testing while placing an instrument. */
-.library-dragging .library-dismiss {
-  pointer-events: none;
-  background: transparent;
 }
 .library-drop-preview {
   position: absolute;

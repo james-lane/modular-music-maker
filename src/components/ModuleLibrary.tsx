@@ -38,7 +38,7 @@ export function ModuleLibrary({
     (module) =>
       (category === 'All modules' || category === module.category) &&
       `${module.name} ${module.description}`.toLowerCase().includes(search.toLowerCase()),
-  );
+  ).sort((first, second) => first.name.localeCompare(second.name, 'en'));
   const categories = ['All modules', 'Sources', 'Modulation', 'Effects', 'Utility'] as const;
   return (
     <aside
