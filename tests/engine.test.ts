@@ -8,6 +8,7 @@ import { AUDIO_FACTORIES } from '../src/audio/factories';
 import { CONFIG } from '../src/config';
 import { setPadCount } from '../src/domain/pad-controller';
 import { ticksPerBar } from '../src/domain/switch-schedule';
+import { audioSession } from '../src/audio/session';
 
 class Parameter {
   value = 0;
@@ -118,6 +119,75 @@ class Context {
     return this as unknown as AudioContext;
   }
 }
+
+test('music session starts before Web Audio and releases on Stop, restart and disposal', async (t) => {
+  let mode = 'auto';
+  let acquisitions = 0;
+  let releases = 0;
+  t.mock.method(audioSession, 'acquire', (requested: string) => {
+    acquisitions++;
+    mode = requested;
+    return () => {
+      mode = 'auto';
+      releases++;
+    };
+  });
+  const context = new Context();
+  const engine = new AudioEngine(() => {
+    assert.equal(mode, 'playback', 'iPhone policy is set before creating the context');
+    return context.asAudioContext();
+  });
+  const project = { ...createProject(true), modules: [] };
+  engine.update(project);
+  assert.equal(acquisitions, 0, 'passive updates stay silent');
+  try {
+    await engine.activate(project);
+    await engine.play(project);
+    assert.equal(acquisitions, 1, 'live gestures and transport share the active session');
+    await engine.stop();
+    assert.equal(mode, 'auto');
+    assert.equal(releases, 1);
+    await engine.play(project);
+    assert.equal(mode, 'playback');
+    assert.equal(acquisitions, 2);
+  } finally {
+    await engine.dispose();
+  }
+  await engine.dispose();
+  assert.equal(mode, 'auto');
+  assert.equal(releases, 2);
+});
+
+test('failed audio activation releases session policy and can be retried', async (t) => {
+  let owners = 0;
+  t.mock.method(audioSession, 'acquire', () => {
+    owners++;
+    return () => owners--;
+  });
+  const context = new Context();
+  let fail = true;
+  const engine = new AudioEngine(() => {
+    if (fail) throw new Error('Device unavailable');
+    return context.asAudioContext();
+  });
+  const project = { ...createProject(true), modules: [] };
+  try {
+    await assert.rejects(engine.activate(project), /Device unavailable/);
+    assert.equal(owners, 0);
+    fail = false;
+    const resume = t.mock.method(context, 'resume', async () => {
+      throw new Error('Resume rejected');
+    });
+    await assert.rejects(engine.activate(project), /Resume rejected/);
+    assert.equal(owners, 0);
+    resume.mock.restore();
+    await engine.activate(project);
+    assert.equal(owners, 1);
+  } finally {
+    await engine.dispose();
+  }
+  assert.equal(owners, 0);
+});
 
 test('Switch cues use the shared future audio ticks in 4/4, 3/4 and 6/8', async (t) => {
   for (const timeSignature of ['4/4', '3/4', '6/8'] as const)

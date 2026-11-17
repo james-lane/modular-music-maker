@@ -2,6 +2,7 @@ import { CONFIG } from '../config';
 import type { DrumSample } from '../domain/types';
 import { preferredRecordingType } from './recordings';
 import { decodeMicrophoneSample } from './sample-import';
+import { audioSession } from './session';
 
 export type CapturePhase = 'idle' | 'requesting' | 'recording' | 'processing';
 interface CaptureDependencies {
@@ -31,6 +32,7 @@ const defaults: CaptureDependencies = {
 export class MicrophoneCapture {
   private generation = 0;
   private stream?: MediaStream;
+  private releaseSession?: () => void;
   private recorder?: MediaRecorder;
   private timer?: ReturnType<typeof setTimeout>;
   private settle?: (blob: Blob | null) => void;
@@ -44,6 +46,8 @@ export class MicrophoneCapture {
     this.timer = undefined;
     this.stream?.getTracks().forEach((track) => track.stop());
     this.stream = undefined;
+    this.releaseSession?.();
+    this.releaseSession = undefined;
   }
 
   finish() {
@@ -66,6 +70,9 @@ export class MicrophoneCapture {
     this.onPhase('requesting');
     try {
       const mimeType = this.dependencies.format();
+      // Playback-only policy can suppress iPhone microphone input. Capture owns
+      // the page session until tracks stop, including permission cancellation.
+      this.releaseSession = audioSession.acquire('play-and-record');
       const stream = await this.dependencies.getMedia();
       if (token !== this.generation) {
         stream.getTracks().forEach((track) => track.stop());

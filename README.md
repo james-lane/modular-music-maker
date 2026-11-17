@@ -15,6 +15,8 @@ npm run dev
 
 Open **http://127.0.0.1:5173**. The development command starts both Vite (5173) and the local Node API (3001). Press **Play** to hear the connected starter patch. Audio starts only after a user gesture.
 
+On supported iPhone/iPad browsers, Patchwork requests music playback mode so instruments can sound with **Silent mode** on. If the meters move but you hear nothing, turn Silent mode off, raise the media volume, and check the selected speaker/headphones. Older browsers may still require Silent mode off.
+
 For a production build served by Node:
 
 ```sh

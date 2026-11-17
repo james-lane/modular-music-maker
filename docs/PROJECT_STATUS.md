@@ -2,6 +2,12 @@
 
 Last updated: **17 November 2026**.
 
+## iPhone Silent mode audio policy — 17 November 2026
+
+The user confirmed Brave on iPhone advances playback/meters but is inaudible with Silent mode on. Studio activation now requests the optional browser music playback policy before waking Web Audio. Stop/idle/disposal restore the preceding policy. Explicit Mic sampler capture takes priority with play-and-record, then returns an active studio to playback when its tracks stop. Browsing stays silent, studio recording never requests microphone permission, and missing/rejected session APIs retain normal Web Audio with Silent mode off as the fallback.
+
+Validation: all **169 tests**, strict types, production build and formatting pass. New regressions cover shared playback/capture ownership in either start order, restoring prior policy, unsupported/rejected APIs, failed activation/retry, Stop/restart/disposal, microphone permission cancellation/denial and capture completion. WebKit 26.5 verified the native policy before context creation, audible transport/live keys, Stop/restart, saved patch reload, opt-in synthetic microphone capture/return to playback and dry snippet preview. Its decoded 0.71-second studio take was audible; automated WebKit used the existing recording-download fallback when blob storage was unavailable. Chromium verified audible browser-stored takes and the same interactions with supported, missing and rejected session APIs. Studio recording requested no microphone access, and browsing created no audio contexts. Physical Brave/iPhone Silent-switch verification remains required; desktop WebKit cannot emulate that hardware setting.
+
 ## Shared tempo markings — issue #15 — 17 November 2026
 
 Matching printed metronome symbols replace repeated SYNC TO TEMPO text on Drum machine, Step sequencer, Mod sequencer and clocked Sample & Hold, and appear beside the main tempo setting. Rates stay visible. Hover/focus/touch reveals an accessible explanation without editing data or starting audio. Help explains BPM, note divisions and the external-trigger exception. A patched Sample & Hold shows lightning/TRIGGER IN instead of an inactive rate selector; unplugging restores the retained rate. No audio-clock, patch format, dimensions or socket changes.

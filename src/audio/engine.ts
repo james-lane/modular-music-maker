@@ -16,6 +16,7 @@ import type { PatchModule, Project } from '../domain/types';
 import { switchInputAtBar, ticksPerBar } from '../domain/switch-schedule';
 import { padTargets } from '../domain/pad-controller';
 import { AUDIO_FACTORIES, type AudioRuntime } from './factories';
+import { audioSession } from './session';
 
 /** One engine per studio. AudioContext is created only after a user gesture.
  * Musical notes use the audio clock and a look-ahead scheduler, never React render timing.
@@ -26,6 +27,7 @@ export class AudioEngine {
       new AudioContext({ latencyHint: 'interactive' }),
   ) {}
   private context?: AudioContext;
+  private releaseSession?: () => void;
   private master?: GainNode;
   private bus?: DynamicsCompressorNode;
   private analyser?: AnalyserNode;
@@ -80,9 +82,20 @@ export class AudioEngine {
 
   /** Live instruments can resume the audio device without starting the transport. */
   async activate(project: Project) {
-    this.initialize();
-    await this.context!.resume();
-    this.update(project);
+    // Declare music playback before waking Web Audio so iPhone Silent mode
+    // does not mute instruments. Browsing and passive previews never acquire it.
+    this.releaseSession ??= audioSession.acquire('playback');
+    try {
+      this.initialize();
+      await this.context!.resume();
+      this.update(project);
+    } catch (error) {
+      if (!this.isActive) {
+        this.releaseSession?.();
+        this.releaseSession = undefined;
+      }
+      throw error;
+    }
   }
 
   async play(project: Project) {
@@ -113,7 +126,13 @@ export class AudioEngine {
         runtime.voice.envelope.setValueAtTime(0, this.context.currentTime);
       }
     });
-    if (this.context && this.context.state !== 'closed') await this.context.suspend();
+    const releaseSession = this.releaseSession;
+    this.releaseSession = undefined;
+    try {
+      if (this.context && this.context.state !== 'closed') await this.context.suspend();
+    } finally {
+      releaseSession?.();
+    }
     this.onTick?.(-1, 0, -1);
   }
 
@@ -500,6 +519,8 @@ export class AudioEngine {
     this.bus = undefined;
     this.analyser = undefined;
     this.recordingDestination = undefined;
+    this.releaseSession?.();
+    this.releaseSession = undefined;
     if (context && context.state !== 'closed') await context.close();
   }
 }

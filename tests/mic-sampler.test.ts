@@ -6,6 +6,7 @@ import { createModule, createProject } from '../src/domain/project';
 import { encodeSamplePcm, sampleRegion, sampleWav } from '../src/domain/samples';
 import { drumLiveTailMs } from '../src/domain/instruments';
 import { parseProject } from '../src/domain/validation';
+import { audioSession } from '../src/audio/session';
 
 const sample = { name: 'Clap', pcm: encodeSamplePcm(new Float32Array([0, 0.5, -1, 0])) };
 
@@ -46,6 +47,43 @@ function captureFixture(
   });
   return { capture, recorder, phases, stream, stopped: () => stopped, requests: () => requests };
 }
+
+test('microphone session covers pending permission and releases on cancellation, denial and Finish', async (t) => {
+  let owners = 0;
+  t.mock.method(audioSession, 'acquire', (mode: string) => {
+    assert.equal(mode, 'play-and-record');
+    owners++;
+    return () => owners--;
+  });
+  let grant: (stream: MediaStream) => void = () => {};
+  const f = captureFixture(() => {
+    assert.equal(owners, 1, 'capture policy precedes the permission request');
+    return new Promise((resolve) => {
+      grant = resolve;
+    });
+  });
+  assert.equal(owners, 0);
+  const pending = f.capture.record();
+  assert.equal(owners, 1);
+  f.capture.cancel();
+  assert.equal(owners, 0);
+  grant(f.stream);
+  assert.equal(await pending, null);
+  assert.equal(owners, 0, 'late grants cannot release a later session');
+  const denied = captureFixture(async () => {
+    throw new DOMException('Denied', 'NotAllowedError');
+  });
+  await assert.rejects(denied.capture.record(), /permission was denied/);
+  assert.equal(owners, 0);
+  const active = captureFixture();
+  const recorded = active.capture.record();
+  await Promise.resolve();
+  assert.equal(owners, 1);
+  active.capture.finish();
+  assert.equal(owners, 0);
+  assert.deepEqual(await recorded, sample);
+  assert.equal(owners, 0);
+});
 
 test('microphone capture is opt-in, finishes with portable audio, and releases the device', async () => {
   const f = captureFixture();
