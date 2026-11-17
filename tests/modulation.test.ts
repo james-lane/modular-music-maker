@@ -93,7 +93,8 @@ test('envelopes anchor attack, hold and release on the audio clock, and retrigge
   runtime.silence!();
   assert.equal(f.nodes[0].offset.value, 0);
   runtime.dispose();
-  assert.ok(f.nodes.every((node) => node.connections.size === 0 && node.stopped));
+  assert.ok(f.nodes[0].stopped);
+  assert.ok(f.nodes.every((node) => node.connections.size === 0));
 });
 
 test('modulation patterns use shared ticks, keep eight signed values and accept live rate edits', () => {

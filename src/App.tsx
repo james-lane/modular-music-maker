@@ -1,3 +1,4 @@
+import { MidiContext, useMidi } from './hooks/useMidi';
 import { PatchLibraryDialog } from './components/PatchLibraryDialog';
 import { Cable, Check, CircleHelp, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -53,7 +54,9 @@ export default function App() {
   useEffect(() => () => clearTimeout(toastTimer.current), []);
   const microphone = useMicrophoneSampler(project, studio.setSample, notify);
   const playback = useAudio(project, notify);
+  const midi = useMidi(project, playback.live, notify);
   const stop = async () => {
+    midi.panic();
     microphone.cancel();
     await playback.stop();
   };
@@ -283,25 +286,27 @@ export default function App() {
           open={libraryOpen}
           onClose={closeLibrary}
         />
-        <Workspace
-          {...studio}
-          notify={notify}
-          microphone={microphone}
-          engine={audio.engine}
-          playing={audio.playing}
-          playbackPosition={audio.position}
-          live={audio.live}
-          audioActive={playback.active}
-          cableStyle={cableStyle}
-          cableOpacity={cableOpacity}
-          libraryDrag={libraryDrag}
-          onLibraryDragFinish={finishLibraryDrag}
-          onViewCentreChange={viewCentreChanged}
-          libraryOpen={libraryOpen}
-          onLibraryToggle={() => setLibraryOpen((open) => !open)}
-          focused={focused}
-          onFocusToggle={() => setFocused((value) => !value)}
-        />
+        <MidiContext.Provider value={midi}>
+          <Workspace
+            {...studio}
+            notify={notify}
+            microphone={microphone}
+            engine={audio.engine}
+            playing={audio.playing}
+            playbackPosition={audio.position}
+            live={audio.live}
+            audioActive={playback.active}
+            cableStyle={cableStyle}
+            cableOpacity={cableOpacity}
+            libraryDrag={libraryDrag}
+            onLibraryDragFinish={finishLibraryDrag}
+            onViewCentreChange={viewCentreChanged}
+            libraryOpen={libraryOpen}
+            onLibraryToggle={() => setLibraryOpen((open) => !open)}
+            focused={focused}
+            onFocusToggle={() => setFocused((value) => !value)}
+          />
+        </MidiContext.Provider>
       </div>
       <footer className="status-bar" inert={offline.applying}>
         <div>

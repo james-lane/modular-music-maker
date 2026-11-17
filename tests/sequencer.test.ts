@@ -21,7 +21,7 @@ test('legacy v1/v2 sequencers migrate to eighth notes without changing the saved
     const saved = { ...createProject(true), version, modules: [sequencer] };
     const original = structuredClone(saved);
     const restored = parseProject(saved);
-    assert.equal(restored.version, 2);
+    assert.equal(restored.version, 3);
     assert.deepEqual(restored.modules[0], {
       ...sequencer,
       parameters: { ...sequencer.parameters, rate: '1/8' },

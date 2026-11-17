@@ -1,5 +1,6 @@
+import { createXYControl } from './xy-control';
 import { CONFIG } from '../config';
-import { XY_CORNERS, XY_EFFECTS, xyBlend } from '../domain/xy-effects';
+import { XY_CORNERS, XY_EFFECTS } from '../domain/xy-effects';
 import type { AudioRuntime } from './factories';
 
 /** A fixed parallel graph lets corner reassignment crossfade without rebuilding audio.
@@ -81,25 +82,47 @@ export function createXYEffects(context: AudioContext): AudioRuntime {
   input.connect(convolver);
   convolver.connect(buses.space);
 
+  const control = createXYControl(context);
+  control.dry.connect(dry.gain);
+  let assignment = '';
+  const routes: { corner: number; effect: string; gain: GainNode }[] = [];
   return {
-    inputs: { in: input },
+    configureConnections: (ports) => control.configure(ports),
+    inputs: { in: input, ...control.inputs },
     outputs: { out: output },
     update(parameters) {
-      const blend = xyBlend(Number(parameters.x), Number(parameters.y), Number(parameters.mix));
-      const targets = new Map<string, number>(XY_EFFECTS.map(({ id }) => [id, 0]));
-      XY_CORNERS.forEach((corner, index) => {
-        const effect = String(parameters[corner.id]);
-        targets.set(effect, (targets.get(effect) ?? 0) + blend.corners[index]);
+      control.update({
+        x: Number(parameters.x),
+        y: Number(parameters.y),
+        mix: Number(parameters.mix),
       });
-      dry.gain.setTargetAtTime(blend.dry, context.currentTime, CONFIG.audio.parameterRampSeconds);
-      for (const { id } of XY_EFFECTS)
-        buses[id].gain.setTargetAtTime(
-          targets.get(id) ?? 0,
-          context.currentTime,
-          CONFIG.audio.parameterRampSeconds,
-        );
+      const next = XY_CORNERS.map((corner) => String(parameters[corner.id])).join(':');
+      if (next !== assignment) {
+        // Retain bounded native crossfade paths when reassigning effects.
+        // Disconnecting a nonzero control signal would click and cut its tail.
+        XY_CORNERS.forEach((corner, index) => {
+          const effect = String(parameters[corner.id]);
+          if (!routes.some((route) => route.corner === index && route.effect === effect)) {
+            const gain = context.createGain();
+            gain.gain.value = 0;
+            control.corners[index].connect(gain);
+            gain.connect(buses[effect].gain);
+            routes.push({ corner: index, effect, gain });
+          }
+          for (const route of routes)
+            if (route.corner === index)
+              route.gain.gain.setTargetAtTime(
+                route.effect === effect ? 1 : 0,
+                context.currentTime,
+                CONFIG.audio.parameterRampSeconds,
+              );
+        });
+        assignment = next;
+      }
     },
     dispose() {
+      control.dispose();
+      routes.forEach((route) => route.gain.disconnect());
       [
         input,
         output,

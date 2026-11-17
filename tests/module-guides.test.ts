@@ -29,12 +29,21 @@ test('compatibility guidance separates live pitch, drum triggers, modulation and
     'envelope:trigger',
     'random-mod:trigger',
   ]);
-  assert.deepEqual(endpoints('lfo', 'out'), [
+  const modulation = endpoints('lfo', 'out');
+  for (const socket of [
     'mic-sampler:rateMod',
     'mic-sampler:levelMod',
     'oscillator:pitchMod',
     'filter:cutoff',
-  ]);
+    'delay:mixMod',
+    'mixer:hMod',
+    'merger:levelMod',
+    'xy-effects:xMod',
+    'output:levelMod',
+  ])
+    assert(modulation.includes(socket), socket);
+  assert(!modulation.some((socket) => socket.endsWith(':pitch') || socket.endsWith(':in')));
+  assert.deepEqual(endpoints('midi-input', 'pitch'), ['oscillator:pitch', 'envelope:gate']);
   const audioSources = endpoints('output', 'in');
   assert.ok(audioSources.includes('drum-machine:out'));
   assert.ok(audioSources.includes('oscillator:out'));

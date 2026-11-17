@@ -76,6 +76,11 @@ test('demo copies have fresh IDs and independent editable notes, parameters and 
 });
 
 test('demos select cabled kit voices, preload local sampler audio and declare their live gestures', () => {
+  const midi = createModuleDemo('midi-input');
+  assert.equal(midi.interaction, 'midi');
+  assert.match(midi.instructions, /Test note/);
+  assert(midi.project.cables.some((cable) => cable.from.portId === 'pitch'));
+  assert(midi.project.cables.some((cable) => cable.from.portId === 'mod1'));
   const pads = createModuleDemo('pad-controller');
   assert.equal(pads.interaction, 'pads');
   assert.equal(

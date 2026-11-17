@@ -2,6 +2,16 @@
 
 Last updated: **17 November 2026**.
 
+## Patchable Web MIDI — 17 November 2026
+
+The catalog now has **22 modules**, including a blue-grey MIDI Input interface with PITCH / GATE, TRIGGER and four assignable CC→MOD outputs. Hardware access is optional, explicitly enabled and feature-detected; each instance can select input devices, channel, note range, drum-note origin and polarity. Velocity, last-held-note priority, sustain and note-source ownership are transient. The test note/hit and MOD sliders work without hardware, including unsupported browsers. Enablement starts off on reload; device choices stay in browser preferences, while validated assignments travel with the patch. Stop, Disable, disconnect, blur/hidden visibility, MIDI/routing edits, project switches and unmount retire ownership and pending resumes.
+
+Ordinary MOD cables now reach levels, all active Mixer channels, Merger inputs/sum, LFO settings, Filter resonance, Delay time/feedback/mix, Reverb mix, modulation depth and XY Effects axes/mix. Other modulation sources use the same sockets. Native range takeover/multipliers, lazy allocation, bounded feedback/gain and complete disposal preserve unpatched sound; existing filter/pitch/sampler signal contracts remain unchanged. XY blend/control and corner reassignment remain native and smoothed. Filter/Delay displays follow external modulation without becoming musical clocks. MIDI output, clock, pitch bend/aftertouch and SysEx are outside this release. Source-only modules and Switch explain their limits explicitly.
+
+Every guide now requires Web MIDI compatibility text, Help includes setup/contracts/browser availability, and the shared MIDI demo uses real signal routes without autoplay. AGENTS.md, Adding modules and MIDI.md require assessing suitable inputs and documenting support for future modules. Patch **v3** migrates v1/v2 sound, IDs, samples and cables, moving only expanded legacy Mixer/Merger panels that need clearance. Existing examples have spacing updates; the concurrent tenth example, Daylight radio, is retained unchanged. All sockets stay in the shared footer, whose border compensation and single-line labels now match cable geometry.
+
+Validation: strict types, **180 automated tests** and production build pass. Isolated Chromium checks passed all **22 actual guide demos** producing sound and **333 rendered socket checks**, silent guide browsing, explicit permission/denial/unsupported fallback, device/channel filtering, velocity, sustain/release, hotplug, Stop and delayed-resume cancellation, real MOD cable control, settings/device persistence, recording and offline playback/help, plus dark 834/390/360px layouts. A decoded MIDI-triggered sampler take was audible (0.84 seconds, RMS 0.0293); no microphone access or page errors occurred. Native Chromium and WebKit rendering passed 30 bounded modulation cases and 14 XY base/external combinations, with maximum XY error below 0.00000005, and created/disposed every real factory. WebKit also passed all 22 guide demos with live sound, native unsupported-MIDI fallback, saved reload and dark tablet/phone controls. Physical MIDI hardware remains unverified; native browser simulation covers message routing and live sound without requiring user testing. Publication uses the existing main-branch build pipeline.
+
 ## Daylight radio — tenth example song — 17 November 2026
 
 Example 10 is a complete 32-second C-major jingle at 120 BPM, built from 40 modules spanning 19 types. Four automatic, non-repeating Switch programmes arrange intro (bars 1–2), verse (3–6), chorus (7–10), breakdown (11–12), chorus reprise (13–14) and a resolving tag (15–16). Bar 17 selects unpatched inputs, allowing the lead echo to fade; transport remains running until Stop. Stop/Play restarts the intro. The patch includes three melodies, two bass patterns, C–F–G–C triads, two drum patterns, noise hats, the original bundled clap and all four modulation sources. The top row exposes the four section Switches and master controls. Musical rows use resolved registry dimensions and every module contributes to Output. The factory is separate from the catalog in `domain/example-song.ts` and uses ordinary patch data and existing audio scheduling.
@@ -496,7 +506,7 @@ The user prefers individually designed instruments with different materials, col
 - The source and history are hosted on GitHub, and production runs on Cloudflare Workers. A separate private Sites project was registered earlier, but source synchronization/publication to Sites was blocked by automatic approval review because that upload was not explicitly authorized. No Sites version has been published. Obtain explicit user authorization before retrying that separate upload.
 
 - Local-first, single-user storage. No accounts or cloud database; static hosted copies use browser storage. The Node server remains local and unauthenticated.
-- The melodic sequencer has eight steps; drum patterns have sixteen sixteenths. Keyboard voices are monophonic with last-note priority and chromatic pitch. No physical MIDI support.
+- The melodic sequencer has eight steps; drum patterns have sixteen sixteenths. Keyboard voices are monophonic with last-note priority and chromatic pitch. Optional patchable Web MIDI input is available; browser/hardware support varies.
 - Eight-step melodic and sixteen-step drum patterns; time signature controls beat grouping rather than pattern length. 6/8 currently uses three quarter-note groups, not a compound-meter transport.
 - Capture uses native MediaRecorder audio (WebM/Ogg/MP4 depending on browser), with WAV, MP3 and Original downloads. Recording takes are capped at 10 minutes; conversion preserves the captured quality rather than recovering lost detail. Rendering a patch faster than real time is not implemented.
 - Entire module graph rebuilds when routing changes, which may make a small transient. Parameter/position edits keep the existing graph.
@@ -510,7 +520,7 @@ The user prefers individually designed instruments with different materials, col
 2. Add an ADSR/envelope and VCA module with a clear gate signal contract.
 3. Add more editable drum lanes, tempo-synced effects, and configurable pattern lengths.
 4. Provide deterministic noise/impulse seeds and gradual graph crossfades.
-5. Add faster-than-real-time patch rendering and MIDI input after defining their lifecycle and permissions.
+5. Add faster-than-real-time patch rendering; consider external MIDI clock/output only with an explicit lifecycle and timing design.
 6. Add user accounts and a real persistence adapter only when cloud sync is requested.
 
 Keep these as potential directions, not automatic scope for future sessions.

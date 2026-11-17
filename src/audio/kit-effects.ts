@@ -17,7 +17,8 @@ export class KitEffects {
 
   constructor(context: AudioContext, project: Project, runtimes: Map<string, AudioRuntime>) {
     for (const machine of project.modules.filter((module) => module.type === 'drum-machine')) {
-      const output = runtimes.get(machine.id)?.outputs.out;
+      const machineRuntime = runtimes.get(machine.id);
+      const output = machineRuntime?.kitEffectsReturn ?? machineRuntime?.outputs.out;
       if (!output) continue;
       const inputs: Partial<Record<DrumLane, AudioNode>> = {};
       const paths = kitSamplerPaths(project, connectedDrumKit(project, machine.id));
@@ -28,6 +29,13 @@ export class KitEffects {
         for (const module of path.effects) {
           const runtime = AUDIO_FACTORIES[module.type](context, output);
           this.effects.push({ moduleId: module.id, runtime });
+          runtime.configureConnections?.(
+            new Set(
+              project.cables
+                .filter((cable) => cable.to.moduleId === module.id)
+                .map((cable) => cable.to.portId),
+            ),
+          );
           const input = runtime.inputs.in;
           if (!(input instanceof AudioNode)) continue;
           if (previous) previous.connect(input);

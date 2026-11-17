@@ -1,3 +1,4 @@
+import { MidiInputPanel } from './MidiInputPanel';
 import { DelayDisplay } from './DelayDisplay';
 import { LfoDisplay } from './LfoDisplay';
 import { FilterDisplay } from './FilterDisplay';
@@ -122,6 +123,9 @@ export function ModuleCard({
         <span className="module-code">{definition.code}</span>
       </header>
       <div className="module-content">
+        {module.type === 'midi-input' && (
+          <MidiInputPanel module={module} live={live} onParameters={onParameters} />
+        )}
         {module.type === 'drum-machine' && (
           <DrumMachinePanel
             module={module}
@@ -234,6 +238,11 @@ export function ModuleCard({
         {module.type === 'filter' && (
           <>
             <FilterDisplay
+              resonanceModulation={
+                project.cables.find(
+                  (cable) => cable.to.moduleId === module.id && cable.to.portId === 'resonanceMod',
+                )?.from
+              }
               parameters={module.parameters}
               engine={engine}
               active={audioActive}
@@ -267,7 +276,21 @@ export function ModuleCard({
             <LevelMeter engine={engine} playing={audioActive} />
           </>
         )}
-        {module.type === 'delay' && <DelayDisplay parameters={module.parameters} />}
+        {module.type === 'delay' && (
+          <DelayDisplay
+            parameters={module.parameters}
+            engine={engine}
+            active={audioActive}
+            modulation={Object.fromEntries(
+              ['time', 'feedback', 'mix'].flatMap((id) => {
+                const cable = project.cables.find(
+                  (cable) => cable.to.moduleId === module.id && cable.to.portId === `${id}Mod`,
+                );
+                return cable ? [[id, cable.from]] : [];
+              }),
+            )}
+          />
+        )}
         {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
         {module.type === 'switch' && (
           <SwitchPanel
@@ -286,6 +309,7 @@ export function ModuleCard({
           <LfoDisplay module={module} engine={engine} active={audioActive} />
         )}
         {![
+          'midi-input',
           'sequencer',
           'mixer',
           'merger',

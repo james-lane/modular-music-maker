@@ -21,7 +21,7 @@ test('v1 patches migrate without changing IDs, positions, samples, sound or cabl
   const legacy = { ...structuredClone(current), version: 1 };
   assert.deepEqual(parseProject(legacy), current);
   assert.equal(legacy.version, 1);
-  assert.throws(() => parseProject({ ...legacy, version: 3 }));
+  assert.throws(() => parseProject({ ...legacy, version: 4 }));
   assert.throws(() =>
     parseProject({ ...legacy, modules: [{ ...legacy.modules[0], x: Infinity }] }),
   );

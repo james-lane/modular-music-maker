@@ -1,3 +1,5 @@
+import { withParameterInputs, type ParameterTarget } from './parameter-inputs';
+import { createMidiInput } from './midi-input';
 import {
   boundedModulation,
   createEnvelope,
@@ -25,6 +27,9 @@ export interface AudioRuntime {
   outputs: Record<string, AudioNode>;
   update: (parameters: Parameters) => void;
   dispose: () => void;
+  /** Registry-declared MOD inputs bind to these native targets on connection. */
+  modulationTargets?: Record<string, ParameterTarget[]>;
+  setControl?: (index: number, value: number) => void;
   /** Only pitched voices expose an envelope and frequency for the note scheduler. */
   voice?: { frequency: AudioParam; envelope: AudioParam };
   trigger?: (sound: DrumSound, velocity: number, time: number) => void;
@@ -38,6 +43,8 @@ export interface AudioRuntime {
   silence?: () => void;
   remainingTailSeconds?: () => number;
   configureSample?: (sample: DrumSample | undefined) => void;
+  /** Private sampler effect returns enter before saved drum Level and MOD gain. */
+  kitEffectsReturn?: AudioNode;
   configureKit?: (
     kit: PatchModule | undefined,
     samplers?: KitSamplerSources,
@@ -55,14 +62,29 @@ const smooth = (parameter: AudioParam, target: number, context: AudioContext) =>
 /** Native Web Audio factories have no React or persistence dependencies.
  * Every owned source/node must be released in dispose(), including feedback connections.
  */
-export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
+const FACTORIES: Record<ModuleType, Factory> = {
+  'midi-input': createMidiInput,
   envelope: createEnvelope,
   'mod-sequencer': createModSequencer,
   'random-mod': (context) => createRandomMod(context),
   'xy-controller': createXYController,
   'xy-effects': createXYEffects,
   'mic-sampler': createMicSampler,
-  'drum-machine': createDrumRuntime,
+  'drum-machine': (context) => {
+    const runtime = createDrumRuntime(context);
+    const level = context.createGain();
+    runtime.outputs.out.connect(level);
+    return {
+      ...runtime,
+      outputs: { ...runtime.outputs, out: level },
+      kitEffectsReturn: runtime.outputs.out,
+      modulationTargets: { level: [{ parameter: level.gain }] },
+      dispose() {
+        level.disconnect();
+        runtime.dispose();
+      },
+    };
+  },
   'drum-kit': (context) => {
     // Four independent buses carry external audio. The KIT route assigns their voices;
     // envelopes belong to each receiving drum machine, allowing independent fan-out.
@@ -92,9 +114,12 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     amplitude.gain.value = 0;
     oscillator.connect(amplitude);
     oscillator.start();
+    const level = context.createGain();
+    amplitude.connect(level);
     return {
+      modulationTargets: { level: [{ parameter: level.gain }] },
       inputs: { pitchMod: modulation.input },
-      outputs: { out: amplitude },
+      outputs: { out: level },
       voice: { frequency: oscillator.frequency, envelope: amplitude.gain },
       update(parameters) {
         oscillator.type = parameters.waveform as OscillatorType;
@@ -105,6 +130,7 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
         oscillator.stop();
         oscillator.disconnect();
         amplitude.disconnect();
+        level.disconnect();
       },
     };
   },
@@ -120,6 +146,7 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     source.connect(gain);
     source.start();
     return {
+      modulationTargets: { level: [{ parameter: gain.gain }] },
       inputs: {},
       outputs: { out: gain },
       update(parameters) {
@@ -140,6 +167,10 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     oscillator.connect(depth);
     oscillator.start();
     return {
+      modulationTargets: {
+        rate: [{ parameter: oscillator.frequency }],
+        depth: [{ parameter: depth.gain }],
+      },
       inputs: {},
       outputs: { out: depth },
       update(parameters) {
@@ -157,6 +188,7 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
   filter(context) {
     const filter = context.createBiquadFilter();
     return {
+      modulationTargets: { resonance: [{ parameter: filter.Q }] },
       inputs: { in: filter, cutoff: filter.frequency },
       outputs: { out: filter },
       update(parameters) {
@@ -185,6 +217,11 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     delay.connect(wet);
     wet.connect(output);
     return {
+      modulationTargets: {
+        time: [{ parameter: delay.delayTime }],
+        feedback: [{ parameter: feedback.gain }],
+        mix: [{ parameter: wet.gain }, { parameter: dry.gain, scale: -1, offset: 1 }],
+      },
       inputs: { in: input },
       outputs: { out: output },
       update(parameters) {
@@ -219,6 +256,9 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     input.connect(dry);
     dry.connect(output);
     return {
+      modulationTargets: {
+        mix: [{ parameter: wet.gain }, { parameter: dry.gain, scale: -1, offset: 1 }],
+      },
       inputs: { in: input },
       outputs: { out: output },
       update(parameters) {
@@ -242,6 +282,9 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
       }),
     );
     return {
+      modulationTargets: Object.fromEntries(
+        Object.entries(inputs).map(([id, node]) => [id, [{ parameter: node.gain }]]),
+      ),
       inputs,
       outputs: { out: output },
       update(parameters) {
@@ -263,7 +306,7 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     // two cables from the same source into a single Web Audio connection.
     const inputs = Object.fromEntries(
       MODULES.merger.ports
-        .filter((port) => port.direction === 'input')
+        .filter((port) => port.signal === 'audio' && port.direction === 'input')
         .map((port) => {
           const input = context.createGain();
           input.connect(sum);
@@ -271,6 +314,12 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
         }),
     );
     return {
+      modulationTargets: {
+        ...Object.fromEntries(
+          Object.entries(inputs).map(([id, node]) => [id, [{ parameter: node.gain }]]),
+        ),
+        level: [{ parameter: sum.gain }],
+      },
       inputs,
       outputs: { out: sum },
       update(parameters) {
@@ -338,6 +387,7 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     const gain = context.createGain();
     gain.connect(masterBus);
     return {
+      modulationTargets: { level: [{ parameter: gain.gain }] },
       inputs: { in: gain },
       outputs: {},
       update(parameters) {
@@ -349,3 +399,11 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
     };
   },
 };
+
+/** Every catalog-declared MOD input must have a native target. */
+export const AUDIO_FACTORIES = { ...FACTORIES };
+for (const definition of Object.values(MODULES)) {
+  const factory = FACTORIES[definition.type];
+  AUDIO_FACTORIES[definition.type] = (context, bus) =>
+    withParameterInputs(context, definition, factory(context, bus));
+}

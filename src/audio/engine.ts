@@ -278,7 +278,8 @@ export class AudioEngine {
         const [note, velocity] = held;
         voice.frequency.setTargetAtTime(
           midiFrequency(
-            note + (Number(controller.parameters.octave) + Number(target.parameters.octave)) * 12,
+            note +
+              (Number(controller.parameters.octave ?? 0) + Number(target.parameters.octave)) * 12,
           ),
           now,
           0.005,
@@ -323,6 +324,25 @@ export class AudioEngine {
     padTargets(this.project, controllerId, index).forEach((id) =>
       this.hitDrum(id, DRUM_SOUNDS[index].id, velocity),
     );
+  }
+
+  hitMidi(controllerId: string, index: number, velocity: number) {
+    const module = this.project?.modules.find((module) => module.id === controllerId);
+    if (!this.project || module?.type !== 'midi-input' || !DRUM_SOUNDS[index]) return;
+    for (const id of controllerTargets(this.project, controllerId, 'trigger'))
+      this.hitDrum(id, DRUM_SOUNDS[index].id, velocity * Number(module.parameters.velocity));
+  }
+
+  setMidiControl(moduleId: string, index: number, value: number) {
+    this.runtimes.get(moduleId)?.setControl?.(index, value);
+  }
+
+  resetMidi() {
+    for (const module of this.project?.modules ?? [])
+      if (module.type === 'midi-input') {
+        this.releaseKeyboard(module.id);
+        this.runtimes.get(module.id)?.silence?.();
+      }
   }
 
   private syncSwitch(module: PatchModule) {

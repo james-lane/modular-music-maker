@@ -8,7 +8,7 @@ export const CONFIG = {
     'X-Content-Type-Options': 'nosniff',
     'X-Frame-Options': 'DENY',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
-    'Permissions-Policy': 'microphone=(self), camera=(), geolocation=()',
+    'Permissions-Policy': 'microphone=(self), midi=(self), camera=(), geolocation=()',
   },
   storageKey: 'patchwork.projects.v1',
   activeProjectKey: 'patchwork.active.v1',
@@ -22,6 +22,10 @@ export const CONFIG = {
     cableOpacity: { min: 0, max: 1, step: 0.01, default: 1 },
   },
   autosaveDelayMs: 650,
+  midi: {
+    storageKey: 'patchwork.midi.v1',
+    testNoteMs: 300,
+  },
   offline: {
     statusTimeoutMs: 4000,
     activationTimeoutMs: 15000,

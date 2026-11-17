@@ -20,7 +20,7 @@ const PORT_GUIDE: Record<SignalType, { name: string; meaning: string; example: s
     meaning:
       'Short for modulation: a changing control signal moves a setting for you. An LFO can sweep a filter, an Envelope can shape sampler level, and an XY controller can bend pitch. MOD does not carry the sound itself.',
     example:
-      'LFO MOD OUT → Filter MOD. PITCH MOD, SPEED MOD and LEVEL MOD name the particular setting being moved.',
+      'LFO MOD OUT → Filter MOD. PITCH MOD, SPEED MOD and LEVEL MOD name the particular setting being moved. MIDI Input converts chosen hardware CC movements into the same MOD signals.',
   },
   trigger: {
     name: 'TRIGGER — a hit or a restart',

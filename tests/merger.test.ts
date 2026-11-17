@@ -125,16 +125,27 @@ test('merger inputs and sum ramp independently and disposal releases every node'
     },
   } as unknown as AudioContext;
   const runtime = AUDIO_FACTORIES.merger(context, {} as AudioNode);
-  assert.deepEqual(Object.keys(runtime.inputs), ['in1', 'in2', 'in3', 'in4']);
-  assert.equal(new Set(Object.values(runtime.inputs)).size, 4);
-  assert.ok(Object.values(runtime.inputs).every((input) => input !== runtime.outputs.out));
+  assert.deepEqual(Object.keys(runtime.inputs), [
+    'in1',
+    'in2',
+    'in3',
+    'in4',
+    'in1Mod',
+    'in2Mod',
+    'in3Mod',
+    'in4Mod',
+    'levelMod',
+  ]);
+  const audioInputs = ['in1', 'in2', 'in3', 'in4'].map((id) => runtime.inputs[id]);
+  assert.equal(new Set(audioInputs).size, 4);
+  assert.ok(audioInputs.every((input) => input !== runtime.outputs.out));
   const output = runtime.outputs.out as unknown as ReturnType<typeof makeNode>;
-  for (const input of Object.values(runtime.inputs)) {
+  for (const input of audioInputs) {
     assert.ok((input as unknown as ReturnType<typeof makeNode>).connections.has(output));
   }
   runtime.update({ in1: 1, in2: 0.75, in3: 0.5, in4: 0.25, level: 0.5 });
   assert.equal(output.gain.value, 0.5);
-  const inputs = Object.values(runtime.inputs) as unknown as ReturnType<typeof makeNode>[];
+  const inputs = audioInputs as unknown as ReturnType<typeof makeNode>[];
   assert.deepEqual(
     inputs.map((input) => input.gain.value),
     [1, 0.75, 0.5, 0.25],

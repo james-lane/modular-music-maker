@@ -15,7 +15,7 @@ test('every Mixer channel count round-trips and exposes only its active audio so
     const next = setMixerInputCount(project, mixer.id, count);
     assert.deepEqual(parseProject(next), next);
     const definition = moduleDefinition(next.modules[0]);
-    assert.equal(definition.ports.length, count + 1);
+    assert.equal(definition.ports.length, count * 2 + 1);
     assert.equal(definition.controls.length, count);
     assert.equal(
       connectionError(
@@ -133,7 +133,10 @@ test('Mixer gains stay independent, mute hidden channels, ramp changes and dispo
   const runtime = AUDIO_FACTORIES.mixer(context, {} as AudioNode);
   const module = createModule('mixer', 0, 0);
   runtime.update({ ...module.parameters, inputCount: 8, c: 0.4, h: 0.9 });
-  assert.equal(new Set(Object.values(runtime.inputs)).size, 8);
+  assert.equal(
+    new Set(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((id) => runtime.inputs[id])).size,
+    8,
+  );
   assert.equal(nodes[3].gain.value, 0.4);
   assert.equal(nodes[8].gain.value, 0.9);
   runtime.update(module.parameters);

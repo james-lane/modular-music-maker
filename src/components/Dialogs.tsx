@@ -352,6 +352,40 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           choose its new values; unplug that cable to return to tempo timing.
         </p>
       </section>
+      <section className="port-guide" aria-label="Web MIDI hardware controls">
+        <h3>Play with MIDI hardware</h3>
+        <p>
+          Web MIDI lets a supported browser receive notes and control movements from a connected
+          keyboard, pad controller, fader or pedal. MIDI carries instructions; Patchwork makes the
+          sound.
+        </p>
+        <p>
+          Add a <strong>MIDI Input</strong> module, connect its PITCH / GATE, TRIGGER or MOD outputs
+          to compatible modules, then press <strong>Enable MIDI</strong> and allow access. Choose
+          the device and channel on each instance; add more instances for different inputs or note
+          ranges. Use Test note / hit and the Test MOD sliders to check wiring without hardware.
+        </p>
+        <p>
+          Four CC assignments convert hardware knobs and faders into MOD signals. New MOD inputs
+          take over their named knob over its normal range; unplugging restores the saved knob.
+          LEVEL/DEPTH MOD on Oscillator, Drum machine and Envelope scales the saved strength.
+          Existing Filter MOD adds to cutoff; pitch/speed MOD bends around the saved note or speed.
+          Bipolar outputs allow movement in both directions, including the XY Effects axes.
+        </p>
+        <p>
+          CC64 is sustain. Release MIDI notes clears held notes and neutralizes MOD outputs; Stop,
+          disconnecting and leaving the page also release notes. Enable is optional and starts off
+          after reload. Device choices stay on this browser; channel/CC assignments travel with
+          saved patches. MIDI performances are captured as routed audio by Record.
+        </p>
+        <p>
+          Web MIDI needs HTTPS or localhost and browser permission. It is available in supported
+          Chrome, Edge and desktop Firefox browsers; Safari and iPad/iPhone Safari currently lack
+          native support. Touch, computer keys and all other studio features remain available. There
+          is no MIDI clock, SysEx or external MIDI output in this release. Each module’s guide
+          explains its compatibility.
+        </p>
+      </section>
       <PortGuide />
       <div className="shortcut-list">
         <span>

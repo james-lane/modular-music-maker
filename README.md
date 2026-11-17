@@ -28,7 +28,7 @@ Open **http://127.0.0.1:3001**. The server binds to loopback and rejects unexpec
 
 ## What works
 
-- A searchable module library with twenty-one working modules: drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, Envelope, Mod sequencer, Sample & Hold, XY controller, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
+- A searchable module library with twenty-two working modules: MIDI Input, drum machine, drum kit, keyboard, pad controller, step sequencer, oscillator, noise, Mic sampler, LFO, Envelope, Mod sequencer, Sample & Hold, XY controller, filter, delay, reverb, XY Effects, mixer, merger, Switch, and output.
 - Ten contrasting example patches under **More → Example patches**. The chooser opens on a first visit. Each example opens a temporary editable copy. Choose Save patch to keep it; your saved work stays in My patches.
 - Each module in the library has a **?** help button. Its guide explains setup and controls, shows compatible sockets/modules, and provides a worked patch example. Select a compatible module to explore its guide, then use Back to return. **Load demo patch** opens a fresh, ready-wired demonstration of the module currently shown, preserving saved work in My patches. Demos include any needed local sample and wait for Play or live keys/pads; browsing stays silent.
 - Open **Add modules** for an alphabetical module list with category filters and search. The drawer stays open while you pan or zoom the exposed workspace; close it with its X, **Add modules**, or Escape. The Pan/zoom buttons stay reachable beside the drawer, or in a clear strip below it on phones. Tap the search icon when you want to type; opening the drawer leaves the iPad keyboard closed. Drag a row with a mouse, or drag its grip on a touch screen, then release over the placement preview. The **+** buttons add modules without dragging. Move placed panels by dragging their headers. Releasing over the toolbar or beyond the workspace keeps the move; press Escape during a drag to cancel it.
@@ -128,7 +128,17 @@ Use **More → Example patches → Pocket rhythm** for the connected performance
 
 Keys, pads, and drum audition work with the transport stopped. They wake the audio device for live playing and suspend it after a short tail when idle. Stop silences the instruments. Recording captures their routed audio along with the sequencer. Play/Record starts the transport; turn Pattern off to record only live playing.
 
-Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns repeat every eight steps at their selected rate. Each sequencer can run at a different rate. Live rate changes join the shared transport grid without restarting; a short already-queued segment may retain the previous timing. Older patches open at 1/8, preserving their sound. Both pattern types repeat independently of the time-signature display. No physical MIDI device support is included yet.
+Drum patterns repeat every sixteen sixteenth-notes (one 4/4 bar); melodic patterns repeat every eight steps at their selected rate. Each sequencer can run at a different rate. Live rate changes join the shared transport grid without restarting; a short already-queued segment may retain the previous timing. Older patches open at 1/8, preserving their sound. Both pattern types repeat independently of the time-signature display. Optional hardware MIDI input is available through the MIDI Input module; see below.
+
+## Play with MIDI hardware
+
+Add **MIDI Input**, connect its **PITCH / GATE**, **TRIGGER** or four **MOD** outputs to compatible modules, then press **Enable MIDI** and grant permission. Each instance can select a different device, channel, note range and four controller (CC) numbers. Test note / hit and Test MOD sliders check the actual routes without hardware or permission. Sustain (CC64), hardware velocity and last-held-note priority are supported; Oscillator remains monophonic. Drum triggers use sixteen consecutive notes starting at First drum note (36 by default), following Patchwork pad order.
+
+New MOD inputs control instrument/output levels, Mixer/Merger channels, LFO settings, effect settings, modulation depth and XY Effects axes. They also accept existing LFO/envelope/XY signals. Unplugging restores saved controls; external movement never becomes patch edits. Every module guide explains its exact MIDI compatibility, and Help describes setup and signal ranges.
+
+MIDI is optional and starts disabled after reload. Web MIDI requires HTTPS/localhost, permission and a supporting browser; Safari/iPad/iPhone Safari currently lack native support. Browser/device failure leaves ordinary studio use available. Device choices stay in this browser; validated channel/CC assignments travel with patches. Stop, Release MIDI notes, disconnect, hidden visibility and patch changes clear live ownership. There is no MIDI clock, SysEx or external MIDI output. Record captures routed audio. See [MIDI support and future-module rules](docs/MIDI.md).
+
+Patch files now use v3; existing v1/v2 files migrate with sound/IDs intact. Mixer and Merger gain room for MOD sockets, moving only overlapping legacy instances when necessary. Older app releases cannot import v3 exports.
 
 ## Delete saved patches
 

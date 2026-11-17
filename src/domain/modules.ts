@@ -55,6 +55,43 @@ export const SAMPLER_TRIM = { start: 0, end: 1, step: 0.001 } as const;
  * Ordinary numeric controls render automatically; only special interfaces need a component.
  */
 export const MODULES: Record<ModuleType, ModuleDefinition> = {
+  'midi-input': {
+    type: 'midi-input',
+    name: 'MIDI Input',
+    subtitle: 'Bring your hardware into the patch',
+    description: 'Hardware notes, drum hits and four patchable controller signals.',
+    category: 'Modulation',
+    color: '#5f8d9c',
+    code: 'MIDI–01',
+    width: 480,
+    height: 560,
+    ports: [
+      { id: 'pitch', label: 'PITCH / GATE', direction: 'output', signal: 'pitch' },
+      { id: 'trigger', label: 'TRIGGER', direction: 'output', signal: 'trigger' },
+      ...[1, 2, 3, 4].map((index) => ({
+        id: `mod${index}`,
+        label: `MOD ${index}`,
+        direction: 'output' as const,
+        signal: 'control' as const,
+      })),
+    ],
+    controls: [
+      { id: 'channel', label: 'Channel', min: 0, max: 16, step: 1, default: 0 },
+      { id: 'noteMin', label: 'Lowest note', min: 0, max: 127, step: 1, default: 0 },
+      { id: 'noteMax', label: 'Highest note', min: 0, max: 127, step: 1, default: 127 },
+      { id: 'firstNote', label: 'First drum note', min: 0, max: 112, step: 1, default: 36 },
+      { id: 'velocity', label: 'Velocity', min: 0.1, max: 1, step: 0.01, default: 1, unit: '%' },
+      ...[1, 7, 74, 11].map((cc, index) => ({
+        id: `cc${index + 1}`,
+        label: `MOD ${index + 1} CC`,
+        min: 0,
+        max: 119,
+        step: 1,
+        default: cc,
+      })),
+    ],
+    defaults: { bipolar1: false, bipolar2: false, bipolar3: false, bipolar4: false },
+  },
   'drum-machine': {
     type: 'drum-machine',
     name: 'Drum machine',
@@ -65,6 +102,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'DRM–01',
     width: 452,
     height: 432,
+    modulationInputs: [{ id: 'levelMod', label: 'LEVEL MOD', control: 'level', multiplier: true }],
     ports: [
       { id: 'kit', label: 'KIT IN', direction: 'input', signal: 'kit' },
       { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
@@ -222,6 +260,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'VCO–01',
     width: 244,
     height: 326,
+    modulationInputs: [{ id: 'levelMod', label: 'LEVEL MOD', control: 'level', multiplier: true }],
     ports: [
       { id: 'pitch', label: 'PITCH', direction: 'input', signal: 'pitch' },
       {
@@ -249,6 +288,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'NS–01',
     width: 168,
     height: 220,
+    modulationInputs: [{ id: 'levelMod', label: 'LEVEL MOD', control: 'level' }],
     ports: [{ id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' }],
     controls: [
       { id: 'level', label: 'Level', min: 0, max: 0.5, step: 0.01, default: 0.12, unit: '%' },
@@ -264,6 +304,10 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'LFO–01',
     width: 216,
     height: 290,
+    modulationInputs: [
+      { id: 'rateMod', label: 'RATE MOD', control: 'rate' },
+      { id: 'depthMod', label: 'DEPTH MOD', control: 'depth' },
+    ],
     ports: [{ id: 'out', label: 'MOD OUT', direction: 'output', signal: 'control' }],
     controls: [
       { id: 'rate', label: 'Rate', min: 0.1, max: 15, step: 0.1, default: 0.6, unit: 'Hz' },
@@ -280,6 +324,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'ENV–01',
     width: 276,
     height: 390,
+    modulationInputs: [{ id: 'depthMod', label: 'DEPTH MOD', control: 'depth', multiplier: true }],
     ports: [
       { id: 'gate', label: 'NOTE / GATE', direction: 'input', signal: 'pitch' },
       { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
@@ -301,6 +346,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'MOD–08',
     width: 360,
     height: 520,
+    modulationInputs: [{ id: 'depthMod', label: 'DEPTH MOD', control: 'depth' }],
     ports: [{ id: 'out', label: 'MOD OUT', direction: 'output', signal: 'control' }],
     controls: [
       ...[0, 0.5, -0.3, 0.8, -0.6, 0.2, 1, -0.2].map((value, index) => ({
@@ -326,6 +372,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'S&H–01',
     width: 260,
     height: 430,
+    modulationInputs: [{ id: 'depthMod', label: 'DEPTH MOD', control: 'depth' }],
     ports: [
       { id: 'trigger', label: 'TRIGGER IN', direction: 'input', signal: 'trigger' },
       { id: 'out', label: 'MOD OUT', direction: 'output', signal: 'control' },
@@ -366,6 +413,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'VCF–01',
     width: 244,
     height: 326,
+    modulationInputs: [{ id: 'resonanceMod', label: 'Q MOD', control: 'resonance' }],
     ports: [
       { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
       { id: 'cutoff', label: 'MOD', direction: 'input', signal: 'control' },
@@ -396,6 +444,11 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'DLY–01',
     width: 260,
     height: 284,
+    modulationInputs: [
+      { id: 'timeMod', label: 'TIME MOD', control: 'time' },
+      { id: 'feedbackMod', label: 'FB MOD', control: 'feedback' },
+      { id: 'mixMod', label: 'MIX MOD', control: 'mix' },
+    ],
     ports: [
       { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
@@ -424,6 +477,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'RVB–01',
     width: 180,
     height: 220,
+    modulationInputs: [{ id: 'mixMod', label: 'MIX MOD', control: 'mix' }],
     ports: [
       { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
@@ -443,6 +497,12 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     ports: [
       { id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' },
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
+      ...['x', 'y', 'mix'].map((id) => ({
+        id: `${id}Mod`,
+        label: `${id.toUpperCase()} MOD`,
+        direction: 'input' as const,
+        signal: 'control' as const,
+      })),
     ],
     controls: [
       { id: 'x', label: 'X position', min: -1, max: 1, step: 0.01, default: 0 },
@@ -461,6 +521,16 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'MIX–01',
     width: 184,
     height: 270,
+    modulationInputs: [
+      { id: 'aMod', label: 'A MOD', control: 'a' },
+      { id: 'bMod', label: 'B MOD', control: 'b' },
+      { id: 'cMod', label: 'C MOD', control: 'c' },
+      { id: 'dMod', label: 'D MOD', control: 'd' },
+      { id: 'eMod', label: 'E MOD', control: 'e' },
+      { id: 'fMod', label: 'F MOD', control: 'f' },
+      { id: 'gMod', label: 'G MOD', control: 'g' },
+      { id: 'hMod', label: 'H MOD', control: 'h' },
+    ],
     ports: [
       ...MIXER_CHANNEL_IDS.map((id) => ({
         id,
@@ -491,6 +561,13 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     code: 'SUM–04',
     width: 320,
     height: 248,
+    modulationInputs: [
+      { id: 'in1Mod', label: '1 MOD', control: 'in1' },
+      { id: 'in2Mod', label: '2 MOD', control: 'in2' },
+      { id: 'in3Mod', label: '3 MOD', control: 'in3' },
+      { id: 'in4Mod', label: '4 MOD', control: 'in4' },
+      { id: 'levelMod', label: 'SUM MOD', control: 'level' },
+    ],
     ports: [
       { id: 'in1', label: 'IN 1', direction: 'input', signal: 'audio' },
       { id: 'in2', label: 'IN 2', direction: 'input', signal: 'audio' },
@@ -537,12 +614,31 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     width: 228,
     height: 326,
     maxInstances: 1,
+    modulationInputs: [{ id: 'levelMod', label: 'LEVEL MOD', control: 'level' }],
     ports: [{ id: 'in', label: 'AUDIO IN', direction: 'input', signal: 'audio' }],
     controls: [
       { id: 'level', label: 'Output level', min: 0, max: 1, step: 0.01, default: 0.8, unit: '%' },
     ],
   },
 };
+
+/** Reserve legible socket spacing in the single shared footer. */
+export const MODULATION_SOCKET_SPACING = 42;
+for (const definition of Object.values(MODULES)) {
+  definition.ports.push(
+    ...(definition.modulationInputs ?? []).map((input) => ({
+      id: input.id,
+      label: input.label,
+      direction: 'input' as const,
+      signal: 'control' as const,
+    })),
+  );
+  if (definition.type === 'mixer') continue;
+  definition.width = Math.max(
+    definition.width,
+    definition.ports.length * MODULATION_SOCKET_SPACING + 24,
+  );
+}
 
 export const MODULE_LIST = Object.values(MODULES);
 
@@ -558,10 +654,25 @@ export function moduleDefinition(
     };
   if (module.type === 'mixer') {
     const count = mixerInputCount(module.parameters.inputCount);
+    const modulationInputs = definition.modulationInputs?.slice(0, count) ?? [];
+    const ports = [
+      ...definition.ports.slice(0, count),
+      definition.ports.find((port) => port.id === 'out')!,
+      ...modulationInputs.map((input) => ({
+        id: input.id,
+        label: input.label,
+        direction: 'input' as const,
+        signal: 'control' as const,
+      })),
+    ];
     return {
       ...definition,
-      width: definition.width + (count - MIXER_INPUT_COUNTS[0]) * 64,
-      ports: [...definition.ports.slice(0, count), definition.ports[definition.ports.length - 1]],
+      ports,
+      modulationInputs,
+      width: Math.max(
+        definition.width + (count - MIXER_INPUT_COUNTS[0]) * 64,
+        ports.length * MODULATION_SOCKET_SPACING + 24,
+      ),
       controls: definition.controls.slice(0, count),
     };
   }

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 import type { AudioEngine } from '../audio/engine';
+import { MODULES } from '../domain/modules';
 import { CONFIG } from '../config';
 import type { Endpoint, Parameters } from '../domain/types';
 import { filterResponsePath } from './instrument-display';
@@ -12,11 +13,13 @@ export function FilterDisplay({
   engine,
   active,
   modulation,
+  resonanceModulation,
 }: {
   parameters: Parameters;
   engine: AudioEngine;
   active: boolean;
   modulation?: Endpoint;
+  resonanceModulation?: Endpoint;
 }) {
   const path = useRef<SVGPathElement>(null);
   const cutoff = Number(parameters.cutoff),
@@ -32,17 +35,29 @@ export function FilterDisplay({
     let frame = 0,
       previous = -Infinity;
     const draw = (now: number) => {
-      if (active && modulation && !reduced.matches) frame = requestAnimationFrame(draw);
+      if (active && (modulation || resonanceModulation) && !reduced.matches)
+        frame = requestAnimationFrame(draw);
       if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
       previous = now;
       const input =
         active && modulation && !reduced.matches
           ? engine.readControl(modulation.moduleId, modulation.portId)
           : 0;
-      path.current?.setAttribute(
-        'd',
-        filterResponsePath(mode, cutoff + input, resonance, sampleRate),
-      );
+      const qControl = MODULES.filter.controls.find((control) => control.id === 'resonance');
+      const q =
+        active && resonanceModulation && !reduced.matches && qControl
+          ? qControl.min +
+            Math.max(
+              0,
+              Math.min(
+                1,
+                engine.readControl(resonanceModulation.moduleId, resonanceModulation.portId) /
+                  CONFIG.audio.modulation.reference,
+              ),
+            ) *
+              (qControl.max - qControl.min)
+          : resonance;
+      path.current?.setAttribute('d', filterResponsePath(mode, cutoff + input, q, sampleRate));
     };
     const motionChanged = () => {
       cancelAnimationFrame(frame);
@@ -60,6 +75,8 @@ export function FilterDisplay({
     active,
     modulation?.moduleId,
     modulation?.portId,
+    resonanceModulation?.moduleId,
+    resonanceModulation?.portId,
     mode,
     cutoff,
     resonance,

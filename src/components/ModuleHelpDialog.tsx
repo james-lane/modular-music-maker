@@ -172,6 +172,10 @@ export function ModuleHelpDialog({
             </dl>
           </section>
         </div>
+        <section className="guide-connections" aria-label="Web MIDI compatibility">
+          <h3>Web MIDI compatibility</h3>
+          <p>{guide.midi}</p>
+        </section>
         <div className="guide-tip">
           <Lightbulb size={17} />
           <p>{guide.tip}</p>

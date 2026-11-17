@@ -28,8 +28,11 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   latest.current = project;
   const notifyRef = useRef(notify);
   notifyRef.current = notify;
-  const heldKeys = useRef(new Set<string>());
+  const heldKeys = useRef(
+    new Map<string, { moduleId: string; note: number; velocity?: number; source: string }>(),
+  );
   const liveGeneration = useRef(0);
+  const midiGeneration = useRef(0);
   const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
@@ -124,20 +127,29 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   );
 
   const noteOn = useCallback(
-    (moduleId: string, note: number) => {
+    (moduleId: string, note: number, velocity?: number, source = 'ui') => {
       if (!controllerTargets(latest.current, moduleId, 'pitch').length) {
+        if (
+          latest.current.modules.some(
+            (module) => module.id === moduleId && module.type === 'midi-input',
+          )
+        )
+          return;
         notifyRef.current(
           'Connect Keyboard PITCH / GATE to an Oscillator PITCH or Envelope NOTE / GATE input.',
         );
         return;
       }
-      const token = `${moduleId}:${note}`;
-      heldKeys.current.add(token);
+      const token = JSON.stringify([moduleId, note, source]);
+      const hold = { moduleId, note, velocity, source };
+      heldKeys.current.delete(token);
+      heldKeys.current.set(token, hold);
       void activateLive(() => {
         // A quick release may arrive while the audio device is still waking up.
-        if (heldKeys.current.has(token)) {
+        if (heldKeys.current.get(token) === hold) {
           const module = latest.current.modules.find((item) => item.id === moduleId);
-          if (module) engine.noteOn(moduleId, note, Number(module.parameters.velocity));
+          if (module?.type === 'keyboard' || module?.type === 'midi-input')
+            engine.noteOn(moduleId, note, Number(module.parameters.velocity) * (velocity ?? 1));
         }
       });
     },
@@ -145,9 +157,14 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   );
 
   const noteOff = useCallback(
-    (moduleId: string, note: number) => {
-      heldKeys.current.delete(`${moduleId}:${note}`);
-      engine.noteOff(moduleId, note);
+    (moduleId: string, note: number, source = 'ui') => {
+      heldKeys.current.delete(JSON.stringify([moduleId, note, source]));
+      if (
+        ![...heldKeys.current.values()].some(
+          (hold) => hold.moduleId === moduleId && hold.note === note,
+        )
+      )
+        engine.noteOff(moduleId, note);
       scheduleIdle();
     },
     [engine, scheduleIdle],
@@ -155,23 +172,27 @@ export function useAudio(project: Project, notify: (message: string) => void) {
 
   const releaseKeyboard = useCallback(
     (moduleId: string) => {
-      for (const token of heldKeys.current)
-        if (token.startsWith(`${moduleId}:`)) heldKeys.current.delete(token);
-      engine.releaseKeyboard(moduleId);
+      // Panel cleanup owns touch/computer keys only. A MIDI hold on the same
+      // pitch must survive a pointer release or a keyboard layout remount.
+      for (const hold of [...heldKeys.current.values()])
+        if (hold.moduleId === moduleId && hold.source === 'ui') noteOff(moduleId, hold.note);
       scheduleIdle();
     },
-    [engine, scheduleIdle],
+    [noteOff, scheduleIdle],
   );
 
   const drumHit = useCallback(
-    (moduleId: string, sound: DrumSound) => {
-      void activateLive(() => engine.hitDrum(moduleId, sound, 0.9));
+    (moduleId: string, sound: DrumSound, velocity = 0.9) => {
+      const projectId = latest.current.id;
+      void activateLive(() => {
+        if (latest.current.id === projectId) engine.hitDrum(moduleId, sound, velocity);
+      });
     },
     [activateLive, engine],
   );
 
   const padHit = useCallback(
-    (moduleId: string, index: number) => {
+    (moduleId: string, index: number, velocity = 1) => {
       const sourceProject = latest.current;
       if (!padTargets(sourceProject, moduleId, index).length) {
         notifyRef.current(
@@ -182,9 +203,10 @@ export function useAudio(project: Project, notify: (message: string) => void) {
       void activateLive(() => {
         // Audio resume may finish after resizing/rewiring. Never dispatch into
         // the graph captured before that edit or revive a removed pad output.
+        if (latest.current.id !== sourceProject.id) return;
         if (latest.current !== sourceProject) engine.update(latest.current);
         const module = latest.current.modules.find((item) => item.id === moduleId);
-        if (module) engine.hitPad(moduleId, index, Number(module.parameters.velocity));
+        if (module) engine.hitPad(moduleId, index, Number(module.parameters.velocity) * velocity);
       });
     },
     [activateLive, engine],
@@ -197,9 +219,53 @@ export function useAudio(project: Project, notify: (message: string) => void) {
     [activateLive, engine],
   );
 
+  const midiHit = useCallback(
+    (moduleId: string, index: number, velocity: number) => {
+      if (!controllerTargets(latest.current, moduleId, 'trigger').length) return;
+      const projectId = latest.current.id,
+        generation = midiGeneration.current;
+      void activateLive(() => {
+        if (generation === midiGeneration.current && latest.current.id === projectId)
+          engine.hitMidi(moduleId, index, velocity);
+      });
+    },
+    [activateLive, engine],
+  );
+  const midiControl = useCallback(
+    (moduleId: string, index: number, value: number) => {
+      if (!controllerTargets(latest.current, moduleId, `mod${index}`).length) return;
+      const projectId = latest.current.id,
+        generation = midiGeneration.current;
+      void activateLive(() => {
+        if (generation === midiGeneration.current && latest.current.id === projectId)
+          engine.setMidiControl(moduleId, index, value);
+      });
+    },
+    [activateLive, engine],
+  );
+  const resetMidi = useCallback(() => {
+    midiGeneration.current++;
+    for (const [token, hold] of heldKeys.current)
+      if (hold.source.startsWith('midi:')) {
+        heldKeys.current.delete(token);
+        engine.noteOff(hold.moduleId, hold.note);
+      }
+    engine.resetMidi();
+    scheduleIdle();
+  }, [engine, scheduleIdle]);
   const live: LiveControls = useMemo(
-    () => ({ noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit }),
-    [noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit],
+    () => ({
+      noteOn,
+      noteOff,
+      releaseKeyboard,
+      drumHit,
+      padHit,
+      sampleHit,
+      midiHit,
+      midiControl,
+      resetMidi,
+    }),
+    [noteOn, noteOff, releaseKeyboard, drumHit, padHit, sampleHit, midiHit, midiControl, resetMidi],
   );
 
   const toggleRecord = useCallback(async () => {

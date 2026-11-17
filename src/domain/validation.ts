@@ -26,7 +26,7 @@ const endpoint = z.object({ moduleId: z.uuid(), portId: z.string().max(24) }).st
 /** One versioned validation boundary is shared by JSON import, browser storage and Node. */
 export const projectSchema = z
   .object({
-    version: z.literal(2),
+    version: z.literal(3),
     id: z.uuid(),
     name: z.string().trim().min(1).max(80),
     updatedAt: z.iso.datetime(),
@@ -120,6 +120,13 @@ export const projectSchema = z
         !KEYBOARD_KEY_COUNTS.some((count) => count === module.parameters.keyCount)
       )
         issue('Keyboard needs 25, 37, 49 or 61 keys.');
+      if (module.type === 'midi-input') {
+        if (Number(module.parameters.noteMin) > Number(module.parameters.noteMax))
+          issue('MIDI lowest note must not exceed highest note.');
+        for (let index = 1; index <= 4; index++)
+          if (typeof module.parameters[`bipolar${index}`] !== 'boolean')
+            issue('MIDI polarity must be a boolean.');
+      }
       if (module.type === 'switch') {
         if (
           typeof module.parameters.automatic !== 'boolean' ||
@@ -220,12 +227,23 @@ export const projectSchema = z
   });
 
 export function parseProject(value: unknown): Project {
-  const expandedPads = new Set<string>();
-  const project = projectSchema.parse(migrateProject(value, expandedPads));
-  // Old sixteen-pad controllers gain a wider socket row. Preserve every ID, route
-  // and neighbouring position; relocate only a legacy panel that would now overlap.
+  const expandedModules = new Set<string>();
+  const legacy =
+    typeof value === 'object' &&
+    value !== null &&
+    'version' in value &&
+    (value.version === 1 || value.version === 2);
+  const project = projectSchema.parse(migrateProject(value, expandedModules));
+  if (legacy)
+    for (const module of project.modules) {
+      // These two enclosures need more width for the new MOD sockets. Only move
+      // the expanded legacy panel, retaining neighbouring instruments and cable IDs.
+      if (module.type === 'mixer' || module.type === 'merger') expandedModules.add(module.id);
+    }
+  // Preserve every ID, route and neighbouring position. Only an enlarged legacy
+  // panel may move; already migrated v3 patches retain their explicit layout.
   for (const module of project.modules) {
-    if (!expandedPads.has(module.id)) continue;
+    if (!expandedModules.has(module.id)) continue;
     const resized = clearModuleOverlap(
       module,
       project.modules.filter((item) => item.id !== module.id),
@@ -235,15 +253,16 @@ export function parseProject(value: unknown): Project {
   return project;
 }
 
-/** V2 gives coordinates a signed, open-workspace meaning. V1 IDs, sound, samples
- * and cables migrate unchanged; legacy pad enclosures may need layout clearance.
+/** V3 adds wider MOD footers; V2 introduced signed open-workspace coordinates.
+ * V1/V2 IDs, sound, samples and cables migrate unchanged, with layout clearance
+ * only for expanded legacy enclosures.
  * Never mutate the caller's stored object.
  * Validation still runs after migration and unknown versions remain unsupported.
  */
-function migrateProject(value: unknown, expandedPads: Set<string>): unknown {
+function migrateProject(value: unknown, expandedModules: Set<string>): unknown {
   if (typeof value !== 'object' || value === null || !('version' in value)) return value;
-  const project = value.version === 1 ? { ...value, version: 2 } : value;
-  if (project.version !== 2 || !('modules' in project) || !Array.isArray(project.modules))
+  const project = value.version === 1 || value.version === 2 ? { ...value, version: 3 } : value;
+  if (project.version !== 3 || !('modules' in project) || !Array.isArray(project.modules))
     return project;
   // Additive controls preserve the sound of old saves. Only a completely absent
   // control group is legacy data; partial or invalid values still fail validation.
@@ -286,7 +305,7 @@ function migrateProject(value: unknown, expandedPads: Set<string>): unknown {
         };
       }
       if (module.type === 'pad-controller' && !('padCount' in parameters)) {
-        if ('id' in module && typeof module.id === 'string') expandedPads.add(module.id);
+        if ('id' in module && typeof module.id === 'string') expandedModules.add(module.id);
         return { ...module, parameters: { ...parameters, padCount: DEFAULT_PAD_LAYOUT.count } };
       }
       if (module.type === 'sequencer' && !('rate' in parameters)) {

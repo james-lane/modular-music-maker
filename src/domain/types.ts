@@ -1,5 +1,6 @@
 /** Serializable domain data only. Audio nodes and UI state never enter a saved patch. */
 export type ModuleType =
+  | 'midi-input'
   | 'sequencer'
   | 'oscillator'
   | 'noise'
@@ -55,6 +56,8 @@ export interface ModuleDefinition {
   height: number;
   ports: PortDefinition[];
   controls: ControlDefinition[];
+  /** Ordinary control-signal inputs, implemented by the native parameter adapter. */
+  modulationInputs?: { id: string; label: string; control: string; multiplier?: boolean }[];
   defaults?: Parameters;
   maxInstances?: number;
 }
@@ -97,7 +100,7 @@ export interface Cable {
 }
 
 export interface Project {
-  version: 2;
+  version: 3;
   id: string;
   name: string;
   updatedAt: string;

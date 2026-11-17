@@ -1795,3 +1795,97 @@
     font-size: 16px;
   }
 }
+
+/* A blue-grey desktop MIDI interface with ivory switches and recessed selectors. */
+:root {
+  --enclosure-midi-input: #536f7a;
+}
+.module-midi-input {
+  --panel-face: var(--enclosure-midi-input);
+  --panel-end: #354d59;
+  --panel-edge: #243944;
+  --panel-ink: #f6f2dc;
+  --panel-muted: #d3dce0;
+  --panel-rule: #7d9299;
+  --panel-highlight: #cde4e83d;
+  border-radius: 8px 8px 12px 12px;
+}
+.midi-instrument {
+  display: grid;
+  gap: 10px;
+  color: var(--panel-ink);
+  font-size: 10px;
+}
+.midi-instrument label {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.midi-instrument button,
+.midi-instrument select,
+.midi-instrument input[type='number'] {
+  min-width: 0;
+  height: 26px;
+  padding: 3px 7px;
+  border: 1px solid #213944;
+  border-radius: 3px;
+  background: linear-gradient(#f4f0df, #d4d1c4);
+  color: #243944;
+  font-size: 11px;
+  box-shadow:
+    inset 0 1px 1px #fff9,
+    0 1px 2px #172e3980;
+}
+.midi-instrument button:disabled {
+  opacity: 0.6;
+}
+.midi-access {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.midi-device-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 10px;
+}
+.midi-note-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.midi-test-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.midi-test-row label {
+  flex: 1;
+}
+.midi-cc-rows {
+  display: grid;
+  gap: 5px;
+  border-top: 1px solid var(--panel-rule);
+  padding-top: 8px;
+}
+.midi-cc-rows > div {
+  display: grid;
+  grid-template-columns: 46px 60px 40px 1fr;
+  gap: 9px;
+  align-items: center;
+}
+.midi-cc-rows > div > label:has(input[type='checkbox']) {
+  display: flex;
+  align-items: center;
+}
+.midi-instrument input[type='range'] {
+  width: 100%;
+  min-width: 0;
+  accent-color: #f0dca3;
+  height: 18px;
+}
+.midi-error {
+  margin: 0;
+  color: #ffe4ad;
+}

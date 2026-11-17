@@ -18,6 +18,8 @@ export const guideInstance = (endpoint: GuideEndpoint): string =>
 
 export interface ModuleGuide {
   overview: string;
+  /** Required for future modules: explain actual MIDI/patch-signal support and limits. */
+  midi: string;
   steps: string[];
   /** Keys match the registry's numeric control IDs; their labels come from the registry. */
   controls: Record<string, string>;
@@ -32,7 +34,7 @@ export interface ModuleGuide {
     instanceParameters?: Record<string, Parameters>;
     /** Optional registry-sized rows keep parallel teaching paths easy to follow. */
     rows?: string[][];
-    interaction?: 'transport' | 'keyboard' | 'pads';
+    interaction?: 'transport' | 'keyboard' | 'pads' | 'midi';
     instructions?: string;
   };
 }
@@ -51,7 +53,60 @@ const wire = (
 
 /** Keep teaching copy beside the domain. Every new module must supply a guide. */
 export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
+  'midi-input': {
+    midi: 'Compatible in browsers exposing Web MIDI on HTTPS or localhost, after explicit Enable MIDI. Choose input device(s), channel and note range per instance. Safari/iPad Safari currently lack native Web MIDI; the test controls remain available without hardware. This module receives MIDI only: no SysEx, external clock or MIDI output.',
+    overview:
+      'A patchable hardware interface: physical keys become PITCH / GATE, drum notes become TRIGGER hits, and four chosen MIDI CCs become ordinary MOD signals. Add several instances for different devices, channels, note ranges or controller assignments.',
+    steps: [
+      'Connect PITCH / GATE to Oscillator PITCH or Envelope NOTE / GATE. Connect the instrument AUDIO OUT onwards to Output. Use Test note / hit to check the route without hardware.',
+      'Press Enable MIDI only when you want hardware access; allow the browser permission. Choose an input and channel (All is 0). Set a note range to split a keyboard or isolate a pad. You can play with the transport stopped.',
+      'Connect MOD 1–4 to matching MOD inputs and enter the hardware control’s CC number. Default outputs listen to CC 1, 7, 74 and 11. Test sliders send the same signals without permission. Bipolar maps 0–127 to −100%…+100%; ordinary mode maps it to 0…100%.',
+      'For drum hits, First drum note maps to kick, then fifteen consecutive notes follow Patchwork’s pad order. TRIGGER can also restart samples and modulation. Hold CC64 sustain for notes; Release MIDI notes clears holds and returns MOD outputs to neutral.',
+    ],
+    controls: {
+      channel:
+        '0 receives all sixteen channels; 1–16 isolates one. Multiple instances can share or split hardware inputs.',
+      noteMin:
+        'Lowest accepted MIDI note, inclusive. Used with Highest note to split a keyboard or isolate a hardware pad.',
+      noteMax: 'Highest accepted MIDI note, inclusive. Must not be lower than Lowest note.',
+      firstNote:
+        'The first of sixteen consecutive drum notes, mapped to kick, snare, clap, closed hat, open hat, low/high tom, rim, shaker, crash, ride, cowbell, tambourine, claves and low/high conga.',
+      velocity: 'Scales hardware/test-note velocity. It affects notes and hits, not MOD signals.',
+      cc1: 'Controller number received by MOD 1 (default 1, modulation wheel).',
+      cc2: 'Controller number received by MOD 2 (default 7, channel volume).',
+      cc3: 'Controller number received by MOD 3 (default 74, commonly brightness).',
+      cc4: 'Controller number received by MOD 4 (default 11, expression).',
+    },
+    extraControls: [
+      {
+        label: 'Enable / Disable MIDI',
+        description:
+          'Permission is requested only on Enable. Disable closes input ports for the whole studio and releases MIDI notes. Reload starts with hardware MIDI off.',
+      },
+      {
+        label: 'Device and polarity',
+        description:
+          'Device choices are remembered on this browser for this patch. CC assignments, channels, ranges and polarity travel with the patch; permission, held notes and live CC positions do not.',
+      },
+    ],
+    tip: 'New MOD inputs replace their knob over its full range; bipolar negatives clamp at the minimum. Oscillator, Envelope and Drum machine LEVEL/DEPTH MOD instead multiply the saved level/depth, as sampler LEVEL MOD already does. Existing filter and pitch/speed MOD retain their additive/bending behavior. Stop, disconnect, hidden page and patch switches release live notes. MIDI is instructions, not recorded audio; routed instrument sound is what Record captures.',
+    example: {
+      title: 'Hardware melody and filter wheel',
+      description:
+        'Play Test note / hit, or enable a hardware keyboard. Move Test MOD 1 or CC1 to open the filter. No MIDI hardware or microphone is required for the test controls.',
+      connections: [
+        wire('midi-input', 'pitch', 'oscillator', 'pitch'),
+        wire('midi-input', 'mod1', 'filter', 'cutoff'),
+        wire('oscillator', 'out', 'filter', 'in'),
+        wire('filter', 'out', 'output', 'in'),
+      ],
+      interaction: 'midi',
+      instructions:
+        'Use MIDI Input Test note / hit to hear a note, then move Test MOD 1. Enable MIDI to use hardware; this demo works without it.',
+    },
+  },
   'drum-machine': {
+    midi: 'Compatible: MIDI Input TRIGGER plays drum voices with velocity. Sixteen consecutive notes begin at First drum note; the first four follow the connected Drum kit. LEVEL MOD scales the saved Level. MIDI clock and pattern entry are not supported.',
     overview:
       'A drum kit with a repeating rhythm. Its four voices default to kick, snare, clap, and closed hat; connect a Drum kit to replace them with built-in sounds, imported samples, or external audio. A Pad controller can play the full sixteen-sound kit.',
     steps: [
@@ -80,6 +135,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'mic-sampler': {
+    midi: 'Compatible: MIDI Input TRIGGER plays the saved clip through AUDIO OUT and studio recording. SPEED MOD bends playback pitch/speed by up to one octave; LEVEL MOD scales the saved Level. MIDI never starts microphone capture.',
     overview:
       'A pocket recorder for your voice, claps, and found sounds. Capture up to four seconds from your device microphone, then play the saved snippet through the studio. Recordings stay on this device and travel inside patch exports.',
     steps: [
@@ -125,6 +181,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'drum-kit': {
+    midi: 'Indirectly compatible: MIDI Input TRIGGER → Drum machine TRIGGER IN plays this kit through its KIT cable. Drum kit takes assignments and audio, not MIDI notes or MOD cables.',
     overview:
       'A four-voice sound cartridge for the Drum machine. Give each voice a built-in percussion sound, an imported audio sample, or a sound patched in from another module. The drum machine keeps the rhythm and produces the final audio.',
     steps: [
@@ -166,6 +223,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   keyboard: {
+    midi: 'No MIDI input socket: Keyboard is a note source. Use MIDI Input PITCH / GATE in place of Keyboard to play the same Oscillator/Envelope from hardware. On-screen and hardware keyboards can drive separate instruments.',
     overview:
       'A 25-, 37-, 49- or 61-key controller for playing melodies. It sends notes and note releases to an Oscillator, which creates the sound.',
     steps: [
@@ -203,6 +261,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'pad-controller': {
+    midi: 'No MIDI input socket: Pads are a trigger source. Use MIDI Input TRIGGER in place of ALL to play hardware hits. Add separate MIDI Input modules with note/channel filters when individual hardware pads should drive different destinations.',
     overview:
       'Choose 4, 8 or 16 playable pads. Each numbered PAD output fires only its matching pad, so different pads can play different instruments. ALL sends every hit through one cable and keeps older patches working. A Drum machine supplies the printed percussion sounds; its first four pads follow any connected Drum kit assignments. A Mic sampler plays its saved snippet instead.',
     steps: [
@@ -236,6 +295,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   sequencer: {
+    midi: 'No direct MIDI input: this module creates its own note pattern. MIDI Input can play another Oscillator alongside it. External clock, MIDI step entry and pattern transposition are not implemented.',
     overview:
       'An eight-step melody that repeats in time with the composition. It tells an Oscillator which notes to play.',
     steps: [
@@ -269,6 +329,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   oscillator: {
+    midi: 'Compatible: MIDI Input PITCH / GATE plays velocity-sensitive chromatic notes with last-held-note priority, not chords. PITCH MOD bends by at most one octave around the note; LEVEL MOD scales the saved Level. Oscillator Octave still transposes incoming notes.',
     overview:
       'The starting point for a synthesized tone. Choose a waveform, tune it, then send its audio to effects or an Output.',
     steps: [
@@ -305,6 +366,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   noise: {
+    midi: 'Compatible: MIDI Input MOD → LEVEL MOD controls its level. It does not respond to note messages; use an Envelope or a drum-kit audio input for shaped hits.',
     overview:
       'A continuous wash of random sound. Use it for texture, hiss, wind-like effects, or layering with other sources.',
     steps: [
@@ -328,6 +390,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   envelope: {
+    midi: 'Compatible: MIDI Input PITCH / GATE → NOTE / GATE follows held notes, velocity and sustain; TRIGGER produces one attack/release pulse. DEPTH MOD scales the saved envelope depth.',
     overview:
       'An attack/hold/release control envelope. Notes hold its peak until release; a pad or Trigger envelope button plays one attack/release sweep. It produces control data, not sound.',
     steps: [
@@ -363,6 +426,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'mod-sequencer': {
+    midi: 'Compatible: MOD → DEPTH MOD changes the pattern strength. Its rate still follows the studio transport; MIDI clock, step entry and external restart are not supported.',
     overview:
       'Eight bipolar control values repeat at the project tempo. This is a modulation pattern; the Step sequencer remains the separate note and gate instrument.',
     steps: [
@@ -400,6 +464,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'random-mod': {
+    midi: 'Compatible: MIDI Input TRIGGER requests a new held value per hit and replaces tempo triggering. MOD → DEPTH MOD changes its strength. It does not track note pitch.',
     overview:
       'Sample & Hold chooses a random bipolar control value and holds it until the next clock step or pad hit. Glide softens the transitions. It does not sample or store microphone audio.',
     steps: [
@@ -435,10 +500,16 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
         'Press Play. Switch 1: random filter rhythm; 2: gentle pitch drift; 3: tap pad 1 for varied claps; 4: dry reference. Try Depth and Glide in each row.',
       parameters: {
         oscillator: { waveform: 'sawtooth', level: 0.18 },
-        filter: { cutoff: 900, resonance: 6 },
+        filter: {
+          cutoff: 900,
+          resonance: 6,
+        },
         'pad-controller': { padCount: 4 },
         'mic-sampler': { level: 0.45 },
-        switch: { automatic: false, selected: 1 },
+        switch: {
+          automatic: false,
+          selected: 1,
+        },
       },
       instanceParameters: {
         'Filter rhythm': { rate: '1/8', depth: 0.45, glide: 0.005 },
@@ -466,6 +537,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'xy-controller': {
+    midi: 'No MIDI input socket: XY controller already creates modulation. Use MIDI Input MOD outputs in its place, including bipolar mode for signed movement.',
     overview:
       'A hands-on two-axis controller with independent X MOD and Y MOD outputs. It sends no audio and applies no built-in effects; XY Effects remains the separate audio processor.',
     steps: [
@@ -500,6 +572,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   lfo: {
+    midi: 'Compatible: MOD → RATE MOD and DEPTH MOD control the frequency and strength of the LFO. It remains free-running; MIDI clock synchronization is not implemented.',
     overview:
       'A slow modulation wave that moves another module’s setting over time. It controls Filter cutoff, Oscillator pitch, or Mic sampler speed/level through their MOD sockets.',
     steps: [
@@ -530,6 +603,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   filter: {
+    midi: 'Compatible: MIDI Input MOD → MOD adds up to 1500 Hz to Cutoff (bipolar mode also subtracts); MOD → Q MOD takes over Resonance over its full range. Any other Patchwork modulation source can use the same sockets.',
     overview:
       'Shapes a sound by letting some frequencies through and reducing others. Use it to soften, brighten, or narrow a sound.',
     steps: [
@@ -567,6 +641,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   delay: {
+    midi: 'Compatible: MIDI Input MOD outputs can control TIME MOD, FB MOD and MIX MOD independently. New MOD inputs take over their knobs over the registry ranges; feedback remains bounded. Time changes can bend the echo pitch.',
     overview:
       'Adds repeating echoes to anything patched into it. Turn a short sound into a rhythmic trail or add space to a melody.',
     steps: [
@@ -597,6 +672,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   reverb: {
+    midi: 'Compatible: MIDI Input MOD → MIX MOD controls the dry/wet blend over 0–100%. Unplugging restores the saved Mix knob. MIDI notes do not trigger this effect.',
     overview:
       'Adds a decaying sense of space, from a little ambience to a distant wash. It processes the sound connected to AUDIO IN.',
     steps: [
@@ -619,6 +695,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   'xy-effects': {
+    midi: 'Compatible: MIDI Input MOD → X MOD / Y MOD takes over each axis; choose bipolar output for the full left/right or down/up range. MIX MOD controls overall wet amount. The centre remains dry and corner assignments stay editable.',
     overview:
       'A touch effects console that blends four assignable corners. Slide a point around the pad to reshape incoming audio. The centre is clean; moving outward increases the effect up to the Mix setting. Release to leave the point where you put it.',
     steps: [
@@ -656,6 +733,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   mixer: {
+    midi: 'Compatible: each visible channel has a matching MOD socket (A MOD–H MOD). MIDI Input MOD takes over that fader over 0–100%; unplugging restores its saved level. Reducing Channels removes both audio and modulation cables for hidden channels in one Undo edit.',
     overview:
       'Combines 2–8 audio signals into one output, with a separate fader for each input. Use it to balance instruments or blend effects with dry sounds.',
     steps: [
@@ -694,6 +772,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   merger: {
+    midi: 'Compatible: MIDI Input MOD outputs control inputs 1–4 or SUM MOD independently over 0–100%. Patched MOD takes over the corresponding knob; unplug to restore the saved setting.',
     overview:
       'Sums up to four audio signals into one output. Combine instruments, parallel effects, or submixes before an Output or another effect.',
     steps: [
@@ -734,6 +813,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   switch: {
+    midi: 'No MIDI input socket: this discrete routing/arrangement module uses its numbered keys and bar schedule. MIDI Input cannot select inputs or change its schedule in this release; route MIDI-played instruments into its audio inputs instead.',
     overview:
       'Routes one of four audio inputs to a single output. Select inputs by hand or arrange bar-start cues to change song sections automatically, once or in a repeating pattern.',
     steps: [
@@ -767,6 +847,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     },
   },
   output: {
+    midi: 'Compatible: MIDI Input MOD → LEVEL MOD controls the final module level over 0–100%, useful for an expression pedal. The separate studio master volume still applies. This is audio output, not MIDI output to external synthesizers.',
     overview:
       'The final stop for your patch. Audio connected here reaches your speakers and the recorder; its screen shows the live waveform.',
     steps: [

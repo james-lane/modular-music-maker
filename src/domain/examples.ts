@@ -149,8 +149,8 @@ function createCopperProject(): Project {
     level: 0.42,
   });
   const merger = instrument('merger', 540, 60, { level: 0.65 });
-  const effects = instrument('xy-effects', 940, 60, { x: 0.45, y: 0.65, mix: 0.5 });
-  const output = instrument('output', 1360, 60, { level: 0.8 });
+  const effects = instrument('xy-effects', 1020, 60, { x: 0.45, y: 0.65, mix: 0.5 });
+  const output = instrument('output', 1440, 60, { level: 0.8 });
   return {
     ...createProject(true),
     name: 'Copper currents',
@@ -229,9 +229,9 @@ function createClockworkProject(): Project {
   const bellEcho = instrument('delay', -60, 900, { time: eighth, feedback: 0.36, mix: 0.32 });
 
   const voices = instrument('merger', 780, 100, { level: 0.8 });
-  const room = instrument('reverb', 1180, 100, { mix: 0.2 });
+  const room = instrument('reverb', 1280, 100, { mix: 0.2 });
   const master = instrument('merger', 1180, -480, { level: 0.8 });
-  const output = instrument('output', 1580, -480, { level: 0.8 });
+  const output = instrument('output', 1680, -480, { level: 0.8 });
   return {
     ...createProject(true),
     name: 'Clockwork garden',
@@ -313,7 +313,7 @@ function createMovingPartsProject(): Project {
   const drums = instrument('drum-machine', 1120, 1000, { level: 0.5 });
   drums.drumPattern = drumPattern({ kick: [0, 4, 8, 12] });
   const merger = instrument('merger', 1300, 40, { level: 0.7 });
-  const output = instrument('output', 1700, 40);
+  const output = instrument('output', 1800, 40);
   return {
     ...createProject(true),
     name: 'Moving parts',
@@ -401,8 +401,8 @@ function createNeonProject(): Project {
   fifthSequence.steps = [4, 4, 8, 8, 9, 9, 7, 7];
   const fifth = instrument('oscillator', 0, -80, { waveform: 'triangle', level: 0.15 });
   const chordMix = instrument('merger', 320, -80, { level: 0.7 });
-  const chordFilter = instrument('filter', 720, -80, { cutoff: 2800, resonance: 0.6 });
-  const chordRoom = instrument('reverb', 1040, -80, { mix: 0.18 });
+  const chordFilter = instrument('filter', 800, -80, { cutoff: 2800, resonance: 0.6 });
+  const chordRoom = instrument('reverb', 1120, -80, { mix: 0.18 });
 
   const hookSequence = instrument('sequencer', -1600, 340, { rate: '1/4', gate: 0.48 });
   hookSequence.steps = [9, 8, 8, 6, 7, 9, 7, 5];
@@ -426,13 +426,13 @@ function createNeonProject(): Project {
   const liveFilter = instrument('filter', -760, 780, { cutoff: 1800, resonance: 0.7 });
   const liveEcho = instrument('delay', -440, 780, { time: eighth, feedback: 0.22, mix: 0.2 });
   const duet = instrument('merger', -100, 780, { level: 0.85 });
-  const selector = instrument('switch', 300, 780);
-  const effects = instrument('xy-effects', 700, 780, { x: 0.2, y: -0.2, mix: 0.25 });
+  const selector = instrument('switch', 400, 780);
+  const effects = instrument('xy-effects', 800, 780, { x: 0.2, y: -0.2, mix: 0.25 });
 
   const voices = instrument('merger', 1320, -500, { level: 0.85, in1: 0.95, in2: 0.8, in3: 0.85 });
-  const room = instrument('reverb', 1720, -500, { mix: 0.1 });
+  const room = instrument('reverb', 1820, -500, { mix: 0.1 });
   const master = instrument('merger', 1320, -1120, { level: 0.85 });
-  const output = instrument('output', 1720, -1120, { level: 0.85 });
+  const output = instrument('output', 1820, -1120, { level: 0.85 });
   return {
     ...createProject(true),
     name: 'Neon chorus',

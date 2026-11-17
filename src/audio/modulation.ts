@@ -44,6 +44,8 @@ export function boundedModulation(
 
 export function createEnvelope(context: AudioContext): AudioRuntime {
   const source = context.createConstantSource();
+  const depthInput = context.createGain();
+  source.connect(depthInput);
   source.offset.value = 0;
   source.start();
   let parameters: Parameters = { attack: 0.05, release: 0.4, depth: 0.5 };
@@ -92,7 +94,8 @@ export function createEnvelope(context: AudioContext): AudioRuntime {
   };
   return {
     inputs: {},
-    outputs: { out: source },
+    outputs: { out: depthInput },
+    modulationTargets: { depth: [{ parameter: depthInput.gain }] },
     update(next) {
       parameters = next;
     },
@@ -107,6 +110,7 @@ export function createEnvelope(context: AudioContext): AudioRuntime {
       silence();
       source.stop();
       source.disconnect();
+      depthInput.disconnect();
     },
   };
 }
@@ -138,6 +142,7 @@ function steppedControl(context: AudioContext, random?: () => number): AudioRunt
   return {
     inputs: {},
     outputs: { out: depth },
+    modulationTargets: { depth: [{ parameter: depth.gain }] },
     update(next) {
       parameters = next;
       depth.gain.setTargetAtTime(Number(next.depth), context.currentTime, ramp);

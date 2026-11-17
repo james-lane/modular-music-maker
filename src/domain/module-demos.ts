@@ -8,7 +8,7 @@ import { parseProject } from './validation';
 export interface ModuleDemo {
   project: Project;
   /** The same gesture used by browser QA, with no separate testing-only patch. */
-  interaction: 'transport' | 'keyboard' | 'pads';
+  interaction: 'transport' | 'keyboard' | 'pads' | 'midi';
   instructions: string;
 }
 
