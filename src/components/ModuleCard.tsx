@@ -150,7 +150,13 @@ export function ModuleCard({
             onClear={() => onSample('clip', null)}
           />
         )}
-        {module.type === 'keyboard' && <KeyboardPanel module={module} live={live} />}
+        {module.type === 'keyboard' && (
+          <KeyboardPanel
+            module={module}
+            live={live}
+            onCount={(count) => onParameter('keyCount', count)}
+          />
+        )}
         {module.type === 'xy-effects' && (
           <XYEffectsPanel module={module} onParameters={onParameters} />
         )}

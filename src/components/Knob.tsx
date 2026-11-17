@@ -19,7 +19,7 @@ export function Knob({
   onChange: (value: number) => void;
   large?: boolean;
 }) {
-  const drag = useRef<{ startY: number; ratio: number } | null>(null);
+  const drag = useRef<{ pointerId: number; startY: number; ratio: number } | null>(null);
   const ratio = control.logarithmic
     ? Math.log(value / control.min) / Math.log(control.max / control.min)
     : (value - control.min) / (control.max - control.min);
@@ -32,10 +32,10 @@ export function Knob({
     onChange(Math.max(control.min, Math.min(control.max, Number(snapped.toFixed(4)))));
   };
   const pointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || drag.current) return;
     event.stopPropagation();
     event.currentTarget.setPointerCapture(event.pointerId);
-    drag.current = { startY: event.clientY, ratio };
+    drag.current = { pointerId: event.pointerId, startY: event.clientY, ratio };
   };
   const keyDown = (event: KeyboardEvent) => {
     const direction = ['ArrowUp', 'ArrowRight'].includes(event.key)
@@ -75,17 +75,20 @@ export function Knob({
         title="Drag up or down · Arrow keys to adjust · Double-click to reset"
         onPointerDown={pointerDown}
         onPointerMove={(event) => {
-          if (drag.current)
+          if (drag.current?.pointerId === event.pointerId)
             changeRatio(
               drag.current.ratio +
                 (drag.current.startY - event.clientY) / (event.shiftKey ? 900 : 180),
             );
         }}
-        onPointerUp={() => {
-          drag.current = null;
+        onPointerUp={(event) => {
+          if (drag.current?.pointerId === event.pointerId) drag.current = null;
         }}
-        onPointerCancel={() => {
-          drag.current = null;
+        onPointerCancel={(event) => {
+          if (drag.current?.pointerId === event.pointerId) drag.current = null;
+        }}
+        onLostPointerCapture={(event) => {
+          if (drag.current?.pointerId === event.pointerId) drag.current = null;
         }}
         onDoubleClick={() => onChange(control.default)}
         onKeyDown={keyDown}

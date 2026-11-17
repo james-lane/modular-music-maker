@@ -24,6 +24,7 @@ export function useWorkspaceGestures(
   viewport: RefObject<HTMLDivElement | null>,
   cancelEdit: () => void,
   frameIntervalMs = 0,
+  handMode = false,
 ) {
   const [view, setViewState] = useState<WorkspaceView>({
     x: 0,
@@ -79,6 +80,31 @@ export function useWorkspaceGestures(
   const suppressClick = useRef(false);
   const syntheticCancel = useRef(false);
 
+  const cancelTouchControls = () => {
+    for (const [id, { target }] of touches.current) {
+      let owner: Element | null = target;
+      while (owner && !owner.hasPointerCapture(id)) owner = owner.parentElement;
+      syntheticCancel.current = true;
+      (owner ?? target).dispatchEvent(
+        new PointerEvent('pointercancel', { bubbles: true, pointerId: id, pointerType: 'touch' }),
+      );
+      syntheticCancel.current = false;
+      if (owner?.hasPointerCapture(id)) owner.releasePointerCapture(id);
+    }
+  };
+  const previousMode = useRef(handMode);
+  useEffect(() => {
+    if (previousMode.current === handMode) return;
+    previousMode.current = handMode;
+    // Changing tools while a finger is held releases its control before navigation.
+    cancelTouchControls();
+    touches.current.clear();
+    pinch.current = null;
+    navigating.current = false;
+    suppressClick.current = true;
+    latest.current.cancelEdit();
+  }, [handMode]);
+
   const applyZoom = (value: number, anchor: Point, midpoint: Point) => {
     updateView(
       viewAtAnchor(
@@ -128,6 +154,7 @@ export function useWorkspaceGestures(
       );
     };
     const resetTouches = () => {
+      cancelTouchControls();
       touches.current.clear();
       pinch.current = null;
       navigating.current = false;
@@ -136,16 +163,30 @@ export function useWorkspaceGestures(
     const visibility = () => {
       if (document.hidden) resetTouches();
     };
+    const endOutside = (event: PointerEvent) => {
+      // Uncaptured buttons may be released outside the rack. Do not retain that
+      // physical touch and mistake the next independent gesture for a pinch.
+      if (syntheticCancel.current || !touches.current.delete(event.pointerId)) return;
+      if (navigating.current) {
+        pinch.current = null;
+        if (!touches.current.size) navigating.current = false;
+        latest.current.cancelEdit();
+      }
+    };
     const measure = () => setSize({ width: element.clientWidth, height: element.clientHeight });
     const observer = new ResizeObserver(measure);
     observer.observe(element);
     measure();
     window.addEventListener('blur', resetTouches);
+    window.addEventListener('pointerup', endOutside);
+    window.addEventListener('pointercancel', endOutside);
     document.addEventListener('visibilitychange', visibility);
     element.addEventListener('wheel', wheel, { passive: false });
     return () => {
       observer.disconnect();
       window.removeEventListener('blur', resetTouches);
+      window.removeEventListener('pointerup', endOutside);
+      window.removeEventListener('pointercancel', endOutside);
       document.removeEventListener('visibilitychange', visibility);
       element.removeEventListener('wheel', wheel);
     };
@@ -173,12 +214,12 @@ export function useWorkspaceGestures(
         target: event.target as Element,
       });
       if (touches.current.size < 2) return;
-      // Two fingers on performance surfaces are musical input, including keys plus pads.
+      // In Select mode, a gesture that starts on any module belongs to its controls.
+      // Empty-space pinches still navigate; Hand mode deliberately owns every surface.
       if (
         !navigating.current &&
-        [...touches.current.values()].every(({ target }) =>
-          target.closest('.piano-keybed, .performance-pads'),
-        )
+        !handMode &&
+        [...touches.current.values()].some(({ target }) => target.closest('.module-panel'))
       )
         return;
       if (!navigating.current) {

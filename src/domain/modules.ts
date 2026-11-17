@@ -14,6 +14,12 @@ export function mixerInputCount(value: unknown): number {
   return MIXER_INPUT_COUNTS.find((count) => count === value) ?? MIXER_INPUT_COUNTS[0];
 }
 
+/** Add seven white keys per octave without narrowing the original playable keys. */
+export const KEYBOARD_KEY_COUNTS = [25, 37, 49, 61] as const;
+export function keyboardKeyCount(value: unknown): number {
+  return KEYBOARD_KEY_COUNTS.find((count) => count === value) ?? KEYBOARD_KEY_COUNTS[0];
+}
+
 /** Socket count sets the enclosure width: even sixteen outputs retain one bottom row. */
 export const PAD_LAYOUTS = [
   { count: 4, columns: 4, width: 300, height: 384 },
@@ -153,7 +159,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     type: 'keyboard',
     name: 'Keyboard',
     subtitle: 'Put a melody under your fingers',
-    description: 'Two octaves of hands-on melody.',
+    description: '25, 37, 49 or 61 keys of hands-on melody.',
     category: 'Modulation',
     color: '#8c9a78',
     code: 'KEY–01',
@@ -164,6 +170,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
       { id: 'octave', label: 'Octave', min: -2, max: 2, step: 1, default: 0 },
       { id: 'velocity', label: 'Velocity', min: 0.1, max: 1, step: 0.01, default: 0.8, unit: '%' },
     ],
+    defaults: { keyCount: KEYBOARD_KEY_COUNTS[0] },
   },
   'pad-controller': {
     type: 'pad-controller',
@@ -544,6 +551,11 @@ export function moduleDefinition(
   module: Pick<PatchModule, 'type' | 'parameters'>,
 ): ModuleDefinition {
   const definition = MODULES[module.type];
+  if (module.type === 'keyboard')
+    return {
+      ...definition,
+      width: definition.width + ((keyboardKeyCount(module.parameters.keyCount) - 25) / 12) * 182,
+    };
   if (module.type === 'mixer') {
     const count = mixerInputCount(module.parameters.inputCount);
     return {

@@ -9,12 +9,18 @@ import {
   moduleDefinition,
   PAD_LAYOUTS,
   MIXER_INPUT_COUNTS,
+  KEYBOARD_KEY_COUNTS,
 } from '../src/domain/modules';
 import { createModule, createProject } from '../src/domain/project';
 
 function catalogModules() {
   return MODULE_LIST.flatMap((definition) => {
     const module = createModule(definition.type, 40, 60);
+    if (definition.type === 'keyboard')
+      return KEYBOARD_KEY_COUNTS.map((count) => ({
+        ...module,
+        parameters: { ...module.parameters, keyCount: count },
+      }));
     if (definition.type === 'mixer')
       return MIXER_INPUT_COUNTS.map((count) => ({
         ...module,

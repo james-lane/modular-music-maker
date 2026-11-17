@@ -5,6 +5,7 @@ import type { LiveControls } from '../audio/live';
 import { SEQUENCER_DEGREES } from '../domain/modules';
 import { setPadCount } from '../domain/pad-controller';
 import { setMixerInputCount } from '../domain/mixer';
+import { setKeyboardKeyCount } from '../domain/keyboard';
 import type { DrumSample, Endpoint, PatchModule, Project } from '../domain/types';
 import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { ModuleCard } from './ModuleCard';
@@ -83,15 +84,17 @@ export const WorkspaceModule = memo(function WorkspaceModule({
               ? setPadCount(current, module.id, value)
               : module.type === 'mixer' && id === 'inputCount'
                 ? setMixerInputCount(current, module.id, value)
-                : {
-                    ...current,
-                    modules: current.modules.map((item) =>
-                      item.id === module.id
-                        ? { ...item, parameters: { ...item.parameters, [id]: value } }
-                        : item,
-                    ),
-                  },
-          ['padCount', 'inputCount'].includes(id) ? '' : `${module.id}:${id}`,
+                : module.type === 'keyboard' && id === 'keyCount'
+                  ? setKeyboardKeyCount(current, module.id, value)
+                  : {
+                      ...current,
+                      modules: current.modules.map((item) =>
+                        item.id === module.id
+                          ? { ...item, parameters: { ...item.parameters, [id]: value } }
+                          : item,
+                      ),
+                    },
+          ['padCount', 'inputCount', 'keyCount'].includes(id) ? '' : `${module.id}:${id}`,
         )
       }
       onParameters={(values, group) =>
