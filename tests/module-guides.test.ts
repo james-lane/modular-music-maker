@@ -52,6 +52,8 @@ test('every worked example contains its subject and forms a valid, saveable patc
     ];
     assert.ok(types.includes(definition.type), definition.name);
     const modules = new Map(types.map((type) => [type, createModule(type, 40, 40)]));
+    for (const [type, module] of modules)
+      Object.assign(module.parameters, example.parameters?.[type]);
     const project = { ...createProject(true), modules: [...modules.values()] };
     for (const connection of example.connections) {
       const from = {

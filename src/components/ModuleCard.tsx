@@ -266,6 +266,7 @@ export function ModuleCard({
         {![
           'sequencer',
           'mixer',
+          'merger',
           'xy-effects',
           'switch',
           'envelope',
@@ -277,9 +278,7 @@ export function ModuleCard({
             {definition.controls
               .filter(
                 (control) =>
-                  (module.type !== 'mic-sampler' ||
-                    !['trimStart', 'trimEnd'].includes(control.id)) &&
-                  (module.type !== 'merger' || control.id === 'level'),
+                  module.type !== 'mic-sampler' || !['trimStart', 'trimEnd'].includes(control.id),
               )
               .map((control) => (
                 <Knob

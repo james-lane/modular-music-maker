@@ -9,7 +9,7 @@ import { CONFIG } from '../config';
 import type { DrumSample, ModuleType, Parameters, PatchModule } from '../domain/types';
 import type { DrumLane, DrumSound, KitSamplerSources } from '../domain/instruments';
 import { createDrumRuntime } from './drums';
-import { MODULES } from '../domain/modules';
+import { MODULES, mixerInputCount } from '../domain/modules';
 import { createMicSampler } from './mic-sampler';
 import { createXYEffects } from './xy-effects';
 
@@ -230,20 +230,26 @@ export const AUDIO_FACTORIES: Record<ModuleType, Factory> = {
   },
 
   mixer(context) {
-    const a = context.createGain();
-    const b = context.createGain();
     const output = context.createGain();
-    a.connect(output);
-    b.connect(output);
+    const inputs = Object.fromEntries(
+      MODULES.mixer.controls.map((control) => {
+        const input = context.createGain();
+        input.gain.value = 0;
+        input.connect(output);
+        return [control.id, input];
+      }),
+    );
     return {
-      inputs: { a, b },
+      inputs,
       outputs: { out: output },
       update(parameters) {
-        smooth(a.gain, value(parameters, 'a'), context);
-        smooth(b.gain, value(parameters, 'b'), context);
+        const count = mixerInputCount(parameters.inputCount);
+        Object.entries(inputs).forEach(([id, input], index) =>
+          smooth(input.gain, index < count ? value(parameters, id) : 0, context),
+        );
       },
       dispose() {
-        [a, b, output].forEach((node) => node.disconnect());
+        [...Object.values(inputs), output].forEach((node) => node.disconnect());
       },
     };
   },

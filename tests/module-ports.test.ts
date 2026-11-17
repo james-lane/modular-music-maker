@@ -4,12 +4,22 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ModulePorts } from '../src/components/ModulePorts';
 import { socketPosition } from '../src/components/socket-geometry';
-import { MODULE_LIST, moduleDefinition, PAD_LAYOUTS } from '../src/domain/modules';
+import {
+  MODULE_LIST,
+  moduleDefinition,
+  PAD_LAYOUTS,
+  MIXER_INPUT_COUNTS,
+} from '../src/domain/modules';
 import { createModule, createProject } from '../src/domain/project';
 
 function catalogModules() {
   return MODULE_LIST.flatMap((definition) => {
     const module = createModule(definition.type, 40, 60);
+    if (definition.type === 'mixer')
+      return MIXER_INPUT_COUNTS.map((count) => ({
+        ...module,
+        parameters: { ...module.parameters, inputCount: count },
+      }));
     return definition.type === 'pad-controller'
       ? PAD_LAYOUTS.map((layout) => ({
           ...module,

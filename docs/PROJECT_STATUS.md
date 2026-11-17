@@ -2,6 +2,14 @@
 
 Last updated: **17 November 2026**.
 
+## Mixer channel count and aligned Merger controls — issues #12/#17 — 17 November 2026
+
+Mixer offers 2–8 inputs with individual faders and a registry-derived width. The default remains two inputs in the existing 184×270 footprint. Old A/B gains, IDs and positions are preserved; added channels keep their fader settings when hidden. Shrinking removes discarded input cables in the same Undo edit as count/resize changes. Eight independent runtime gains ramp active values, mute hidden channels, and dispose together. The guide demo uses three audible sources to demonstrate an extra channel.
+
+Merger’s four input knobs and Sum level now form a single row, each directly above its matching bottom socket. The enclosure shrinks from 320×336 to 320×248 while preserving saved positions, port IDs and audio behavior.
+
+Validation: all **151 tests**, strict types, production build, formatting and diff checks pass. New tests cover 2–8 active port sets, count bounds, old A/B patch migration, inactive ports, channel-removal Undo, independent ramped gains, hidden-channel muting and disposal. Browser checks passed all Mixer counts and footer clearance, audible independent H gain/mute, resize/cable Undo during playback, a decoded 0.72-second audible recording, saved reload, all five Merger knob/socket centres, Sum-level mute, cable alignment, offline playback, and dark desktop/phone layouts. No browser errors or microphone requests. The user requested a direct push to main without a PR or post-release live checks.
+
 ## Independent pad outputs and configurable decks — issue #8 — 17 November 2026
 
 Pad controllers offer 4, 8 or 16 pads, with one numbered trigger output per visible pad and a retained ALL bus (`trigger`) for existing patches. Distinct rubber-pad layouts and widths provide legible labels and comfortable spacing in a single shared bottom socket row. The 4/8/16 footprints are 300×384, 432×456 and 760×456; registry-derived instance geometry drives drawing, ports/cables, bounds, placement and demo layout. Hidden shortcuts do nothing. Native touch defaults stay suppressed on the playable pads while the count selector remains keyboard/touch accessible.

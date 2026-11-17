@@ -1,5 +1,11 @@
 import type { ModuleDefinition, ModuleType, PatchModule } from './types';
 
+export const MIXER_INPUT_COUNTS = [2, 3, 4, 5, 6, 7, 8] as const;
+export const MIXER_CHANNEL_IDS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'] as const;
+export function mixerInputCount(value: unknown): number {
+  return MIXER_INPUT_COUNTS.find((count) => count === value) ?? MIXER_INPUT_COUNTS[0];
+}
+
 /** Socket count sets the enclosure width: even sixteen outputs retain one bottom row. */
 export const PAD_LAYOUTS = [
   { count: 4, columns: 4, width: 300, height: 384 },
@@ -434,21 +440,31 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     type: 'mixer',
     name: 'Mixer',
     subtitle: 'Bring your ideas together',
-    description: 'Blend two signals into something new.',
+    description: 'Blend 2–8 signals with individual faders.',
     category: 'Utility',
     color: '#a29373',
     code: 'MIX–01',
     width: 184,
     height: 270,
     ports: [
-      { id: 'a', label: 'IN A', direction: 'input', signal: 'audio' },
-      { id: 'b', label: 'IN B', direction: 'input', signal: 'audio' },
+      ...MIXER_CHANNEL_IDS.map((id) => ({
+        id,
+        label: `IN ${id.toUpperCase()}`,
+        direction: 'input' as const,
+        signal: 'audio' as const,
+      })),
       { id: 'out', label: 'AUDIO OUT', direction: 'output', signal: 'audio' },
     ],
-    controls: [
-      { id: 'a', label: 'Channel A', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
-      { id: 'b', label: 'Channel B', min: 0, max: 1, step: 0.01, default: 0.7, unit: '%' },
-    ],
+    controls: MIXER_CHANNEL_IDS.map((id) => ({
+      id,
+      label: `Channel ${id.toUpperCase()}`,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      default: 0.7,
+      unit: '%',
+    })),
+    defaults: { inputCount: MIXER_INPUT_COUNTS[0] },
   },
   merger: {
     type: 'merger',
@@ -459,7 +475,7 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     color: '#5a9290',
     code: 'SUM–04',
     width: 320,
-    height: 336,
+    height: 248,
     ports: [
       { id: 'in1', label: 'IN 1', direction: 'input', signal: 'audio' },
       { id: 'in2', label: 'IN 2', direction: 'input', signal: 'audio' },
@@ -519,6 +535,15 @@ export function moduleDefinition(
   module: Pick<PatchModule, 'type' | 'parameters'>,
 ): ModuleDefinition {
   const definition = MODULES[module.type];
+  if (module.type === 'mixer') {
+    const count = mixerInputCount(module.parameters.inputCount);
+    return {
+      ...definition,
+      width: definition.width + (count - MIXER_INPUT_COUNTS[0]) * 64,
+      ports: [...definition.ports.slice(0, count), definition.ports[definition.ports.length - 1]],
+      controls: definition.controls.slice(0, count),
+    };
+  }
   if (module.type !== 'pad-controller') return definition;
   const layout = padLayout(module.parameters.padCount);
   return {

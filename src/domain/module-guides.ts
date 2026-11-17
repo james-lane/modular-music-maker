@@ -605,23 +605,38 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
   },
   mixer: {
     overview:
-      'Combines two audio signals into one output. Use it to balance instruments or blend an effect with a dry sound.',
+      'Combines 2–8 audio signals into one output, with a separate fader for each input. Use it to balance instruments or blend effects with dry sounds.',
     steps: [
-      'Connect one source AUDIO OUT to IN A and another to IN B.',
+      'Choose 2–8 Inputs, then connect a source AUDIO OUT to each input you want to use.',
       'Connect AUDIO OUT to Output AUDIO IN, or send the mix through an effect.',
       'Press Play and drag the channel faders up or down to balance the sources. Arrow keys also adjust a focused fader.',
     ],
     controls: {
       a: 'Sets the gain of the signal connected to IN A.',
       b: 'Sets the gain of the signal connected to IN B.',
+      c: 'Sets IN C gain when at least 3 inputs are selected.',
+      d: 'Sets IN D gain when at least 4 inputs are selected.',
+      e: 'Sets IN E gain when at least 5 inputs are selected.',
+      f: 'Sets IN F gain when at least 6 inputs are selected.',
+      g: 'Sets IN G gain when at least 7 inputs are selected.',
+      h: 'Sets IN H gain when 8 inputs are selected.',
     },
-    tip: 'Each input accepts one cable. Use a Merger for up to four sources, or chain Mixers when you need separate channel faders.',
+    extraControls: [
+      {
+        label: 'Inputs',
+        description:
+          'Choose 2–8 channels. Reducing the count unplugs removed input cables; Undo restores the count, position and cables. Fader settings are kept for re-expansion.',
+      },
+    ],
+    tip: 'Each input accepts one audio cable. The enclosure widens for extra channels and moves only if it needs room. Existing A/B patches keep their balance.',
     example: {
-      title: 'Blend a beat and a synth',
-      description: 'Balance the two instruments before sending them to the speakers.',
+      title: 'Blend a beat, a synth and a little noise',
+      description: 'Three separate channel faders balance the instruments before Output.',
+      parameters: { mixer: { inputCount: 3 }, noise: { level: 0.035 } },
       connections: [
         wire('drum-machine', 'out', 'mixer', 'a'),
         wire('oscillator', 'out', 'mixer', 'b'),
+        wire('noise', 'out', 'mixer', 'c'),
         wire('mixer', 'out', 'output', 'in'),
       ],
     },
@@ -632,7 +647,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Connect instrument or effect audio outputs to IN 1, IN 2, IN 3, or IN 4. Each input takes one cable; unused inputs stay silent.',
       'Connect SUM OUT to Output AUDIO IN, or route it through an effect first.',
-      'Press Play or play a connected live instrument. Balance the sounds with Input 1–4, then adjust Sum level to set the combined volume.',
+      'Press Play or play a connected live instrument. Each knob sits above its matching socket: Input 1–4 set individual levels; Sum level above SUM OUT sets the combined volume.',
     ],
     controls: {
       in1: 'Sets the level of IN 1 before summing. Starts at 100%; zero mutes only this input without unplugging its cable.',

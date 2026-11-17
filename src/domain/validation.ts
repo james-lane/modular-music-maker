@@ -3,6 +3,7 @@ import { CONFIG, ROOT_NOTES } from '../config';
 import {
   DEFAULT_SEQUENCER_RATE,
   MODULES,
+  MIXER_INPUT_COUNTS,
   DEFAULT_PAD_LAYOUT,
   PAD_LAYOUTS,
   SAMPLER_TRIM,
@@ -99,6 +100,11 @@ export const projectSchema = z
       ]);
       if (Object.keys(module.parameters).some((key) => !allowed.has(key)))
         issue('Unknown module parameter.');
+      if (
+        module.type === 'mixer' &&
+        !MIXER_INPUT_COUNTS.some((count) => count === module.parameters.inputCount)
+      )
+        issue('Mixer input count must be a whole number from 2 to 8.');
       if (
         module.type === 'pad-controller' &&
         !PAD_LAYOUTS.some((layout) => layout.count === module.parameters.padCount)
@@ -220,6 +226,18 @@ function migrateProject(value: unknown, expandedPads: Set<string>): unknown {
       const parameters = module.parameters;
       if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters))
         return module;
+      if (module.type === 'mixer' && !('inputCount' in parameters)) {
+        const added = MODULES.mixer.controls.slice(MIXER_INPUT_COUNTS[0]);
+        if (added.some((control) => control.id in parameters)) return module;
+        return {
+          ...module,
+          parameters: {
+            ...parameters,
+            inputCount: MIXER_INPUT_COUNTS[0],
+            ...Object.fromEntries(added.map((control) => [control.id, control.default])),
+          },
+        };
+      }
       if (module.type === 'pad-controller' && !('padCount' in parameters)) {
         if ('id' in module && typeof module.id === 'string') expandedPads.add(module.id);
         return { ...module, parameters: { ...parameters, padCount: DEFAULT_PAD_LAYOUT.count } };
