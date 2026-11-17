@@ -2,6 +2,14 @@
 
 Last updated: **17 November 2026**.
 
+## Bar-start Switch arrangements — issue #13 — 17 November 2026
+
+Switch can select inputs automatically at chosen bar starts, once or as a repeating pattern. Its Schedule dialog edits up to 16 cues over bars 1–128 with a bar 1 starting cue and optional repeat length. Apply enables Auto without autoplay; numbered keys take manual control, Auto rejoins the current bar, and Stop/Play restarts at bar 1. The compact burgundy panel retains its original 320×300 footprint, port IDs and saved/example positions. Its key lights/readout follow the transport without driving audio timing.
+
+The engine schedules native gain targets on its existing look-ahead audio ticks, preserving ramps, source clocks and effect tails. Schedule/mode/tempo/meter edits cancel and replace queued targets; unrelated edits leave them alone. Stop, removal and disposal clear pending changes. Automatic playback leaves the saved selection and Undo/autosave data untouched; Apply/manual takeover are atomic explicit edits. Old patches migrate with Auto disabled and their manual choice intact. The shared guide demo alternates a bar of drums and a bar of sequenced melody.
+
+Validation: strict types, all **159 tests**, production build, formatting and diff checks pass. Clock regressions cover 4/4, 3/4 and 6/8, queued cue/tempo edits, unrelated edits, manual takeover and restart. Chromium verified native gain changes exactly one bar apart, a decoded 3.84-second audible take, unchanged automatic persistence, editor validation/cancel, one-pass hold, Undo/Redo, live removal/Undo, export/import, offline playback, compact tablet/phone layouts and all **21 actual guide demos** producing sound. WebKit 26.5 passed native scheduled audio, touch manual/Auto, one-pass editing, cleared repeat-length recovery, Stop/restart, saved reload and dark phone dialogs. No browser errors or microphone requests occurred. Physical iPad testing remains for the user’s PR preview.
+
 ## Mixer channel count and aligned Merger controls — issues #12/#17 — 17 November 2026
 
 Mixer offers 2–8 inputs with individual faders and a registry-derived width. The default remains two inputs in the existing 184×270 footprint. Old A/B gains, IDs and positions are preserved; added channels keep their fader settings when hidden. Shrinking removes discarded input cables in the same Undo edit as count/resize changes. Eight independent runtime gains ramp active values, mute hidden channels, and dispose together. The guide demo uses three audible sources to demonstrate an extra channel.

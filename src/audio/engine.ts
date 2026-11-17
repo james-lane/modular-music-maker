@@ -12,7 +12,8 @@ import {
   midiFrequency,
   type DrumSound,
 } from '../domain/instruments';
-import type { Project } from '../domain/types';
+import type { PatchModule, Project } from '../domain/types';
+import { switchInputAtBar, ticksPerBar } from '../domain/switch-schedule';
 import { padTargets } from '../domain/pad-controller';
 import { AUDIO_FACTORIES, type AudioRuntime } from './factories';
 
@@ -42,6 +43,9 @@ export class AudioEngine {
   private visualTimers = new Set<ReturnType<typeof setTimeout>>();
   private nextStepTime = 0;
   private tickIndex = 0;
+  /** Retain only the current/future audio ticks so edits can replace queued Switch cues. */
+  private scheduledTicks: { tick: number; time: number }[] = [];
+  private switchStates = new Map<string, { signature: string; lastSelected: number }>();
   private keyboardNotes = new Map<string, Map<number, number>>();
   onTick?: (tick: number, beat: number, drumStep: number) => void;
 
@@ -87,12 +91,17 @@ export class AudioEngine {
     this.tickIndex = 0;
     this.nextStepTime = this.context!.currentTime + 0.03;
     this.scheduler = setInterval(() => this.schedule(), CONFIG.audio.schedulerIntervalMs);
+    this.scheduledTicks = [];
+    this.switchStates.clear();
+    for (const module of project.modules) if (module.type === 'switch') this.syncSwitch(module);
     this.schedule();
   }
 
   async stop() {
     if (this.scheduler) clearInterval(this.scheduler);
     this.scheduler = undefined;
+    this.scheduledTicks = [];
+    this.switchStates.clear();
     this.visualTimers.forEach((timer) => clearTimeout(timer));
     this.visualTimers.clear();
     this.keyboardNotes.clear();
@@ -132,6 +141,7 @@ export class AudioEngine {
       this.kitEffects = undefined;
       this.runtimes.forEach((runtime) => runtime.dispose());
       this.runtimes.clear();
+      this.switchStates.clear();
       for (const module of project.modules)
         this.runtimes.set(module.id, AUDIO_FACTORIES[module.type](this.context, this.bus));
       for (const cable of project.cables) {
@@ -175,7 +185,8 @@ export class AudioEngine {
     }
     for (const module of project.modules) {
       const runtime = this.runtimes.get(module.id)!;
-      runtime.update(module.parameters);
+      if (module.type === 'switch') this.syncSwitch(module);
+      else runtime.update(module.parameters);
       runtime.configureSample?.(module.samples?.clip);
       if (runtime.configureKit) {
         const kit = connectedDrumKit(project, module.id);
@@ -295,6 +306,47 @@ export class AudioEngine {
     );
   }
 
+  private syncSwitch(module: PatchModule) {
+    const runtime = this.runtimes.get(module.id),
+      context = this.context,
+      project = this.project;
+    if (!runtime?.resetSelection || !context || !project) return;
+    const signature = JSON.stringify([
+      project.id,
+      module.parameters,
+      module.switchCues,
+      project.tempo,
+      project.timeSignature,
+      this.isPlaying,
+    ]);
+    if (this.switchStates.get(module.id)?.signature === signature) return;
+    const running = this.isPlaying && Boolean(module.parameters.automatic);
+    const current = this.scheduledTicks.filter((item) => item.time <= context.currentTime).at(-1);
+    const selected = running
+      ? current
+        ? switchInputAtBar(module, Math.floor(current.tick / ticksPerBar(project.timeSignature)))
+        : 0
+      : Number(module.parameters.selected);
+    runtime.resetSelection(selected);
+    this.switchStates.set(module.id, { signature, lastSelected: selected });
+    if (running)
+      for (const item of this.scheduledTicks) {
+        if (item.time > context.currentTime) this.scheduleSwitch(module, item.tick, item.time);
+      }
+  }
+
+  private scheduleSwitch(module: PatchModule, tick: number, time: number) {
+    if (!this.project || !module.parameters.automatic) return;
+    const state = this.switchStates.get(module.id);
+    const selected = switchInputAtBar(
+      module,
+      Math.floor(tick / ticksPerBar(this.project.timeSignature)),
+    );
+    if (!state || selected === state.lastSelected) return;
+    this.runtimes.get(module.id)?.selectInput?.(selected, time);
+    state.lastSelected = selected;
+  }
+
   private schedule() {
     const context = this.context;
     const project = this.project;
@@ -308,8 +360,12 @@ export class AudioEngine {
     }
     while (this.nextStepTime < context.currentTime + CONFIG.audio.scheduleAheadSeconds) {
       const tick = this.tickIndex;
+      this.scheduledTicks.push({ tick, time: this.nextStepTime });
+      while (this.scheduledTicks.length > 1 && this.scheduledTicks[1].time <= context.currentTime)
+        this.scheduledTicks.shift();
       const drumStep = this.tickIndex % 16;
       for (const module of project.modules) {
+        if (module.type === 'switch') this.scheduleSwitch(module, tick, this.nextStepTime);
         this.runtimes.get(module.id)?.scheduleControl?.(tick, this.nextStepTime);
         for (const sound of drumHitsAtStep(module, drumStep))
           this.runtimes.get(module.id)?.trigger?.(sound, 0.85, this.nextStepTime);
@@ -437,6 +493,8 @@ export class AudioEngine {
     this.runtimes.clear();
     this.disposeSamplePreview();
     this.graphSignature = '';
+    this.scheduledTicks = [];
+    this.switchStates.clear();
     this.context = undefined;
     this.master = undefined;
     this.bus = undefined;

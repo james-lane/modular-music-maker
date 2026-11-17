@@ -3,6 +3,8 @@ import { CONFIG, ROOT_NOTES } from '../config';
 import {
   DEFAULT_SEQUENCER_RATE,
   MODULES,
+  SWITCH_SCHEDULE,
+  defaultSwitchCues,
   MIXER_INPUT_COUNTS,
   DEFAULT_PAD_LAYOUT,
   PAD_LAYOUTS,
@@ -15,6 +17,7 @@ import { isValidSamplePcm } from './samples';
 import { XY_CORNERS, XY_EFFECTS } from './xy-effects';
 import { connectionError } from './project';
 import { clearModuleOverlap } from './workspace';
+import { switchScheduleError } from './switch-schedule';
 import type { ModuleType, Project } from './types';
 
 const endpoint = z.object({ moduleId: z.uuid(), portId: z.string().max(24) }).strict();
@@ -64,6 +67,17 @@ export const projectSchema = z
             drumPattern: z
               .record(z.string(), z.array(z.boolean()).length(DRUM_STEP_COUNT))
               .optional(),
+            switchCues: z
+              .array(
+                z
+                  .object({
+                    bar: z.number().int().min(1).max(SWITCH_SCHEDULE.maxBar),
+                    input: z.number().int().min(1).max(4),
+                  })
+                  .strict(),
+              )
+              .max(SWITCH_SCHEDULE.maxCues)
+              .optional(),
           })
           .strict(),
       )
@@ -100,6 +114,20 @@ export const projectSchema = z
       ]);
       if (Object.keys(module.parameters).some((key) => !allowed.has(key)))
         issue('Unknown module parameter.');
+      if (module.type === 'switch') {
+        if (
+          typeof module.parameters.automatic !== 'boolean' ||
+          typeof module.parameters.repeat !== 'boolean'
+        )
+          issue('Switch automatic and repeat settings must be booleans.');
+        const error = switchScheduleError({
+          cues: module.switchCues ?? [],
+          repeat: Boolean(module.parameters.repeat),
+          loopBars: Number(module.parameters.loopBars),
+        });
+        if (typeof module.parameters.loopBars !== 'number' || error)
+          issue(error ?? 'Invalid Switch repeat length.');
+      } else if (module.switchCues) issue('Only Switch modules can store switch cues.');
       if (
         module.type === 'mixer' &&
         !MIXER_INPUT_COUNTS.some((count) => count === module.parameters.inputCount)
@@ -226,6 +254,17 @@ function migrateProject(value: unknown, expandedPads: Set<string>): unknown {
       const parameters = module.parameters;
       if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters))
         return module;
+      if (
+        module.type === 'switch' &&
+        !('switchCues' in module) &&
+        !['automatic', 'repeat', 'loopBars'].some((key) => key in parameters)
+      ) {
+        return {
+          ...module,
+          parameters: { ...MODULES.switch.defaults, ...parameters },
+          switchCues: defaultSwitchCues(Number('selected' in parameters ? parameters.selected : 1)),
+        };
+      }
       if (module.type === 'mixer' && !('inputCount' in parameters)) {
         const added = MODULES.mixer.controls.slice(MIXER_INPUT_COUNTS[0]);
         if (added.some((control) => control.id in parameters)) return module;

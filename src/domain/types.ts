@@ -65,6 +65,12 @@ export interface DrumSample {
   pcm: string;
 }
 
+export interface SwitchCue {
+  /** One-based bar number; the cue takes effect at the start of this bar. */
+  bar: number;
+  input: number;
+}
+
 export interface PatchModule {
   id: string;
   type: ModuleType;
@@ -77,6 +83,7 @@ export interface PatchModule {
   drumPattern?: Record<string, boolean[]>;
   /** Portable audio: Drum kit lane IDs, or the Mic sampler’s single `clip` slot. */
   samples?: Record<string, DrumSample>;
+  switchCues?: SwitchCue[];
 }
 
 export interface Endpoint {

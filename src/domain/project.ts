@@ -1,5 +1,5 @@
 import { CONFIG, ROOT_NOTES, SCALES } from '../config';
-import { moduleDefinition, defaultParameters } from './modules';
+import { moduleDefinition, defaultParameters, defaultSwitchCues } from './modules';
 import { createDrumPattern } from './instruments';
 import type { Cable, Endpoint, ModuleType, PatchModule, Project } from './types';
 
@@ -10,6 +10,7 @@ export function createModule(type: ModuleType, x: number, y: number): PatchModul
     x,
     y,
     parameters: defaultParameters(type),
+    ...(type === 'switch' ? { switchCues: defaultSwitchCues() } : {}),
     ...(type === 'sequencer' ? { steps: [0, 2, 4, 2, 0, 2, 6, 4] } : {}),
     ...(type === 'drum-machine' ? { drumPattern: createDrumPattern() } : {}),
   };

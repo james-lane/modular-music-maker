@@ -71,6 +71,11 @@ test('Switch closes unused inputs, smoothly retargets rapid changes and releases
       gain: {
         value: 1,
         targets: [] as { value: number; time: number; smoothing: number }[],
+        holds: [] as number[],
+        cancelAndHoldAtTime(time: number) {
+          this.holds.push(time);
+        },
+        cancelScheduledValues() {},
         setTargetAtTime(value: number, time: number, smoothing: number) {
           this.targets.push({ value, time, smoothing });
         },
@@ -114,6 +119,15 @@ test('Switch closes unused inputs, smoothly retargets rapid changes and releases
     context.currentTime += 0.005;
   }
   assert.deepEqual(nodes, originalNodes, 'selection changes allocate no nodes or sources');
+  runtime.selectInput!(2, context.currentTime + 1);
+  assert(inputs.every((input) => input.gain.targets.at(-1)?.time === context.currentTime + 1));
+  runtime.update({ selected: 3 });
+  assert(
+    inputs.every((input) => input.gain.holds.at(-1) === context.currentTime),
+    'manual takeover cancels queued cues at the audio time',
+  );
+  runtime.silence!();
+  assert(inputs.every((input) => input.gain.targets.at(-1)?.value === 0));
   runtime.dispose();
   assert(nodes.every((node) => node.connections.size === 0));
 });

@@ -29,6 +29,7 @@ import { SequencerPanel } from './SequencerPanel';
 import { XYEffectsPanel } from './XYEffectsPanel';
 
 interface Props {
+  onSwitchSchedule: () => void;
   module: PatchModule;
   /** Drawing-origin-relative placement only; world positions remain in the saved module. */
   position: { x: number; y: number };
@@ -54,6 +55,7 @@ interface Props {
 }
 
 export function ModuleCard({
+  onSwitchSchedule,
   module,
   position,
   scale,
@@ -255,7 +257,14 @@ export function ModuleCard({
         {module.type === 'delay' && <DelayDisplay parameters={module.parameters} />}
         {module.type === 'mixer' && <MixerPanel module={module} onParameter={onParameter} />}
         {module.type === 'switch' && (
-          <SwitchPanel module={module} project={project} onParameter={onParameter} />
+          <SwitchPanel
+            module={module}
+            project={project}
+            onParameters={onParameters}
+            position={playbackPosition}
+            playing={playing}
+            onEditSchedule={onSwitchSchedule}
+          />
         )}
         {module.type === 'merger' && (
           <MergerPanel module={module} project={project} onParameter={onParameter} />
