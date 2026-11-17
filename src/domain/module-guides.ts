@@ -417,7 +417,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Step rate',
         description:
-          'Quarter, eighth or sixteenth-note random updates while transport runs, unless TRIGGER IN is patched.',
+          'Quarter, eighth or sixteenth-note random updates while transport runs. The metronome marks studio timing; a connected TRIGGER IN shows a lightning symbol instead. Unplug it to restore the retained step rate.',
       },
       {
         label: 'New random value',

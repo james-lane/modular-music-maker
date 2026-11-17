@@ -2,6 +2,12 @@
 
 Last updated: **17 November 2026**.
 
+## Shared tempo markings — issue #15 — 17 November 2026
+
+Matching printed metronome symbols replace repeated SYNC TO TEMPO text on Drum machine, Step sequencer, Mod sequencer and clocked Sample & Hold, and appear beside the main tempo setting. Rates stay visible. Hover/focus/touch reveals an accessible explanation without editing data or starting audio. Help explains BPM, note divisions and the external-trigger exception. A patched Sample & Hold shows lightning/TRIGGER IN instead of an inactive rate selector; unplugging restores the retained rate. No audio-clock, patch format, dimensions or socket changes.
+
+Validation: strict types, all **163 tests**, production build, formatting and diff checks pass. Chromium verified matching markings, keyboard/touch explanations without audio activation or number-input focus, control/footer clearance, trigger-clock indication and retained rates after live rewiring, a decoded audible 1.5-second take, offline reload/Help and desktop/tablet/phone tooltip bounds. WebKit 26.5 passed native indicator taps, trigger markings, audible playback and dark tablet/phone explanations. No browser errors or microphone requests occurred.
+
 ## Inline Switch schedule editor — 17 November 2026
 
 Schedule now edits cues inside the Switch enclosure instead of opening a workspace modal. Previous/next buttons page through up to 16 cues; the selected cue’s bar/input, Remove, Add, Repeat length and Use schedule remain in the original 320×300 footprint above the shared footer. The programme stays a local draft until one atomic Apply; Cancel/Escape returns to the keys with focus restored. Editors are independently owned by each Switch, and the rest of the workspace remains interactive. Restored programme data resets the draft, while live transport ticks and unrelated edits retain it. No audio scheduling, patch schema, dimensions, ports or saved/example layout changes.

@@ -6,9 +6,11 @@ import { MODULES, SEQUENCER_RATES, sequencerRate } from '../domain/modules';
 import type { Parameters, PatchModule } from '../domain/types';
 import { usePlaybackStep } from '../hooks/usePlaybackStep';
 import { Knob } from './Knob';
+import { TempoIndicator } from './TempoIndicator';
 
 export function ModulationPanel({
   module,
+  triggered = false,
   playing,
   position,
   live,
@@ -19,6 +21,7 @@ export function ModulationPanel({
   engine: AudioEngine;
   audioActive: boolean;
   module: PatchModule;
+  triggered?: boolean;
   playing: boolean;
   position: PlaybackPosition;
   live: LiveControls;
@@ -62,21 +65,25 @@ export function ModulationPanel({
         </div>
       ) : null}
       {!envelope && (
-        <label className="rate-display mod-rate">
-          <span>STEP RATE</span>
-          <select
-            aria-label={sequenced ? 'Mod step rate' : 'Random step rate'}
-            value={String(module.parameters.rate)}
-            onChange={(event) => onParameters({ rate: event.target.value })}
-          >
-            {SEQUENCER_RATES.map((rate) => (
-              <option key={rate.value} value={rate.value}>
-                {rate.value}
-              </option>
-            ))}
-          </select>
-          <em>SYNC TO TEMPO</em>
-        </label>
+        <div className="rate-display mod-rate">
+          <span>{triggered ? 'CLOCK SOURCE' : 'STEP RATE'}</span>
+          {triggered ? (
+            <span className="trigger-source">TRIGGER IN</span>
+          ) : (
+            <select
+              aria-label={sequenced ? 'Mod step rate' : 'Random step rate'}
+              value={String(module.parameters.rate)}
+              onChange={(event) => onParameters({ rate: event.target.value })}
+            >
+              {SEQUENCER_RATES.map((rate) => (
+                <option key={rate.value} value={rate.value}>
+                  {rate.value}
+                </option>
+              ))}
+            </select>
+          )}
+          <TempoIndicator source={triggered ? 'trigger' : 'tempo'} />
+        </div>
       )}
       <div className="module-knobs">
         {definition.controls

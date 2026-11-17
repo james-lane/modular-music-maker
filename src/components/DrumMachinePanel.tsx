@@ -1,3 +1,4 @@
+import { TempoIndicator } from './TempoIndicator';
 import type { PlaybackPosition } from '../audio/playback-position';
 import { usePlaybackStep } from '../hooks/usePlaybackStep';
 import type { LiveControls } from '../audio/live';
@@ -76,7 +77,9 @@ export function DrumMachinePanel({
       </div>
       <div className="drum-caption">
         <span>{kit ? '● EXTERNAL KIT · VOICES 1–4' : '● INTERNAL KIT · VOICES 1–4'}</span>
-        <span>1/16 · SYNC TO TEMPO</span>
+        <span className="drum-timing">
+          <TempoIndicator /> 1/16
+        </span>
       </div>
     </div>
   );

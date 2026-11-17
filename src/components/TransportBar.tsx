@@ -13,6 +13,7 @@ import {
   VolumeX,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { TempoIndicator } from './TempoIndicator';
 import { CONFIG, ROOT_NOTES } from '../config';
 import type { Project } from '../domain/types';
 import type { useAudio } from '../hooks/useAudio';
@@ -96,7 +97,9 @@ export function TransportBar({
       </div>
       <div className="transport-divider" />
       <label className="tempo-control">
-        <span className="transport-label">TEMPO</span>
+        <span className="transport-label tempo-label">
+          <TempoIndicator /> TEMPO
+        </span>
         <div>
           <input
             type="number"

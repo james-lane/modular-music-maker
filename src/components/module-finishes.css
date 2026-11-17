@@ -271,7 +271,7 @@
     0 3px 4px #51453220;
 }
 .module-sequencer .rate-display > span,
-.module-sequencer .rate-display > em {
+.module-sequencer .rate-display > .tempo-indicator {
   color: var(--panel-muted);
 }
 
@@ -1611,7 +1611,7 @@
 }
 
 .mod-rate > span,
-.mod-rate em {
+.mod-rate > .tempo-indicator {
   color: var(--panel-muted);
   font-size: 8px;
   letter-spacing: 0.3px;

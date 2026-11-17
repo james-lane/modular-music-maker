@@ -6,6 +6,7 @@ import { downloadFile, fileSlug } from '../domain/storage';
 import type { Project } from '../domain/types';
 import { isCableStyle, isTheme, type CableStyle, type Theme } from '../domain/preferences';
 import { PortGuide } from './PortGuide';
+import { TempoSymbol } from './TempoIndicator';
 import { RecordingItem } from './RecordingItem';
 import { useRecordingExport } from '../hooks/useRecordingExport';
 
@@ -334,6 +335,23 @@ export function HelpDialog({ onClose }: { onClose: () => void }) {
           </div>
         ))}
       </div>
+      <section className="port-guide tempo-guide" aria-label="Following the studio tempo">
+        <h3>
+          <TempoSymbol /> Following the tempo
+        </h3>
+        <p>
+          Modules marked with this metronome follow the studio’s BPM during playback. Press Play to
+          run them; changing BPM changes their timing together. The marking shows an automatic link.
+        </p>
+        <p>
+          Drum steps use 1/16 notes. Sequencer and modulation Step rate selects 1/4, 1/8 or 1/16: at
+          120 BPM these last 0.5, 0.25 and 0.125 seconds.
+        </p>
+        <p>
+          A lightning symbol on Sample &amp; Hold means TRIGGER IN is connected. Incoming hits
+          choose its new values; unplug that cable to return to tempo timing.
+        </p>
+      </section>
       <PortGuide />
       <div className="shortcut-list">
         <span>

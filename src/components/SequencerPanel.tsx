@@ -4,6 +4,7 @@ import { MODULES, SEQUENCER_RATES, sequencerRate } from '../domain/modules';
 import { noteLabel } from '../domain/project';
 import type { PatchModule, Project } from '../domain/types';
 import { Knob } from './Knob';
+import { TempoIndicator } from './TempoIndicator';
 import { SequencerStep, type StepNoteChange } from './SequencerStep';
 
 interface Props {
@@ -41,7 +42,9 @@ export function SequencerPanel({ module, project, playing, position, onParameter
       </div>
       <div className="sequencer-lower">
         <label className="rate-display">
-          <span>STEP RATE</span>
+          <span className="step-rate-label">
+            <TempoIndicator /> STEP RATE
+          </span>
           <select
             aria-label="Step rate"
             value={rate.value}
@@ -53,7 +56,6 @@ export function SequencerPanel({ module, project, playing, position, onParameter
               </option>
             ))}
           </select>
-          <em>SYNC TO TEMPO</em>
         </label>
         <Knob
           control={MODULES.sequencer.controls[0]}

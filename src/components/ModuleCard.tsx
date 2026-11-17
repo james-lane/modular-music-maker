@@ -182,6 +182,12 @@ export function ModuleCard({
         {['envelope', 'mod-sequencer', 'random-mod'].includes(module.type) && (
           <ModulationPanel
             module={module}
+            triggered={
+              module.type === 'random-mod' &&
+              project.cables.some(
+                (cable) => cable.to.moduleId === module.id && cable.to.portId === 'trigger',
+              )
+            }
             playing={playing}
             position={playbackPosition}
             engine={engine}
