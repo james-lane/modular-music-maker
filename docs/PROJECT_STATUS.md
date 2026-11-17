@@ -2,6 +2,12 @@
 
 Last updated: **17 November 2026**.
 
+## Daylight radio — tenth example song — 17 November 2026
+
+Example 10 is a complete 32-second C-major jingle at 120 BPM, built from 40 modules spanning 19 types. Four automatic, non-repeating Switch programmes arrange intro (bars 1–2), verse (3–6), chorus (7–10), breakdown (11–12), chorus reprise (13–14) and a resolving tag (15–16). Bar 17 selects unpatched inputs, allowing the lead echo to fade; transport remains running until Stop. Stop/Play restarts the intro. The patch includes three melodies, two bass patterns, C–F–G–C triads, two drum patterns, noise hats, the original bundled clap and all four modulation sources. The top row exposes the four section Switches and master controls. Musical rows use resolved registry dimensions and every module contributes to Output. The factory is separate from the catalog in `domain/example-song.ts` and uses ordinary patch data and existing audio scheduling.
+
+Validation used an isolated copy of the committed studio plus this example, keeping the concurrent MIDI work independent. Strict types, all **170 tests**, production build, formatting and diff checks pass. New regressions check all six sections, held bar selections, phrase alignment, tonic resolution, active source routes, silent completion and independent editable cue data. Isolated Chromium opened card 10 without starting audio, checked 40 panels/106 bottom sockets, recorded the entire 34.14-second performance, verified the six Switch states and fade to silence, and restarted the intro. The decoded take peaked at 0.563, with audible section RMS levels of 0.066–0.134 and final silence below 0.0001. The demo stayed temporary after recording; explicit Save, offline reload/playback and desktop/tablet/390px chooser layouts passed without microphone requests or browser errors. Publication uses the existing main-branch pipeline.
+
 ## iPhone Silent mode audio policy — 17 November 2026
 
 The user confirmed Brave on iPhone advances playback/meters but is inaudible with Silent mode on. Studio activation now requests the optional browser music playback policy before waking Web Audio. Stop/idle/disposal restore the preceding policy. Explicit Mic sampler capture takes priority with play-and-record, then returns an active studio to playback when its tracks stop. Browsing stays silent, studio recording never requests microphone permission, and missing/rejected session APIs retain normal Web Audio with Silent mode off as the fallback.

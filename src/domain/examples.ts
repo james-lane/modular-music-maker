@@ -1,4 +1,5 @@
 import { createDemoClap } from './demo-samples';
+import { createDaylightRadioProject } from './example-song';
 import { DRUM_LANES, DRUM_STEP_COUNT, type DrumSound } from './instruments';
 import { createModule, createPerformanceProject, createProject } from './project';
 import type { Cable, ModuleType, Parameters, PatchModule, Project } from './types';
@@ -10,7 +11,8 @@ export interface ExamplePatch {
   description: string;
   tryThis: string;
   color: string;
-  artwork: 'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy' | 'ensemble' | 'pop';
+  artwork:
+    'melody' | 'performance' | 'bass' | 'texture' | 'arcade' | 'xy' | 'ensemble' | 'pop' | 'song';
   /** Factories supply fresh project/module/cable IDs and independent editable data every time. */
   create: () => Project;
 }
@@ -622,5 +624,17 @@ export const EXAMPLE_PATCHES: readonly ExamplePatch[] = [
     color: '#ad627a',
     artwork: 'pop',
     create: createNeonProject,
+  },
+  {
+    id: 'daylight-radio',
+    name: 'Daylight radio',
+    style: 'Jingle · 32-second song',
+    description:
+      'A sunny C-major tune at 120 BPM: intro, verse, chorus, breakdown, chorus reprise and a closing tag. Forty modules play the whole arrangement automatically.',
+    tryThis:
+      'Press Play and listen through to the ending. The four Switches in the top row run the parts; Stop then Play restarts the song. Save patch to keep your version.',
+    color: '#ad823e',
+    artwork: 'song',
+    create: createDaylightRadioProject,
   },
 ];

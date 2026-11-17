@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import { EXAMPLE_PATCHES } from '../src/domain/examples';
 import { kitSamplerSources } from '../src/domain/instruments';
 import { decodeSamplePcm } from '../src/domain/samples';
-import { MODULES, moduleDefinition } from '../src/domain/modules';
+import { moduleDefinition, sequencerRate } from '../src/domain/modules';
+import { switchInputAtBar } from '../src/domain/switch-schedule';
 import type { Project } from '../src/domain/types';
 import { parseProject } from '../src/domain/validation';
 
@@ -21,9 +22,9 @@ function routingSignature(project: Project) {
   });
 }
 
-test('nine distinct examples are valid, fully connected and laid out without covering another module', () => {
-  assert.equal(EXAMPLE_PATCHES.length, 9);
-  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 9);
+test('ten distinct examples are valid, fully connected and laid out without covering another module', () => {
+  assert.equal(EXAMPLE_PATCHES.length, 10);
+  assert.equal(new Set(EXAMPLE_PATCHES.map((example) => example.id)).size, 10);
   const signatures = new Set<string>();
   for (const example of EXAMPLE_PATCHES) {
     const project = example.create();
@@ -54,7 +55,7 @@ test('nine distinct examples are valid, fully connected and laid out without cov
       }
     }
   }
-  assert.equal(signatures.size, 9, 'Each example teaches a different routing arrangement');
+  assert.equal(signatures.size, 10, 'Each example teaches a different routing arrangement');
 });
 
 test('opening and editing an example cannot change its recipe or another saved copy', () => {
@@ -82,6 +83,7 @@ test('opening and editing an example cannot change its recipe or another saved c
         }
       }
       if (module.steps) module.steps.fill(-1);
+      if (module.switchCues) module.switchCues.forEach((cue) => (cue.input = 4));
       if (module.drumPattern) Object.values(module.drumPattern).forEach((lane) => lane.fill(false));
     }
     edited.name = 'My own version';
@@ -103,6 +105,10 @@ test('opening and editing an example cannot change its recipe or another saved c
     assert.deepEqual(
       next.modules.map((module) => module.drumPattern),
       snapshot.modules.map((module) => module.drumPattern),
+    );
+    assert.deepEqual(
+      next.modules.map((module) => module.switchCues),
+      snapshot.modules.map((module) => module.switchCues),
     );
   }
 });
@@ -149,23 +155,36 @@ test('the ensemble layers a shared-pitch voice, independent rhythms, and separat
   );
 });
 
-test('the final pop example is the largest, retains the original catalog, and has a ready-to-play sampled backbeat', () => {
-  const example = EXAMPLE_PATCHES.at(-1)!;
-  assert.equal(example.id, 'neon-chorus');
+test('Neon chorus retains its original catalog and ready-to-play sampled backbeat', () => {
+  const example = EXAMPLE_PATCHES.find((example) => example.id === 'neon-chorus')!;
   const project = example.create();
   assert.equal(project.modules.length, 38);
   assert(
-    EXAMPLE_PATCHES.slice(0, -1).every(
+    EXAMPLE_PATCHES.filter((other) => !['neon-chorus', 'daylight-radio'].includes(other.id)).every(
       (other) => other.create().modules.length < project.modules.length,
     ),
   );
   assert.deepEqual(
     [...new Set(project.modules.map((module) => module.type))].sort(),
-    Object.keys(MODULES)
-      .filter(
-        (type) => !['envelope', 'mod-sequencer', 'random-mod', 'xy-controller'].includes(type),
-      )
-      .sort(),
+    [
+      'sequencer',
+      'oscillator',
+      'noise',
+      'mic-sampler',
+      'lfo',
+      'filter',
+      'delay',
+      'reverb',
+      'xy-effects',
+      'mixer',
+      'merger',
+      'switch',
+      'output',
+      'drum-machine',
+      'drum-kit',
+      'keyboard',
+      'pad-controller',
+    ].sort(),
   );
   assert.equal(project.scale, 'major');
   const kit = project.modules.find((module) => module.type === 'drum-kit')!;
@@ -199,4 +218,103 @@ test('the final pop example is the largest, retains the original catalog, and ha
     assert.equal(third.steps![step] - root.steps![step], 2);
     assert.equal(fifth.steps![step] - root.steps![step], 4);
   }
+});
+
+test('Daylight radio plays six arranged sections, resolves to C and ends with every source muted', () => {
+  const example = EXAMPLE_PATCHES.at(-1)!;
+  assert.equal(example.id, 'daylight-radio');
+  const project = example.create();
+  assert.equal(project.modules.length, 40);
+  assert.equal(new Set(project.modules.map((module) => module.type)).size, 19);
+  assert.equal(project.tempo, 120);
+  assert.equal(project.timeSignature, '4/4');
+  assert.equal(project.rootNote, 'C');
+  assert.equal(project.scale, 'major');
+  const switches = project.modules.filter((module) => module.type === 'switch');
+  assert.equal(switches.length, 4, 'melody, bass, harmony and rhythm have independent programmes');
+  const sectionBars = [1, 3, 7, 11, 13, 15, 17];
+  const programmes = [
+    [1, 2, 3, 1, 3, 1, 4],
+    [4, 1, 2, 4, 2, 1, 4],
+    [4, 4, 1, 4, 1, 4, 4],
+    [1, 2, 3, 1, 3, 4, 4],
+  ];
+  switches.forEach((module, index) => {
+    assert.equal(module.parameters.automatic, true);
+    assert.equal(module.parameters.repeat, false);
+    assert.deepEqual(
+      module.switchCues?.map((cue) => cue.bar),
+      sectionBars,
+    );
+    assert.deepEqual(
+      module.switchCues?.map((cue) => cue.input),
+      programmes[index],
+    );
+    assert(
+      !project.cables.some((cable) => cable.to.moduleId === module.id && cable.to.portId === 'in4'),
+    );
+    for (let section = 0; section < sectionBars.length - 1; section++) {
+      for (let bar = sectionBars[section]; bar < sectionBars[section + 1]; bar++) {
+        assert.equal(switchInputAtBar(module, bar - 1), programmes[index][section]);
+      }
+    }
+    assert.equal(switchInputAtBar(module, 16), 4);
+    assert.equal(switchInputAtBar(module, 128), 4, 'the ending does not restart itself');
+    assert.equal(switchInputAtBar(module, 0), programmes[index][0], 'Play can restart the intro');
+  });
+  const sequences = project.modules.filter((module) => module.type === 'sequencer');
+  assert(
+    sequences.every(
+      (module) => sequencerRate(module.parameters.rate).ticks * module.steps!.length === 32,
+    ),
+  );
+  const melodyNotes = sequences.slice(0, 3);
+  assert.equal(new Set(melodyNotes.map((module) => JSON.stringify(module.steps))).size, 3);
+  for (const module of [melodyNotes[0], melodyNotes[2]]) {
+    assert.equal(
+      module.steps!.filter((degree) => degree >= 0).at(-1)! % 7,
+      0,
+      'tag and hook resolve to the tonic',
+    );
+    assert.equal(module.steps!.at(-1), -1, 'a breath separates the two-bar phrases');
+  }
+  const [root, third, fifth] = sequences.slice(-3);
+  for (let step = 0; step < 8; step++) {
+    assert.equal(third.steps![step] - root.steps![step], 2);
+    assert.equal(fifth.steps![step] - root.steps![step], 4);
+  }
+  const output = project.modules.find((module) => module.type === 'output')!;
+  const audibleAt = (id: string, bar: number): boolean =>
+    id === output.id ||
+    project.cables.some((cable) => {
+      if (cable.from.moduleId !== id) return false;
+      const target = project.modules.find((module) => module.id === cable.to.moduleId)!;
+      if (target.type === 'switch' && cable.to.portId !== `in${switchInputAtBar(target, bar - 1)}`)
+        return false;
+      return audibleAt(target.id, bar);
+    });
+  const sources = project.modules.filter((module) =>
+    ['oscillator', 'drum-machine'].includes(module.type),
+  );
+  const activeSources = (bar: number) => sources.filter((source) => audibleAt(source.id, bar));
+  assert.equal(activeSources(1).length, 2, 'intro: bells and light percussion');
+  assert.equal(activeSources(3).length, 3, 'verse: melody, bass and beat');
+  assert.equal(
+    activeSources(7).length,
+    7,
+    'chorus adds walking bass, three chord tones and combined drums',
+  );
+  assert.deepEqual(activeSources(11), activeSources(1), 'breakdown returns to the sparse motif');
+  assert.deepEqual(activeSources(13), activeSources(7), 'the hook returns after the breakdown');
+  assert.equal(activeSources(15).length, 2, 'tag: resolving bells and bass, with no drums');
+  assert.equal(activeSources(17).length, 0);
+  for (const source of sources)
+    assert(
+      sectionBars.some((bar) => audibleAt(source.id, bar)),
+      source.type,
+    );
+  const kit = project.modules.find((module) => module.type === 'drum-kit')!;
+  assert.equal(kit.parameters.clap, 'input');
+  assert.equal(kit.parameters['closed-hat'], 'input');
+  assert(kitSamplerSources(project, kit).clap?.samples?.clip);
 });
