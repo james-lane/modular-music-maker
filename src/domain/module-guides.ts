@@ -738,7 +738,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       'Routes one of four audio inputs to a single output. Select inputs by hand or arrange bar-start cues to change song sections automatically, once or in a repeating pattern.',
     steps: [
       'Connect instrument or effect audio outputs to IN 1–4, then connect AUDIO OUT to an effect, a Mixer, a Merger, or Output.',
-      'Open Schedule, choose an input at bar 1, then add the later bar-start changes. Choose whether the pattern repeats and how many bars it lasts. Use schedule enables Auto without starting playback.',
+      'Open Schedule on the module, choose an input at bar 1, then add the later bar-start changes. Use the previous/next arrows to move between cues. Choose whether the pattern repeats and how many bars it lasts. Use schedule enables Auto without starting playback.',
       'Press Play. The lit key shows the current routed input. Tap a numbered key to take manual control; use Auto to rejoin the current bar. Selecting an unpatched input gives silence.',
     ],
     controls: {
@@ -749,7 +749,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Schedule / Auto',
         description:
-          'Store up to 16 cues at bars 1–128, with one input per bar. A bar 1 cue chooses the starting sound. Repeat length must include all cues; without Repeat, the final input stays selected. Stop clears queued changes and the next Play starts at bar 1. Applying edits while playing takes effect at the current position.',
+          'Edit up to 16 cues at bars 1–128 inside the Switch, with one input per bar. Cancel or Escape discards the draft; Use schedule applies all edits together and returns to the input keys. A bar 1 cue chooses the starting sound. Repeat length must include all cues; without Repeat, the final input stays selected. Stop clears queued changes and the next Play starts at bar 1. Applying edits while playing takes effect at the current position.',
       },
     ],
     tip: 'The schedule follows project tempo and time signature: 4/4 bars contain four quarter notes; 3/4 and 6/8 contain three quarter notes. Inputs are audio only. Upstream loops keep their own place when you switch between them.',

@@ -42,7 +42,6 @@ import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { edgePan, fittedView, viewAtAnchor } from './workspace-geometry';
 
 interface Props {
-  onSwitchSchedule: (id: string) => void;
   project: Project;
   commit: (edit: (project: Project) => Project, group?: string) => void;
   setSample: (moduleId: string, slot: string, sample: DrumSample | null) => boolean;
@@ -71,7 +70,6 @@ interface Props {
 }
 
 export function Workspace({
-  onSwitchSchedule,
   project,
   commit,
   notify,
@@ -718,7 +716,6 @@ export function Workspace({
             >
               {displayModules.map((module) => (
                 <WorkspaceModule
-                  onSwitchSchedule={onSwitchSchedule}
                   key={module.id}
                   module={module}
                   project={project}

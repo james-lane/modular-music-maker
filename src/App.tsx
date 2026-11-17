@@ -35,8 +35,6 @@ import { useStudio } from './hooks/useStudio';
 import { useOffline } from './hooks/useOffline';
 import { useTheme } from './hooks/useTheme';
 import { useStudioTouch } from './hooks/useStudioTouch';
-import { SwitchScheduleDialog } from './components/SwitchScheduleDialog';
-import { setSwitchSchedule } from './domain/switch-schedule';
 
 export default function App() {
   const app = useRef<HTMLDivElement>(null);
@@ -81,7 +79,6 @@ export default function App() {
   };
   const [dialog, setDialog] = useState<StudioDialog>(studio.isFirstVisit ? 'examples' : null);
   const [guideType, setGuideType] = useState<ModuleType | null>(null);
-  const [scheduleId, setScheduleId] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [libraryDrag, setLibraryDrag] = useState<ModuleLibraryDrag | null>(null);
@@ -226,9 +223,6 @@ export default function App() {
     if (importInput.current) importInput.current.value = '';
   };
 
-  const scheduleModule = project.modules.find(
-    (module) => module.id === scheduleId && module.type === 'switch',
-  );
   return (
     <div
       ref={app}
@@ -290,10 +284,6 @@ export default function App() {
           onClose={closeLibrary}
         />
         <Workspace
-          onSwitchSchedule={(id) => {
-            setScheduleId(id);
-            setDialog('switch-schedule');
-          }}
           {...studio}
           notify={notify}
           microphone={microphone}
@@ -358,16 +348,6 @@ export default function App() {
         </div>
       )}
       {dialog === 'help' && <HelpDialog onClose={() => setDialog(null)} />}
-      {dialog === 'switch-schedule' && scheduleModule && (
-        <SwitchScheduleDialog
-          module={scheduleModule}
-          onClose={() => setDialog(null)}
-          onApply={(schedule) => {
-            commit((current) => setSwitchSchedule(current, scheduleModule.id, schedule));
-            setDialog(null);
-          }}
-        />
-      )}
       {dialog === 'offline' && (
         <OfflineDialog
           offline={offline}

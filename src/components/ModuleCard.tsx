@@ -24,12 +24,13 @@ import { PadControllerPanel } from './PadControllerPanel';
 import { MixerPanel } from './MixerPanel';
 import { MergerPanel } from './MergerPanel';
 import { SwitchPanel } from './SwitchPanel';
+import type { SwitchSchedule } from '../domain/switch-schedule';
 import type { StepNoteChange } from './SequencerStep';
 import { SequencerPanel } from './SequencerPanel';
 import { XYEffectsPanel } from './XYEffectsPanel';
 
 interface Props {
-  onSwitchSchedule: () => void;
+  onSwitchSchedule: (schedule: SwitchSchedule) => void;
   module: PatchModule;
   /** Drawing-origin-relative placement only; world positions remain in the saved module. */
   position: { x: number; y: number };
@@ -269,7 +270,7 @@ export function ModuleCard({
             onParameters={onParameters}
             position={playbackPosition}
             playing={playing}
-            onEditSchedule={onSwitchSchedule}
+            onSchedule={onSwitchSchedule}
           />
         )}
         {module.type === 'merger' && (

@@ -2,6 +2,14 @@
 
 Last updated: **17 November 2026**.
 
+## Inline Switch schedule editor — 17 November 2026
+
+Schedule now edits cues inside the Switch enclosure instead of opening a workspace modal. Previous/next buttons page through up to 16 cues; the selected cue’s bar/input, Remove, Add, Repeat length and Use schedule remain in the original 320×300 footprint above the shared footer. The programme stays a local draft until one atomic Apply; Cancel/Escape returns to the keys with focus restored. Editors are independently owned by each Switch, and the rest of the workspace remains interactive. Restored programme data resets the draft, while live transport ticks and unrelated edits retain it. No audio scheduling, patch schema, dimensions, ports or saved/example layout changes.
+
+The App-level Switch dialog and its callback chain through Workspace are removed. Schedule commits directly through WorkspaceModule and the existing validated domain helper. The user authorised a direct main push alongside the approved Sample & Hold demo for #11.
+
+Validation: strict types, all **163 tests**, production build, formatting and diff checks pass. Chromium verified inline editing without a modal, Cancel/Escape and focus return, keyboard cue paging, all 16 cues, validation, atomic Undo/Redo and restored-programme draft reset, other workspace controls and live audio during invalid drafts, native bar timing, unchanged footprint/footer clearance, saved/offline reload, independent concurrent editors and the approved Sample & Hold comparison. A decoded 1.5-second take contained audible output. WebKit 26.5 passed native inline edits/paging, timed changes, workspace controls/audio while editing, Cancel/Escape focus, saved reload and dark tablet/phone clearance. No browser errors or microphone requests occurred.
+
 ## Sample & Hold comparison demo — issue #11 — 17 November 2026
 
 The guide demo now compares three independently configured uses in one ten-module patch: Switch 1 is rhythmic random filter movement, 2 is gentle pitch drift, and 3 is pad-triggered speed/pitch variation of the bundled clap (tap pad 1). Switch 4 provides the dry oscillator reference. Each row has its own Sample & Hold; only the pad row uses TRIGGER IN, so the other rows retain their transport clocks. Browsing/loading remains silent and temporary until Save patch.
@@ -20,7 +28,7 @@ Validation: strict types, all **162 tests**, production build, formatting and di
 
 ## Bar-start Switch arrangements — issue #13 — 17 November 2026
 
-Switch can select inputs automatically at chosen bar starts, once or as a repeating pattern. Its Schedule dialog edits up to 16 cues over bars 1–128 with a bar 1 starting cue and optional repeat length. Apply enables Auto without autoplay; numbered keys take manual control, Auto rejoins the current bar, and Stop/Play restarts at bar 1. The compact burgundy panel retains its original 320×300 footprint, port IDs and saved/example positions. Its key lights/readout follow the transport without driving audio timing.
+Switch can select inputs automatically at chosen bar starts, once or as a repeating pattern. Its schedule supports up to 16 cues over bars 1–128 with a bar 1 starting cue and optional repeat length. Apply enables Auto without autoplay; numbered keys take manual control, Auto rejoins the current bar, and Stop/Play restarts at bar 1. The compact burgundy panel retains its original 320×300 footprint, port IDs and saved/example positions. Its key lights/readout follow the transport without driving audio timing.
 
 The engine schedules native gain targets on its existing look-ahead audio ticks, preserving ramps, source clocks and effect tails. Schedule/mode/tempo/meter edits cancel and replace queued targets; unrelated edits leave them alone. Stop, removal and disposal clear pending changes. Automatic playback leaves the saved selection and Undo/autosave data untouched; Apply/manual takeover are atomic explicit edits. Old patches migrate with Auto disabled and their manual choice intact. The shared guide demo alternates a bar of drums and a bar of sequenced melody.
 

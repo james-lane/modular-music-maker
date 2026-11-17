@@ -6,12 +6,12 @@ import { SEQUENCER_DEGREES } from '../domain/modules';
 import { setPadCount } from '../domain/pad-controller';
 import { setMixerInputCount } from '../domain/mixer';
 import { setKeyboardKeyCount } from '../domain/keyboard';
+import { setSwitchSchedule } from '../domain/switch-schedule';
 import type { DrumSample, Endpoint, PatchModule, Project } from '../domain/types';
 import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { ModuleCard } from './ModuleCard';
 
 interface Props {
-  onSwitchSchedule: (id: string) => void;
   module: PatchModule;
   project: Project;
   originX: number;
@@ -38,7 +38,6 @@ interface Props {
  * Keep every prop honest: edits, routing, live handlers and capture state still update normally.
  */
 export const WorkspaceModule = memo(function WorkspaceModule({
-  onSwitchSchedule,
   module,
   project,
   originX,
@@ -62,7 +61,9 @@ export const WorkspaceModule = memo(function WorkspaceModule({
 }: Props) {
   return (
     <ModuleCard
-      onSwitchSchedule={() => onSwitchSchedule(module.id)}
+      onSwitchSchedule={(schedule) =>
+        commit((current) => setSwitchSchedule(current, module.id, schedule))
+      }
       module={module}
       project={project}
       position={{ x: module.x - originX, y: module.y - originY }}

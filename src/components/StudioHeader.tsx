@@ -4,7 +4,6 @@ export type StudioDialog =
   | 'recordings'
   | 'help'
   | 'module-help'
-  | 'switch-schedule'
   | 'export'
   | 'settings'
   | 'offline'
