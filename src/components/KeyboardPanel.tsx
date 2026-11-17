@@ -17,7 +17,7 @@ export function KeyboardPanel({
   const count = keyboardKeyCount(module.parameters.keyCount);
   const whiteKeys = ((count - 1) / 12) * 7 + 1;
   const held = useRef(new Map<string, number>());
-  // A pointer remains playable after leaving the keybed and sliding back onto a key.
+  // Each captured pointer owns its last note until release, including outside the keybed.
   const pointers = useRef(new Set<number>());
   const tapTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
   const [notes, setNotes] = useState<number[]>([]);
@@ -77,7 +77,8 @@ export function KeyboardPanel({
     const token = `pointer:${event.pointerId}`;
     if (key && event.currentTarget.contains(key))
       press(token, Number(key.getAttribute('data-note')));
-    else release(token);
+    // Leaving the keys holds the last note; sliding back in can change it again.
+    // Only up/cancel/lost capture or lifecycle cleanup ends this finger's hold.
   };
   const endPointer = (event: PointerEvent<HTMLDivElement>) => {
     pointers.current.delete(event.pointerId);

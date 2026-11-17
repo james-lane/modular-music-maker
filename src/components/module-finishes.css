@@ -822,6 +822,7 @@
   color: #7c898e;
 }
 .fader-well input {
+  --fader-thumb-height: 12px;
   appearance: none;
   -webkit-appearance: none;
   writing-mode: vertical-lr;
@@ -846,7 +847,7 @@
   appearance: none;
   -webkit-appearance: none;
   width: 28px;
-  height: 12px;
+  height: var(--fader-thumb-height);
   border: 1px solid #7b868c;
   border-radius: 2px;
   background: linear-gradient(#f8faf8, #d4dcde 38%, #4a555b 44%, #6c767b 54%, #e6ebeb 60%, #b4bec3);
@@ -861,7 +862,7 @@
 }
 .fader-well input::-moz-range-thumb {
   width: 28px;
-  height: 12px;
+  height: var(--fader-thumb-height);
   border: 1px solid #7b868c;
   border-radius: 2px;
   background: linear-gradient(#f8faf8, #b4bec3);

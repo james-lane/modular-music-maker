@@ -170,7 +170,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Piano keys',
         description:
-          'Each finger can slide independently between white and black keys. Moving outside the keybed releases its note; sliding back plays again. Release to end the note. Enter or Space on a focused piano key plays a short note.',
+          'Each finger can slide independently between white and black keys. Moving outside the keybed keeps its last note held; slide back in to change notes, then lift to release. Cancellation or switching tools also ends the hold. Enter or Space on a focused piano key plays a short note.',
       },
     ],
     tip: 'Choose the bottom-left arrow (Play / edit) to hold notes while using other modules. The hand (Pan / zoom) navigates over instruments without playing or editing them. Live playing works with the transport stopped. Notes are chromatic, and the last held note takes priority on each oscillator.',
@@ -615,7 +615,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Choose 2–8 Inputs, then connect a source AUDIO OUT to each input you want to use.',
       'Connect AUDIO OUT to Output AUDIO IN, or send the mix through an effect.',
-      'Press Play and drag the channel faders up or down to balance the sources. Arrow keys also adjust a focused fader.',
+      'Press Play and drag the channel faders up or down to balance the sources. A drag keeps following your finger outside the fader until you lift. Arrow keys also adjust a focused fader.',
     ],
     controls: {
       a: 'Sets the gain of the signal connected to IN A.',
