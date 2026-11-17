@@ -357,7 +357,7 @@ function createMovingPartsProject(): Project {
 function createNeonProject(): Project {
   const tempo = 116;
   const eighth = 60 / tempo / 2;
-  const pads = instrument('pad-controller', -1600, -1120, { velocity: 0.75 });
+  const pads = instrument('pad-controller', -2030, -1120, { velocity: 0.75 });
   const drums = instrument('drum-machine', -1220, -1120, { level: 0.54, decay: 0.65 });
   drums.drumPattern = drumPattern({ kick: [0, 4, 8, 12], snare: [4, 12] });
   const sampler = instrument('mic-sampler', -680, -1120, { level: 0.6 });

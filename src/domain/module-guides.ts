@@ -68,7 +68,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     steps: [
       'Press Record mic and allow microphone access. Use HTTPS or localhost. Speak, clap, or make a sound; press Finish or let the four-second limit finish the capture.',
       'Connect AUDIO OUT to an effect, Mixer, Merger, or Output AUDIO IN. The microphone is never monitored live.',
-      'Press Play snippet to hear a direct dry preview, with studio playback stopped or running. No Output connection is needed. Connect Pad controller TRIGGER OUT to TRIGGER IN to retrigger it from any pad.',
+      'Press Play snippet to hear a direct dry preview, with studio playback stopped or running. No Output connection is needed. Connect Pad controller ALL to TRIGGER IN to retrigger it from any pad, or a numbered PAD output for one pad.',
     ],
     controls: {
       level: 'Sets the saved snippet’s output volume without changing the recording.',
@@ -181,29 +181,34 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
   },
   'pad-controller': {
     overview:
-      'Sixteen playable pads for the Drum machine’s percussion sounds. The first four pads follow a connected Drum kit’s voice assignments; the remaining pads keep their printed sounds. Its trigger cable carries the sound choice and velocity to the drum machine. Connect a Mic sampler instead to play its recorded snippet from every pad.',
+      'Choose 4, 8 or 16 playable pads. Each numbered PAD output fires only its matching pad, so different pads can play different instruments. ALL sends every hit through one cable and keeps older patches working. A Drum machine supplies the printed percussion sounds; its first four pads follow any connected Drum kit assignments. A Mic sampler plays its saved snippet instead.',
     steps: [
-      'Connect TRIGGER OUT to a Drum machine TRIGGER IN socket.',
-      'Connect the Drum machine AUDIO OUT to an Output AUDIO IN socket.',
-      'Click or tap a pad. Focus the pad grid to use 1 2 3 4 / Q W E R / A S D F / Z X C V.',
+      'Choose a pad count. Connect PAD 1 to a Drum machine TRIGGER IN and PAD 2 to a Mic sampler TRIGGER IN, or use ALL to send every pad to one instrument.',
+      'Route each instrument’s AUDIO OUT through a Mixer to Output. Trigger cables carry events, not sound.',
+      'Tap a pad without pressing Play. Focus the grid to use the shortcuts printed on visible pads; hidden pads do not play.',
     ],
     controls: {
       velocity: 'Sets the strength of each pad hit. Lower values give a softer performance.',
     },
     extraControls: [
       {
-        label: 'Sixteen pads',
+        label: 'Pad count and numbered outputs',
         description:
-          'Trigger kick, snare, clap, hats, toms, rim, shaker, crash, ride, cowbell, tambourine, claves, and congas. Shortcuts are printed on the pads.',
+          '4, 8 or 16 pads resize the enclosure and its shared bottom socket row. Reducing the count unplugs removed outputs; one Undo restores the count, position and cables. If a wider enclosure needs room, only the controller moves. Every PAD socket can fan out to multiple compatible instruments.',
       },
     ],
-    tip: 'Pads work without pressing Play. Turn the Drum machine’s Pattern off if you want to hear only your live hits.',
+    tip: 'Use a numbered output to retrigger a Mic sampler, Envelope or Sample & Hold independently. ALL still fires alongside numbered outputs. Turn the Drum machine’s Pattern off to hear only live hits.',
     example: {
-      title: 'Build a playable drum kit',
-      description: 'The controller selects each hit, while the Drum machine supplies the audio.',
+      title: 'Two pads, two instruments',
+      description:
+        'Pad 1 plays a kick; pad 2 plays the bundled clap through a separate sampler. The other pads stay unpatched.',
+      parameters: { 'pad-controller': { padCount: 4 }, 'drum-machine': { enabled: false } },
       connections: [
-        wire('pad-controller', 'trigger', 'drum-machine', 'trigger'),
-        wire('drum-machine', 'out', 'output', 'in'),
+        wire('pad-controller', 'pad1', 'drum-machine', 'trigger'),
+        wire('pad-controller', 'pad2', 'mic-sampler', 'trigger'),
+        wire('drum-machine', 'out', 'mixer', 'a'),
+        wire('mic-sampler', 'out', 'mixer', 'b'),
+        wire('mixer', 'out', 'output', 'in'),
       ],
     },
   },
@@ -304,7 +309,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       'An attack/hold/release control envelope. Notes hold its peak until release; a pad or Trigger envelope button plays one attack/release sweep. It produces control data, not sound.',
     steps: [
       'Connect MOD OUT to Filter MOD, Oscillator PITCH MOD, or Mic sampler LEVEL MOD.',
-      'Connect Keyboard PITCH / GATE or Step sequencer PITCH to NOTE / GATE. For one-shot sweeps, connect Pad controller TRIGGER OUT to TRIGGER IN.',
+      'Connect Keyboard PITCH / GATE or Step sequencer PITCH to NOTE / GATE. For one-shot sweeps, connect Pad controller PAD 1 (or ALL) to TRIGGER IN.',
       'Set Attack, Release and Depth, then play a note or press Trigger envelope.',
     ],
     controls: {

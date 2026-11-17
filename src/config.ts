@@ -37,6 +37,7 @@ export const CONFIG = {
   historyLimit: 60,
   historyGroupDelayMs: 700,
   moduleLibrary: { dragThresholdPx: 6 },
+  padFeedbackMs: 160,
   sequencerGesture: {
     dragThresholdPx: 6,
     pixelsPerDegree: 12,

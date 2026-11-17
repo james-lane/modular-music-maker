@@ -1,5 +1,5 @@
 import { MODULE_GUIDES } from './module-guides';
-import { MODULES } from './modules';
+import { MODULES, moduleDefinition } from './modules';
 import { createModule, createProject } from './project';
 import { createDemoClap } from './demo-samples';
 import type { ModuleType, PatchModule, Project } from './types';
@@ -50,9 +50,9 @@ export function createModuleDemo(type: ModuleType): ModuleDemo {
     for (const module of column) {
       module.x = x;
       module.y = y;
-      y += MODULES[module.type].height + 40;
+      y += moduleDefinition(module).height + 40;
     }
-    x += Math.max(...column.map((module) => MODULES[module.type].width)) + 60;
+    x += Math.max(...column.map((module) => moduleDefinition(module).width)) + 60;
   }
   const project = parseProject({
     ...createProject(true),
@@ -73,9 +73,11 @@ export function createModuleDemo(type: ModuleType): ModuleDemo {
     interaction === 'keyboard'
       ? 'Play the Keyboard keys to hear this demo. No need to press Play.'
       : interaction === 'pads'
-        ? modules.has('mic-sampler')
-          ? 'Tap the Pad controller to play the included clap. You can replace it with your own recording.'
-          : 'Tap the Pad controller, or press Play for its backing rhythm.'
+        ? type === 'pad-controller'
+          ? 'Tap pad 1 for a kick and pad 2 for the included clap. Each output plays only its own instrument; no need to press Play.'
+          : modules.has('mic-sampler')
+            ? 'Tap the Pad controller to play the included clap. You can replace it with your own recording.'
+            : 'Tap the Pad controller, or press Play for its backing rhythm.'
         : 'Press Play to hear this demo, then try the module’s controls.';
   return { project, interaction, instructions };
 }

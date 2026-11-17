@@ -1,4 +1,17 @@
-import type { ModuleDefinition, ModuleType } from './types';
+import type { ModuleDefinition, ModuleType, PatchModule } from './types';
+
+/** Socket count sets the enclosure width: even sixteen outputs retain one bottom row. */
+export const PAD_LAYOUTS = [
+  { count: 4, columns: 4, width: 300, height: 384 },
+  { count: 8, columns: 4, width: 432, height: 456 },
+  { count: 16, columns: 8, width: 760, height: 456 },
+] as const;
+export const DEFAULT_PAD_LAYOUT = PAD_LAYOUTS[2];
+export type PadCount = (typeof PAD_LAYOUTS)[number]['count'];
+
+export function padLayout(value: unknown) {
+  return PAD_LAYOUTS.find((layout) => layout.count === value) ?? DEFAULT_PAD_LAYOUT;
+}
 
 /** Saved scale degrees include a rest and fourteen pitches, independently of the scale. */
 export const SEQUENCER_DEGREES = { rest: -1, min: 0, max: 13 } as const;
@@ -142,13 +155,22 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
     type: 'pad-controller',
     name: 'Pad controller',
     subtitle: 'A rhythm at your fingertips',
-    description: 'Sixteen pads. A whole kit to play.',
+    description: '4, 8 or 16 pads. Independent triggers.',
     category: 'Modulation',
     color: '#a18cb4',
     code: 'PAD–01',
-    width: 300,
-    height: 492,
-    ports: [{ id: 'trigger', label: 'TRIGGER OUT', direction: 'output', signal: 'trigger' }],
+    width: DEFAULT_PAD_LAYOUT.width,
+    height: DEFAULT_PAD_LAYOUT.height,
+    ports: [
+      { id: 'trigger', label: 'ALL', direction: 'output', signal: 'trigger' },
+      ...Array.from({ length: DEFAULT_PAD_LAYOUT.count }, (_, index) => ({
+        id: `pad${index + 1}`,
+        label: `PAD ${index + 1}`,
+        direction: 'output' as const,
+        signal: 'trigger' as const,
+      })),
+    ],
+    defaults: { padCount: DEFAULT_PAD_LAYOUT.count },
     controls: [
       { id: 'velocity', label: 'Velocity', min: 0.1, max: 1, step: 0.01, default: 0.85, unit: '%' },
     ],
@@ -491,6 +513,21 @@ export const MODULES: Record<ModuleType, ModuleDefinition> = {
 };
 
 export const MODULE_LIST = Object.values(MODULES);
+
+/** Resolve the same configured footprint/sockets for rendering, placement and validation. */
+export function moduleDefinition(
+  module: Pick<PatchModule, 'type' | 'parameters'>,
+): ModuleDefinition {
+  const definition = MODULES[module.type];
+  if (module.type !== 'pad-controller') return definition;
+  const layout = padLayout(module.parameters.padCount);
+  return {
+    ...definition,
+    width: layout.width,
+    height: layout.height,
+    ports: definition.ports.slice(0, layout.count + 1),
+  };
+}
 
 export function defaultParameters(type: ModuleType) {
   const definition = MODULES[type];

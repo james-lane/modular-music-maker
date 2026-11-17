@@ -204,7 +204,7 @@ export function midiLabel(note: number): string {
 export function controllerTargets(
   project: Project,
   controllerId: string,
-  portId: 'pitch' | 'trigger' | 'kit',
+  portId: string,
 ): string[] {
   return project.cables
     .filter((cable) => cable.from.moduleId === controllerId && cable.from.portId === portId)

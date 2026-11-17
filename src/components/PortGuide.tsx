@@ -26,7 +26,8 @@ const PORT_GUIDE: Record<SignalType, { name: string; meaning: string; example: s
     name: 'TRIGGER — a hit or a restart',
     meaning:
       'A brief “play now” event, including which pad was hit and how hard. It starts a drum hit, restarts a sampler, fires an Envelope, or chooses a new Sample & Hold value. It does not hold a note or carry audio.',
-    example: 'Pad controller TRIGGER OUT → Drum machine or Mic sampler TRIGGER IN.',
+    example:
+      'Pad controller PAD 1 → Mic sampler TRIGGER IN plays only pad 1. ALL → Drum machine TRIGGER IN sends every pad hit.',
   },
   kit: {
     name: 'KIT — a set of drum sounds',

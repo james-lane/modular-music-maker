@@ -7,11 +7,13 @@ import {
   connectedDrumKit,
   kitSamplerSources,
   DRUM_LANES,
+  DRUM_SOUNDS,
   drumHitsAtStep,
   midiFrequency,
   type DrumSound,
 } from '../domain/instruments';
 import type { Project } from '../domain/types';
+import { padTargets } from '../domain/pad-controller';
 import { AUDIO_FACTORIES, type AudioRuntime } from './factories';
 
 /** One engine per studio. AudioContext is created only after a user gesture.
@@ -286,10 +288,10 @@ export class AudioEngine {
     this.samplePreview = undefined;
   }
 
-  hitPad(controllerId: string, sound: DrumSound, velocity: number) {
+  hitPad(controllerId: string, index: number, velocity: number) {
     if (!this.project) return;
-    controllerTargets(this.project, controllerId, 'trigger').forEach((id) =>
-      this.hitDrum(id, sound, velocity),
+    padTargets(this.project, controllerId, index).forEach((id) =>
+      this.hitDrum(id, DRUM_SOUNDS[index].id, velocity),
     );
   }
 

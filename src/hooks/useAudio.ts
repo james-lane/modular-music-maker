@@ -6,6 +6,7 @@ import { CONFIG } from '../config';
 import { downloadFile, fileSlug } from '../domain/storage';
 import type { Project } from '../domain/types';
 import { controllerTargets, drumLiveTailMs, type DrumSound } from '../domain/instruments';
+import { padTargets } from '../domain/pad-controller';
 import type { LiveControls } from '../audio/live';
 
 export function useAudio(project: Project, notify: (message: string) => void) {
@@ -170,16 +171,20 @@ export function useAudio(project: Project, notify: (message: string) => void) {
   );
 
   const padHit = useCallback(
-    (moduleId: string, sound: DrumSound) => {
-      if (!controllerTargets(latest.current, moduleId, 'trigger').length) {
+    (moduleId: string, index: number) => {
+      const sourceProject = latest.current;
+      if (!padTargets(sourceProject, moduleId, index).length) {
         notifyRef.current(
-          'Connect Pad controller TRIGGER OUT to a Drum machine, Mic sampler, Envelope, or Sample & Hold TRIGGER IN.',
+          `Connect PAD ${index + 1} or ALL to a Drum machine, Mic sampler, Envelope, or Sample & Hold TRIGGER IN.`,
         );
         return;
       }
       void activateLive(() => {
+        // Audio resume may finish after resizing/rewiring. Never dispatch into
+        // the graph captured before that edit or revive a removed pad output.
+        if (latest.current !== sourceProject) engine.update(latest.current);
         const module = latest.current.modules.find((item) => item.id === moduleId);
-        if (module) engine.hitPad(moduleId, sound, Number(module.parameters.velocity));
+        if (module) engine.hitPad(moduleId, index, Number(module.parameters.velocity));
       });
     },
     [activateLive, engine],

@@ -8,7 +8,7 @@ import type { PlaybackPosition } from '../audio/playback-position';
 import { GripVertical, X } from 'lucide-react';
 import type { CSSProperties, PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
-import { MODULES } from '../domain/modules';
+import { moduleDefinition } from '../domain/modules';
 import type { DrumSample, Endpoint, Parameters, PatchModule, Project } from '../domain/types';
 import { Knob } from './Knob';
 import { LevelMeter, Scope } from './Scope';
@@ -76,7 +76,7 @@ export function ModuleCard({
   onDragStart,
   onSelect,
 }: Props) {
-  const definition = MODULES[module.type];
+  const definition = moduleDefinition(module);
   return (
     <article
       className={`module-panel ${selected ? 'selected' : ''} module-${module.type}`}
@@ -152,7 +152,14 @@ export function ModuleCard({
         {module.type === 'xy-effects' && (
           <XYEffectsPanel module={module} onParameters={onParameters} />
         )}
-        {module.type === 'pad-controller' && <PadControllerPanel module={module} live={live} />}
+        {module.type === 'pad-controller' && (
+          <PadControllerPanel
+            module={module}
+            project={project}
+            live={live}
+            onCount={(count) => onParameter('padCount', count)}
+          />
+        )}
         {module.type === 'sequencer' && (
           <SequencerPanel
             module={module}

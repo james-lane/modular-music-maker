@@ -5,6 +5,8 @@ import { createModule, createProject, stepFrequency } from '../src/domain/projec
 import { DRUM_LANES, midiFrequency } from '../src/domain/instruments';
 import { encodeSamplePcm } from '../src/domain/samples';
 import { AUDIO_FACTORIES } from '../src/audio/factories';
+import { CONFIG } from '../src/config';
+import { setPadCount } from '../src/domain/pad-controller';
 
 class Parameter {
   value = 0;
@@ -115,6 +117,56 @@ class Context {
     return this as unknown as AudioContext;
   }
 }
+
+test('independent pad outputs trigger only their receivers at the live audio time and retain ALL', async () => {
+  const context = new Context();
+  const engine = new AudioEngine(() => context.asAudioContext());
+  const pads = createModule('pad-controller', 0, 0);
+  const samplers = [2400, 4800, 7200].map((frames, index) => ({
+    ...createModule('mic-sampler', 900 + index * 360, 0),
+    samples: { clip: { name: `Clip ${index}`, pcm: encodeSamplePcm(new Float32Array(frames)) } },
+  }));
+  const project = {
+    ...createProject(true),
+    modules: [pads, ...samplers],
+    cables: ['pad1', 'pad2', 'trigger'].map((portId, index) => ({
+      id: crypto.randomUUID(),
+      from: { moduleId: pads.id, portId },
+      to: { moduleId: samplers[index].id, portId: 'trigger' },
+    })),
+  };
+  try {
+    await engine.activate(project);
+    context.currentTime = 2;
+    engine.hitPad(pads.id, 0, 0.7);
+    assert.deepEqual(
+      context.sources.map((source) => source.buffer!.duration).sort(),
+      [2400, 7200].map((frames) => frames / CONFIG.samples.sampleRate),
+    );
+    assert(context.sources.every((source) => source.starts[0][0] === 2));
+    engine.hitPad(pads.id, 1, 0.5);
+    assert.deepEqual(
+      context.sources
+        .slice(2)
+        .map((source) => source.buffer!.duration)
+        .sort(),
+      [4800, 7200].map((frames) => frames / CONFIG.samples.sampleRate),
+    );
+    engine.hitPad(pads.id, 7, 1);
+    assert.equal(context.sources.length, 5, 'an unpatched pad still reaches ALL');
+    engine.update(setPadCount(project, pads.id, 4));
+    engine.hitPad(pads.id, 7, 1);
+    engine.hitPad(pads.id, -1, 1);
+    assert.equal(context.sources.length, 5, 'hidden and invalid pads never trigger');
+    engine.update({ ...project, modules: [pads], cables: [] });
+    assert(
+      context.sources.every((source) => source.connections.size === 0),
+      'removal disposes every outstanding hit',
+    );
+  } finally {
+    await engine.dispose();
+  }
+});
 
 test('a disposed engine can rebuild the same graph during development reload without stale nodes', async () => {
   const contexts: Context[] = [];
