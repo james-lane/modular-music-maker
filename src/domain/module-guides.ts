@@ -170,7 +170,7 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
       {
         label: 'Piano keys',
         description:
-          'Each finger can slide independently between white and black keys. Moving outside the keybed keeps its last note held; slide back in to change notes, then lift to release. Cancellation or switching tools also ends the hold. Enter or Space on a focused piano key plays a short note.',
+          'Each finger can slide independently between white and black keys. Swiping left/right above or below the keybed still changes notes. Beyond the left or right end, the nearest end key stays held. Lift to release. Cancellation or switching tools also ends the hold. Enter or Space on a focused piano key plays a short note.',
       },
     ],
     tip: 'Choose the bottom-left arrow (Play / edit) to hold notes while using other modules. The hand (Pan / zoom) navigates over instruments without playing or editing them. Live playing works with the transport stopped. Notes are chromatic, and the last held note takes priority on each oscillator.',

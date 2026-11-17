@@ -17,7 +17,7 @@ export function KeyboardPanel({
   const count = keyboardKeyCount(module.parameters.keyCount);
   const whiteKeys = ((count - 1) / 12) * 7 + 1;
   const held = useRef(new Map<string, number>());
-  // Each captured pointer owns its last note until release, including outside the keybed.
+  // Each captured pointer keeps playing until release, including outside the keybed.
   const pointers = useRef(new Set<number>());
   const tapTimers = useRef(new Set<ReturnType<typeof setTimeout>>());
   const [notes, setNotes] = useState<number[]>([]);
@@ -71,13 +71,18 @@ export function KeyboardPanel({
   };
   const movePointer = (event: PointerEvent<HTMLDivElement>) => {
     if (!pointers.current.has(event.pointerId)) return;
-    // Capture targets the keybed, so hit-test the visible key rather than event.target.
-    // Viewport coordinates also work after canvas zoom/pan and respect raised black keys.
-    const key = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-note]');
+    // Project outside touches onto this keybed's edges: horizontal movement still
+    // chooses notes above/below the keys, and left/right overshoot holds the end key.
+    // Screen-space bounds also follow workspace zoom/pan and raised black keys.
+    const first = event.currentTarget.firstElementChild?.getBoundingClientRect();
+    const last = event.currentTarget.lastElementChild?.getBoundingClientRect();
+    if (!first || !last) return;
+    const x = Math.max(first.left + 0.5, Math.min(last.right - 0.5, event.clientX));
+    const y = Math.max(first.top + 0.5, Math.min(first.bottom - 0.5, event.clientY));
+    const key = document.elementFromPoint(x, y)?.closest('[data-note]');
     const token = `pointer:${event.pointerId}`;
     if (key && event.currentTarget.contains(key))
       press(token, Number(key.getAttribute('data-note')));
-    // Leaving the keys holds the last note; sliding back in can change it again.
     // Only up/cancel/lost capture or lifecycle cleanup ends this finger's hold.
   };
   const endPointer = (event: PointerEvent<HTMLDivElement>) => {
