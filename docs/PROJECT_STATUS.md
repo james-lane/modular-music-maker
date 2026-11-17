@@ -2,6 +2,14 @@
 
 Last updated: **17 November 2026**.
 
+## Sample & Hold comparison demo — issue #11 — 17 November 2026
+
+The guide demo now compares three independently configured uses in one ten-module patch: Switch 1 is rhythmic random filter movement, 2 is gentle pitch drift, and 3 is pad-triggered speed/pitch variation of the bundled clap (tap pad 1). Switch 4 provides the dry oscillator reference. Each row has its own Sample & Hold; only the pad row uses TRIGGER IN, so the other rows retain their transport clocks. Browsing/loading remains silent and temporary until Save patch.
+
+Canonical guide recipes now support named duplicate instances, per-instance parameter overrides, registry-sized teaching rows and explicit initial interaction/instructions. The same recipes drive field-guide connections, user demos and regression fixtures. No patch schema or audio runtime changes.
+
+Validation: all **163 tests**, strict types and production build pass. Chromium verified audible filter changes (spectral centroid approximately 270→682Hz), subtle pitch drift (129.20→132.45Hz around C3), a dry 130.81Hz reference, pad-only held values/sample hits, an audible decoded 8.34-second recording, saved/offline playback, tablet/phone guides and all **21 actual demos** producing sound. WebKit 26.5 passed native Switch/pad taps, audible filter/pitch/dry branches, single sampled hits, saved reload/audio and dark tablet/phone guides. Formatting and diff checks pass. The user approved this demo for a direct main release alongside the inline Switch schedule update.
+
 ## Wider keyboards and distinct touch tools — issues #9/#10 — 17 November 2026
 
 Keyboard offers 25, 37, 49 or 61 keys, with registry-derived widths of 428/610/792/974px and the original 360px height. The default/legacy width stays unchanged. Count validation, explicit legacy migration, atomic resize/clearance Undo and stable pitch routes use the existing configured-instance path. The actual field-guide demo uses 37 keys. Held-note styling replaces sticky native `:active`; focus on another instrument preserves physical holds, and resizing releases held notes. Captured keyboard touches keep selecting notes when swiped horizontally above or below the keybed until lift/cancel. Outside coordinates project onto this keyboard’s edges, with left/right overshoot held at the lowest/highest key; ownership never transfers to another module.

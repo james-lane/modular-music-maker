@@ -199,6 +199,7 @@ export function ModuleHelpDialog({
                   <span>
                     <strong>{MODULES[connection.from.module].name}</strong>
                     <small>
+                      {connection.from.instance && `${connection.from.instance} · `}
                       {
                         MODULES[connection.from.module].ports.find(
                           (port) => port.id === connection.from.port,
@@ -210,6 +211,7 @@ export function ModuleHelpDialog({
                   <span>
                     <strong>{MODULES[connection.to.module].name}</strong>
                     <small>
+                      {connection.to.instance && `${connection.to.instance} · `}
                       {
                         MODULES[connection.to.module].ports.find(
                           (port) => port.id === connection.to.port,

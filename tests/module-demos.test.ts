@@ -109,3 +109,44 @@ test('demos select cabled kit voices, preload local sampler audio and declare th
   const merger = createModuleDemo('merger');
   assert.equal(merger.project.modules.find((module) => module.type === 'delay')!.parameters.mix, 1);
 });
+
+test('Sample & Hold compares independent clocked filter, pitch drift and pad-triggered sample paths', () => {
+  const { project, interaction, instructions } = createModuleDemo('random-mod');
+  const selector = project.modules.find((module) => module.type === 'switch')!;
+  const modules = new Map(project.modules.map((module) => [module.id, module]));
+  const source = (id: string, port: string) => {
+    const cable = project.cables.find(
+      (cable) => cable.to.moduleId === id && cable.to.portId === port,
+    )!;
+    return modules.get(cable.from.moduleId)!;
+  };
+  const filter = source(selector.id, 'in1'),
+    tone = source(selector.id, 'in2'),
+    sampler = source(selector.id, 'in3');
+  const filterRandom = source(filter.id, 'cutoff'),
+    pitchRandom = source(tone.id, 'pitchMod'),
+    padRandom = source(sampler.id, 'rateMod');
+  assert.equal(interaction, 'transport');
+  assert.match(instructions, /Switch 1/);
+  assert.equal(selector.parameters.automatic, false);
+  assert.equal(selector.parameters.selected, 1);
+  assert.equal(filter.type, 'filter');
+  assert.equal(tone.type, 'oscillator');
+  assert.equal(sampler.type, 'mic-sampler');
+  assert(isValidSamplePcm(sampler.samples!.clip.pcm));
+  assert.equal(new Set([filterRandom.id, pitchRandom.id, padRandom.id]).size, 3);
+  assert([filterRandom, pitchRandom, padRandom].every((module) => module.type === 'random-mod'));
+  assert(Number(pitchRandom.parameters.depth) < Number(filterRandom.parameters.depth) / 10);
+  assert(Number(pitchRandom.parameters.glide) > Number(filterRandom.parameters.glide));
+  assert.equal(source(padRandom.id, 'trigger').type, 'pad-controller');
+  assert.equal(source(padRandom.id, 'trigger').parameters.padCount, 4);
+  assert.equal(source(padRandom.id, 'trigger').id, source(sampler.id, 'trigger').id);
+  assert(
+    !project.cables.some(
+      (cable) =>
+        [filterRandom.id, pitchRandom.id].includes(cable.to.moduleId) &&
+        cable.to.portId === 'trigger',
+    ),
+  );
+  assert.equal(source(selector.id, 'in4').id, source(filter.id, 'in').id);
+});

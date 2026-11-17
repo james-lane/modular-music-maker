@@ -1,10 +1,20 @@
 import { MODULE_LIST, MODULES } from './modules';
 import type { ModuleType, Parameters, PortDefinition } from './types';
 
-export interface GuideConnection {
-  from: { module: ModuleType; port: string };
-  to: { module: ModuleType; port: string };
+export interface GuideEndpoint {
+  module: ModuleType;
+  port: string;
+  /** Optional teaching name identifies another instance of the same module type. */
+  instance?: string;
 }
+
+export interface GuideConnection {
+  from: GuideEndpoint;
+  to: GuideEndpoint;
+}
+
+export const guideInstance = (endpoint: GuideEndpoint): string =>
+  endpoint.instance ?? endpoint.module;
 
 export interface ModuleGuide {
   overview: string;
@@ -19,6 +29,11 @@ export interface ModuleGuide {
     connections: GuideConnection[];
     /** Settings shared by the loadable demo and development fixtures. */
     parameters?: Partial<Record<ModuleType, Parameters>>;
+    instanceParameters?: Record<string, Parameters>;
+    /** Optional registry-sized rows keep parallel teaching paths easy to follow. */
+    rows?: string[][];
+    interaction?: 'transport' | 'keyboard' | 'pads';
+    instructions?: string;
   };
 }
 
@@ -27,9 +42,11 @@ const wire = (
   output: string,
   to: ModuleType,
   input: string,
+  fromInstance?: string,
+  toInstance?: string,
 ): GuideConnection => ({
-  from: { module: from, port: output },
-  to: { module: to, port: input },
+  from: { module: from, port: output, ...(fromInstance ? { instance: fromInstance } : {}) },
+  to: { module: to, port: input, ...(toInstance ? { instance: toInstance } : {}) },
 });
 
 /** Keep teaching copy beside the domain. Every new module must supply a guide. */
@@ -410,12 +427,41 @@ export const MODULE_GUIDES: Record<ModuleType, ModuleGuide> = {
     ],
     tip: 'Unlike the LFO, values do not follow a repeating wave. Unlike Mic sampler, this module captures no sound and requests no device permission.',
     example: {
-      title: 'Random filter colours',
-      description: 'Noise keeps sounding while random control values move its Filter.',
+      title: 'Three kinds of controlled randomness',
+      description:
+        'Press Play, then compare Switch 1 for rhythmic filter changes, 2 for a gently drifting pitch, and 3 for sampled-clap variation when you tap pad 1. Switch 4 is the dry tone. The three rows each have their own Sample & Hold: try Depth at zero to hear its contribution, or raise Glide to soften the changes. The pad row changes only when you hit pad 1.',
+      interaction: 'transport',
+      instructions:
+        'Press Play. Switch 1: random filter rhythm; 2: gentle pitch drift; 3: tap pad 1 for varied claps; 4: dry reference. Try Depth and Glide in each row.',
+      parameters: {
+        oscillator: { waveform: 'sawtooth', level: 0.18 },
+        filter: { cutoff: 900, resonance: 6 },
+        'pad-controller': { padCount: 4 },
+        'mic-sampler': { level: 0.45 },
+        switch: { automatic: false, selected: 1 },
+      },
+      instanceParameters: {
+        'Filter rhythm': { rate: '1/8', depth: 0.45, glide: 0.005 },
+        'Pitch drift': { rate: '1/4', depth: 0.02, glide: 0.15 },
+        'Pad variation': { depth: 0.25, glide: 0 },
+      },
+      rows: [
+        ['Filter tone', 'Filter rhythm', 'filter', 'switch', 'output'],
+        ['Pitch drift', 'Drifting tone'],
+        ['pad-controller', 'Pad variation', 'mic-sampler'],
+      ],
       connections: [
-        wire('random-mod', 'out', 'filter', 'cutoff'),
-        wire('noise', 'out', 'filter', 'in'),
-        wire('filter', 'out', 'output', 'in'),
+        wire('random-mod', 'out', 'filter', 'cutoff', 'Filter rhythm'),
+        wire('oscillator', 'out', 'filter', 'in', 'Filter tone'),
+        wire('random-mod', 'out', 'oscillator', 'pitchMod', 'Pitch drift', 'Drifting tone'),
+        wire('pad-controller', 'pad1', 'random-mod', 'trigger', undefined, 'Pad variation'),
+        wire('random-mod', 'out', 'mic-sampler', 'rateMod', 'Pad variation'),
+        wire('pad-controller', 'pad1', 'mic-sampler', 'trigger'),
+        wire('filter', 'out', 'switch', 'in1'),
+        wire('oscillator', 'out', 'switch', 'in2', 'Drifting tone'),
+        wire('mic-sampler', 'out', 'switch', 'in3'),
+        wire('oscillator', 'out', 'switch', 'in4', 'Filter tone'),
+        wire('switch', 'out', 'output', 'in'),
       ],
     },
   },

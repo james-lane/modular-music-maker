@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { MODULE_GUIDES, compatiblePorts } from '../src/domain/module-guides';
+import { MODULE_GUIDES, compatiblePorts, guideInstance } from '../src/domain/module-guides';
 import { MODULE_LIST } from '../src/domain/modules';
 import { connectionError, createModule, createProject } from '../src/domain/project';
 import type { ModuleType } from '../src/domain/types';
@@ -51,16 +51,29 @@ test('every worked example contains its subject and forms a valid, saveable patc
       ),
     ];
     assert.ok(types.includes(definition.type), definition.name);
-    const modules = new Map(types.map((type) => [type, createModule(type, 40, 40)]));
-    for (const [type, module] of modules)
-      Object.assign(module.parameters, example.parameters?.[type]);
+    const modules = new Map(
+      example.connections
+        .flatMap((connection) => [connection.from, connection.to])
+        .map(
+          (endpoint) => [guideInstance(endpoint), createModule(endpoint.module, 40, 40)] as const,
+        ),
+    );
+    for (const [key, module] of modules)
+      Object.assign(
+        module.parameters,
+        example.parameters?.[module.type],
+        example.instanceParameters?.[key],
+      );
     const project = { ...createProject(true), modules: [...modules.values()] };
     for (const connection of example.connections) {
       const from = {
-        moduleId: modules.get(connection.from.module)!.id,
+        moduleId: modules.get(guideInstance(connection.from))!.id,
         portId: connection.from.port,
       };
-      const to = { moduleId: modules.get(connection.to.module)!.id, portId: connection.to.port };
+      const to = {
+        moduleId: modules.get(guideInstance(connection.to))!.id,
+        portId: connection.to.port,
+      };
       assert.equal(
         connectionError(project, from, to),
         null,
