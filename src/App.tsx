@@ -34,8 +34,11 @@ import { useMicrophoneSampler } from './hooks/useMicrophoneSampler';
 import { useStudio } from './hooks/useStudio';
 import { useOffline } from './hooks/useOffline';
 import { useTheme } from './hooks/useTheme';
+import { useStudioTouch } from './hooks/useStudioTouch';
 
 export default function App() {
+  const app = useRef<HTMLDivElement>(null);
+  useStudioTouch(app);
   const studio = useStudio();
   const offline = useOffline();
   const { theme, setTheme } = useTheme();
@@ -222,8 +225,14 @@ export default function App() {
 
   return (
     <div
+      ref={app}
       className={`studio-app ${focused ? 'workspace-focused' : ''}`}
       onPointerDownCapture={studio.beginInteraction}
+      onKeyDown={(event) => {
+        // The drawer stays non-modal: Escape must also work after focusing the canvas.
+        if (event.key === 'Escape' && libraryOpen && !dialog && !event.defaultPrevented)
+          closeLibrary();
+      }}
       onKeyDownCapture={(event) => {
         if (
           event.repeat ||
@@ -263,13 +272,6 @@ export default function App() {
         className={`studio-body ${libraryDrag ? 'library-dragging' : ''}`}
         inert={offline.applying}
       >
-        {libraryOpen && (
-          <button
-            className="library-dismiss"
-            aria-label="Dismiss module library"
-            onClick={closeLibrary}
-          />
-        )}
         <ModuleLibrary
           drag={libraryDrag}
           onDragChange={setLibraryDrag}

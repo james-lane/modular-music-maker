@@ -48,6 +48,7 @@ Current examples include a cream/charcoal drum computer, walnut-sided dark keybo
 
 - Run `npm run check` after substantive changes; it runs strict types, domain/persistence/HTTP tests, and a production build.
 - Run `npm run format:check` before committing.
+- Resolve Cloudflare build ownership from the actual Worker name before changing settings. Production belongs to the parent Worker; each Preview has its own ID and trigger. Configure shared preview defaults on the parent with `npm run build:ci` and `npx wrangler preview`, including existing previews. Never repoint a Preview trigger at main or use it to deploy production.
 - Before calling a pull request ready or starting the next issue, wait for every remote check on its latest pushed commit to finish successfully. Inspect failures and repair them first; local checks alone are insufficient. For build/deployment changes, reproduce the actual provider command in a clean shallow checkout, verify the emitted version identifies the requested commit and full history, and confirm the provider uses `npm run build:ci`.
 - Test browser interactions for changes involving audio, routing, dragging, recording, or layout. Listen/check the live signal and verify persistence, rather than relying only on a successful render.
 - Tests open a temporary loopback HTTP server. Restricted execution environments may require permission for local networking.

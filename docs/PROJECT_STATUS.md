@@ -1,6 +1,18 @@
 # Project status
 
-Last updated: **16 November 2026**.
+Last updated: **17 November 2026**.
+
+## Alphabetical library and workspace touch navigation — issues #5, #6, #7 — 17 November 2026
+
+The module drawer sorts all rows, category views and search results alphabetically by their displayed registry names. Removing its dismissal backdrop keeps the exposed workspace available for mouse/touch pan, wheel navigation, pinch zoom and playing/editing while the drawer stays open. Its close button, Add modules toggle and Escape remain available; successful +/grip placement still closes the drawer. Pan/zoom controls remain reachable beside it, or in an exposed strip below it on phones.
+
+The app shell now reserves pinch/double-tap gestures for the workspace camera while allowing normal one-finger drawer/dialog scrolling and native text editing. A native non-passive touch guard suppresses Safari's long-press loupe on keys/pads without taking ownership away from pointer-based playing, multi-touch or keyboard access. WebKit gesture and Ctrl+wheel defaults are cancelled at the shell; the rack retains its anchored camera zoom. No patch schema, audio scheduling or persistence changes.
+
+Validation: all **140 tests**, strict types and production build pass. Isolated Chromium covered alphabetical categories/search; native sidebar swipes; open-drawer mouse, wheel, touch pan and pinch/partial release; shell zoom guards; held multi-touch keys, swipe/cancel, pad hits and keyboard activation; a decoded 1.08-second take with nonzero audio; grip/+ placement and Undo; Escape from the canvas; saved/offline live audio; and reachable controls without overflow at 1194, 834, 390 and 360px. WebKit 26.5 additionally passed native touch taps, cancellation of key touch defaults, audible held notes/release, shell/dialog gesture guards, search editing, and tablet/phone controls. No microphone requests or browser errors occurred. Physical iPad home-screen verification remains required for the reported Safari magnifier.
+
+## Production/preview build ownership audit — 17 November 2026
+
+The #4 release **`0.1.0+72.gc7b520d`** deployed successfully through the parent `patchwork-studio` Worker, and the live version matches its clean source commit. A separate failed check came from a branch Preview trigger that had incorrectly been pointed at main. That Preview trigger is restored to its own branch with `npx wrangler preview`; the parent's main/production configuration is retained. Parent preview defaults now use `npm run build:ci`, applied to existing previews as well as future PRs. Production and Preview IDs must be resolved separately rather than inferred from a check title. Deployment documentation and AGENTS.md record this distinction.
 
 ## Single action locations and footer Help — issue #4 — 16 November 2026
 

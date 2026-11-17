@@ -114,6 +114,8 @@ svg {
   flex-shrink: 0;
 }
 .studio-app {
+  /* Allow native list/dialog scrolling, but reserve pinch/double-tap zoom for the rack. */
+  touch-action: pan-x pan-y;
   height: 100dvh;
   min-height: min(620px, 100dvh);
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
@@ -2342,17 +2344,11 @@ body,
 .module-library.is-open {
   display: flex;
 }
-.library-dismiss {
-  position: absolute;
-  inset: 46px 0 0;
-  background: #34373320;
-  z-index: 29;
-}
 .workspace-focused .studio-toolbar,
 .workspace-focused .status-bar {
   display: none;
 }
-/* Prevent Safari's focus-to-zoom on text fields while keeping page zoom outside the rack. */
+/* Prevent Safari's focus-to-zoom while retaining normal text editing and selection. */
 @media (pointer: coarse) {
   .patch-breadcrumb input,
   .search-field input,

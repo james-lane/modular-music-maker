@@ -19,7 +19,7 @@ import {
 import type { Size } from '../domain/workspace';
 import { FramePublisher } from '../utils/frame-publisher';
 
-/** The rack owns touch navigation; browser magnification remains available outside it. */
+/** The rack owns camera navigation; useStudioTouch prevents native studio magnification. */
 export function useWorkspaceGestures(
   viewport: RefObject<HTMLDivElement | null>,
   cancelEdit: () => void,
@@ -101,8 +101,6 @@ export function useWorkspaceGestures(
   useEffect(() => {
     const element = viewport.current;
     if (!element) return;
-    // WebKit's gesture events and trackpad wheel zoom must not magnify the app shell.
-    const preventGesture = (event: Event) => event.preventDefault();
     const wheel = (event: WheelEvent) => {
       // The camera owns trackpad/wheel panning as well as zoom; no browser-sized
       // scroll surface or artificial scroll border participates in world geometry.
@@ -144,15 +142,11 @@ export function useWorkspaceGestures(
     measure();
     window.addEventListener('blur', resetTouches);
     document.addEventListener('visibilitychange', visibility);
-    element.addEventListener('gesturestart', preventGesture, { passive: false });
-    element.addEventListener('gesturechange', preventGesture, { passive: false });
     element.addEventListener('wheel', wheel, { passive: false });
     return () => {
       observer.disconnect();
       window.removeEventListener('blur', resetTouches);
       document.removeEventListener('visibilitychange', visibility);
-      element.removeEventListener('gesturestart', preventGesture);
-      element.removeEventListener('gesturechange', preventGesture);
       element.removeEventListener('wheel', wheel);
     };
   }, [viewport]);
