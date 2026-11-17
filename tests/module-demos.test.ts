@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createModuleDemo } from '../src/domain/module-demos';
-import { MODULE_LIST, MODULES } from '../src/domain/modules';
+import { MODULE_LIST, moduleDefinition } from '../src/domain/modules';
 import { MODULE_GUIDES } from '../src/domain/module-guides';
 import { parseProject } from '../src/domain/validation';
 import { isValidSamplePcm } from '../src/domain/samples';
@@ -24,9 +24,9 @@ test('every guide loads a valid, fully connected, non-overlapping demo containin
       );
     for (const module of project.modules) {
       assert(reachesOutput(module.id), `${definition.name}: ${module.type} reaches Output`);
-      const size = MODULES[module.type];
+      const size = moduleDefinition(module);
       for (const other of project.modules.filter((other) => other.id !== module.id)) {
-        const otherSize = MODULES[other.type];
+        const otherSize = moduleDefinition(other);
         assert(
           module.x + size.width <= other.x ||
             other.x + otherSize.width <= module.x ||
@@ -75,6 +75,15 @@ test('demo copies have fresh IDs and independent editable notes, parameters and 
 });
 
 test('demos select cabled kit voices, preload local sampler audio and declare their live gestures', () => {
+  const pads = createModuleDemo('pad-controller');
+  assert.equal(pads.interaction, 'pads');
+  assert.equal(
+    pads.project.modules.find((module) => module.type === 'pad-controller')!.parameters.padCount,
+    4,
+  );
+  assert(pads.project.cables.some((cable) => cable.from.portId === 'pad1'));
+  assert(pads.project.cables.some((cable) => cable.from.portId === 'pad2'));
+  assert(pads.project.modules.find((module) => module.type === 'mic-sampler')!.samples!.clip);
   const kitDemo = createModuleDemo('drum-kit');
   assert.equal(
     kitDemo.project.modules.find((module) => module.type === 'drum-kit')!.parameters['closed-hat'],

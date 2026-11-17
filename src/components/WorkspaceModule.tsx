@@ -3,6 +3,7 @@ import { memo, type PointerEvent } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import type { LiveControls } from '../audio/live';
 import { SEQUENCER_DEGREES } from '../domain/modules';
+import { setPadCount } from '../domain/pad-controller';
 import type { DrumSample, Endpoint, PatchModule, Project } from '../domain/types';
 import type { MicrophoneControls } from '../hooks/useMicrophoneSampler';
 import { ModuleCard } from './ModuleCard';
@@ -73,15 +74,18 @@ export const WorkspaceModule = memo(function WorkspaceModule({
       onDragStart={(event) => onDragStart(module, event)}
       onParameter={(id, value) =>
         commit(
-          (current) => ({
-            ...current,
-            modules: current.modules.map((item) =>
-              item.id === module.id
-                ? { ...item, parameters: { ...item.parameters, [id]: value } }
-                : item,
-            ),
-          }),
-          `${module.id}:${id}`,
+          (current) =>
+            module.type === 'pad-controller' && id === 'padCount'
+              ? setPadCount(current, module.id, value)
+              : {
+                  ...current,
+                  modules: current.modules.map((item) =>
+                    item.id === module.id
+                      ? { ...item, parameters: { ...item.parameters, [id]: value } }
+                      : item,
+                  ),
+                },
+          id === 'padCount' ? '' : `${module.id}:${id}`,
         )
       }
       onParameters={(values, group) =>

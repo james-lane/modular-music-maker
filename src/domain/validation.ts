@@ -3,6 +3,8 @@ import { CONFIG, ROOT_NOTES } from '../config';
 import {
   DEFAULT_SEQUENCER_RATE,
   MODULES,
+  DEFAULT_PAD_LAYOUT,
+  PAD_LAYOUTS,
   SAMPLER_TRIM,
   SEQUENCER_DEGREES,
   SEQUENCER_RATES,
@@ -11,6 +13,7 @@ import { DRUM_LANES, DRUM_SOUNDS, DRUM_STEP_COUNT } from './instruments';
 import { isValidSamplePcm } from './samples';
 import { XY_CORNERS, XY_EFFECTS } from './xy-effects';
 import { connectionError } from './project';
+import { clearModuleOverlap } from './workspace';
 import type { ModuleType, Project } from './types';
 
 const endpoint = z.object({ moduleId: z.uuid(), portId: z.string().max(24) }).strict();
@@ -96,6 +99,11 @@ export const projectSchema = z
       ]);
       if (Object.keys(module.parameters).some((key) => !allowed.has(key)))
         issue('Unknown module parameter.');
+      if (
+        module.type === 'pad-controller' &&
+        !PAD_LAYOUTS.some((layout) => layout.count === module.parameters.padCount)
+      )
+        issue('Pad count must be 4, 8 or 16.');
       for (const control of definition.controls) {
         const value = module.parameters[control.id];
         if (
@@ -172,14 +180,27 @@ export const projectSchema = z
   });
 
 export function parseProject(value: unknown): Project {
-  return projectSchema.parse(migrateProject(value));
+  const expandedPads = new Set<string>();
+  const project = projectSchema.parse(migrateProject(value, expandedPads));
+  // Old sixteen-pad controllers gain a wider socket row. Preserve every ID, route
+  // and neighbouring position; relocate only a legacy panel that would now overlap.
+  for (const module of project.modules) {
+    if (!expandedPads.has(module.id)) continue;
+    const resized = clearModuleOverlap(
+      module,
+      project.modules.filter((item) => item.id !== module.id),
+    );
+    project.modules = project.modules.map((item) => (item.id === module.id ? resized : item));
+  }
+  return project;
 }
 
-/** V2 gives coordinates a signed, open-workspace meaning. V1 positions, IDs, sound,
- * samples and cables migrate unchanged; never mutate the caller's stored object.
+/** V2 gives coordinates a signed, open-workspace meaning. V1 IDs, sound, samples
+ * and cables migrate unchanged; legacy pad enclosures may need layout clearance.
+ * Never mutate the caller's stored object.
  * Validation still runs after migration and unknown versions remain unsupported.
  */
-function migrateProject(value: unknown): unknown {
+function migrateProject(value: unknown, expandedPads: Set<string>): unknown {
   if (typeof value !== 'object' || value === null || !('version' in value)) return value;
   const project = value.version === 1 ? { ...value, version: 2 } : value;
   if (project.version !== 2 || !('modules' in project) || !Array.isArray(project.modules))
@@ -199,6 +220,10 @@ function migrateProject(value: unknown): unknown {
       const parameters = module.parameters;
       if (typeof parameters !== 'object' || parameters === null || Array.isArray(parameters))
         return module;
+      if (module.type === 'pad-controller' && !('padCount' in parameters)) {
+        if ('id' in module && typeof module.id === 'string') expandedPads.add(module.id);
+        return { ...module, parameters: { ...parameters, padCount: DEFAULT_PAD_LAYOUT.count } };
+      }
       if (module.type === 'sequencer' && !('rate' in parameters)) {
         return {
           ...module,

@@ -4,12 +4,24 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { ModulePorts } from '../src/components/ModulePorts';
 import { socketPosition } from '../src/components/socket-geometry';
-import { MODULE_LIST } from '../src/domain/modules';
+import { MODULE_LIST, moduleDefinition, PAD_LAYOUTS } from '../src/domain/modules';
 import { createModule, createProject } from '../src/domain/project';
 
-test('every catalog socket renders inside one shared bottom footer, never on the panel face', () => {
-  for (const definition of MODULE_LIST) {
+function catalogModules() {
+  return MODULE_LIST.flatMap((definition) => {
     const module = createModule(definition.type, 40, 60);
+    return definition.type === 'pad-controller'
+      ? PAD_LAYOUTS.map((layout) => ({
+          ...module,
+          parameters: { ...module.parameters, padCount: layout.count },
+        }))
+      : [module];
+  });
+}
+
+test('every catalog socket renders inside one shared bottom footer, never on the panel face', () => {
+  for (const module of catalogModules()) {
+    const definition = moduleDefinition(module);
     const project = { ...createProject(true), modules: [module] };
     const html = renderToStaticMarkup(
       createElement(ModulePorts, { module, project, pending: null, onPort() {} }),
@@ -29,13 +41,21 @@ test('every catalog socket renders inside one shared bottom footer, never on the
 });
 
 test('all cable endpoints use ordered bottom socket centres, including modulation and signed workspace positions', () => {
-  for (const definition of MODULE_LIST) {
-    const module = createModule(definition.type, -420, -800);
+  for (const original of catalogModules()) {
+    const module = { ...original, x: -420, y: -800 };
+    const definition = moduleDefinition(module);
     const positions = definition.ports.map((port) => socketPosition(module, port.id));
     positions.forEach((position, index) => {
       assert.equal(position.y, module.y + definition.height - 22, definition.name);
       assert(position.x > module.x + 12 && position.x < module.x + definition.width - 12);
-      if (index) assert(position.x > positions[index - 1].x);
+      if (index) {
+        assert(position.x > positions[index - 1].x);
+        if (module.type === 'pad-controller')
+          assert(
+            position.x - positions[index - 1].x > 40,
+            'numbered sockets retain room for labels and touch targets',
+          );
+      }
     });
   }
   const oscillator = createModule('oscillator', 0, 0);

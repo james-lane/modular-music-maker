@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { EXAMPLE_PATCHES } from '../src/domain/examples';
 import { kitSamplerSources } from '../src/domain/instruments';
 import { decodeSamplePcm } from '../src/domain/samples';
-import { MODULES } from '../src/domain/modules';
+import { MODULES, moduleDefinition } from '../src/domain/modules';
 import type { Project } from '../src/domain/types';
 import { parseProject } from '../src/domain/validation';
 
@@ -39,11 +39,11 @@ test('nine distinct examples are valid, fully connected and laid out without cov
       );
     for (const module of project.modules) {
       assert.ok(reachesOutput(module.id), `${example.name}: ${module.type} contributes to output`);
-      const size = MODULES[module.type];
+      const size = moduleDefinition(module);
       assert.ok(Number.isFinite(module.x + size.width));
       assert.ok(Number.isFinite(module.y + size.height));
       for (const other of project.modules.filter((other) => other.id !== module.id)) {
-        const otherSize = MODULES[other.type];
+        const otherSize = moduleDefinition(other);
         assert.ok(
           module.x + size.width <= other.x ||
             other.x + otherSize.width <= module.x ||

@@ -1,5 +1,5 @@
 import type { Endpoint, PatchModule, PortDefinition, Project } from '../domain/types';
-import { MODULES } from '../domain/modules';
+import { moduleDefinition } from '../domain/modules';
 
 /** Every socket belongs to the shared bottom footer; registry order also drives cables. */
 export function ModulePorts({
@@ -13,7 +13,7 @@ export function ModulePorts({
   pending: Endpoint | null;
   onPort: (endpoint: Endpoint) => void;
 }) {
-  const definition = MODULES[module.type];
+  const definition = moduleDefinition(module);
   const button = (port: PortDefinition) => {
     const connected = project.cables.some((cable) =>
       [cable.from, cable.to].some(

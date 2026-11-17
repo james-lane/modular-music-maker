@@ -25,7 +25,7 @@ import {
 } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
-import { MODULES } from '../domain/modules';
+import { MODULES, moduleDefinition } from '../domain/modules';
 import { connectionError, createModule, getPort } from '../domain/project';
 import type { DrumSample, Endpoint, ModuleType, PatchModule, Project } from '../domain/types';
 import type { CableStyle } from '../domain/preferences';
@@ -99,7 +99,9 @@ export function Workspace({
   const viewport = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const droppedModule = useRef<string | null>(null);
-  const previousIds = useRef(new Set(project.modules.map((module) => module.id)));
+  const previousSizes = useRef(
+    new Map(project.modules.map((module) => [module.id, moduleDefinition(module)])),
+  );
   const [pending, setPending] = useState<Endpoint | null>(null);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const cablePointer = useRef<Point | null>(null);
@@ -118,6 +120,9 @@ export function Workspace({
     audioActive ? CONFIG.canvas.playbackGestureIntervalMs : 0,
   );
   const { view, size, zoom, setView, zoomAt, panByScreen, screenToWorld } = gestures;
+  useLayoutEffect(() => {
+    if (pending && !getPort(project, pending)) setPending(null);
+  }, [project, pending]);
   useEffect(() => {
     if (pending && cablePointer.current)
       setPointer(screenToWorld(cablePointer.current.x, cablePointer.current.y));
@@ -151,15 +156,22 @@ export function Workspace({
   }, [view, size, onViewCentreChange]);
   const previousProject = useRef(project.id);
   useEffect(() => {
-    const added = project.modules.filter((module) => !previousIds.current.has(module.id));
-    previousIds.current = new Set(project.modules.map((module) => module.id));
+    const added = project.modules.filter((module) => !previousSizes.current.has(module.id));
+    const resized = project.modules.find((module) => {
+      const before = previousSizes.current.get(module.id),
+        after = moduleDefinition(module);
+      return before && (before.width !== after.width || before.height !== after.height);
+    });
+    previousSizes.current = new Map(
+      project.modules.map((module) => [module.id, moduleDefinition(module)]),
+    );
     if (previousProject.current !== project.id) {
       previousProject.current = project.id;
       return;
     }
     if (added.length === 1 && viewport.current) {
       const module = added[0];
-      const definition = MODULES[module.type];
+      const definition = moduleDefinition(module);
       setSelected(module.id);
       // A placed module is already under the pointer; preserve the current camera.
       if (droppedModule.current === module.id) {
@@ -171,6 +183,18 @@ export function Workspace({
           { x: module.x + definition.width / 2, y: module.y + definition.height / 2 },
           { x: viewport.current.clientWidth / 2, y: viewport.current.clientHeight / 2 },
           zoom,
+        ),
+      );
+    } else if (resized && viewport.current) {
+      // A count change can relocate/enlarge the panel. Keep its focused selector in
+      // view, zooming out only as needed; camera changes remain outside patch history.
+      const bounds = moduleBounds([resized]);
+      const frame = { width: viewport.current.clientWidth, height: viewport.current.clientHeight };
+      setView(
+        viewAtAnchor(
+          { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
+          { x: frame.width / 2, y: frame.height / 2 },
+          Math.min(zoom, fittedView(bounds, frame).zoom),
         ),
       );
     }
