@@ -2,6 +2,12 @@
 
 Last updated: **17 November 2026**.
 
+## Automatic and reduced animation — 17 November 2026
+
+Studio settings now offers Automatic, Full and Reduced animation as a per-device preference. Auto reduces display motion for 20+ modules, covering Clockwork garden, Neon chorus and Daylight radio; explicit choices persist across patches/reloads/offline. Device Reduce Motion is always respected. Current steps, held keys/pads, Switch section changes, recording status and an active level meter remain available. Every mode uses cheaper LED-only step highlights. Reduced shows stationary measured control levels and slower waveform/response updates. Offscreen/hidden displays stop sampling/painting until visible again. This changes no audio scheduling, patch data, history or sound.
+
+Validation: strict types, all **182 automated tests** and the production build pass against the released MIDI integration. Preference regressions cover automatic size/accessibility policy, independent storage and unavailable storage; visual-refresh tests cover clipping, document visibility, cadence, recovery and disposal. The user requested immediate publication and will perform browser/device validation. Earlier isolated WebKit probes found cheaper LED-only highlights improved phone-sized playback frame timing while retaining musical feedback. No audio-engine, MIDI-routing or patch-format changes are included.
+
 ## Patchable Web MIDI — 17 November 2026
 
 The catalog now has **22 modules**, including a blue-grey MIDI Input interface with PITCH / GATE, TRIGGER and four assignable CC→MOD outputs. Hardware access is optional, explicitly enabled and feature-detected; each instance can select input devices, channel, note range, drum-note origin and polarity. Velocity, last-held-note priority, sustain and note-source ownership are transient. The test note/hit and MOD sliders work without hardware, including unsupported browsers. Enablement starts off on reload; device choices stay in browser preferences, while validated assignments travel with the patch. Stop, Disable, disconnect, blur/hidden visibility, MIDI/routing edits, project switches and unmount retire ownership and pending resumes.

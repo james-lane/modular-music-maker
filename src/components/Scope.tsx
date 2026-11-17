@@ -1,19 +1,17 @@
 import { useEffect, useRef } from 'react';
 import type { AudioEngine } from '../audio/engine';
 import { CONFIG } from '../config';
+import { useAnimation } from '../hooks/useAnimation';
+import { refreshVisual } from './visual-refresh';
 
 export function Scope({ engine, playing }: { engine: AudioEngine; playing: boolean }) {
+  const { reduced } = useAnimation();
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const context = canvas.current?.getContext('2d');
     if (!context) return;
     const data = new Uint8Array(256);
-    let frame = 0;
-    let previous = -Infinity;
-    const draw = (now: number) => {
-      if (playing) frame = requestAnimationFrame(draw);
-      if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
-      previous = now;
+    const draw = () => {
       context.clearRect(0, 0, 420, 120);
       context.strokeStyle = '#2c4240';
       context.lineWidth = 1;
@@ -42,9 +40,13 @@ export function Scope({ engine, playing }: { engine: AudioEngine; playing: boole
       }
       context.stroke();
     };
-    draw(0);
-    return () => cancelAnimationFrame(frame);
-  }, [engine, playing]);
+    return refreshVisual(
+      canvas.current!,
+      draw,
+      playing,
+      reduced ? CONFIG.audio.reducedVisualizationIntervalMs : CONFIG.audio.visualizationIntervalMs,
+    );
+  }, [engine, playing, reduced]);
   return (
     <div className="oscilloscope">
       <canvas
@@ -59,20 +61,21 @@ export function Scope({ engine, playing }: { engine: AudioEngine; playing: boole
 }
 
 export function LevelMeter({ engine, playing }: { engine: AudioEngine; playing: boolean }) {
+  const { reduced } = useAnimation();
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    let frame = 0;
-    let previous = -Infinity;
-    const update = (now: number) => {
-      if (playing) frame = requestAnimationFrame(update);
-      if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
-      previous = now;
+    if (!container.current) return;
+    const update = () => {
       const level = playing ? Math.min(1, engine.readLevel() * 5) : 0;
       container.current?.style.setProperty('--level', `${playing ? level * 100 : 0}%`);
     };
-    update(0);
-    return () => cancelAnimationFrame(frame);
-  }, [engine, playing]);
+    return refreshVisual(
+      container.current,
+      update,
+      playing,
+      reduced ? CONFIG.audio.reducedMeterIntervalMs : CONFIG.audio.visualizationIntervalMs,
+    );
+  }, [engine, playing, reduced]);
   return (
     <div ref={container} className="level-meter" aria-label="Live stereo output level">
       <span>L</span>

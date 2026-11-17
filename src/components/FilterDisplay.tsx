@@ -4,6 +4,8 @@ import { MODULES } from '../domain/modules';
 import { CONFIG } from '../config';
 import type { Endpoint, Parameters } from '../domain/types';
 import { filterResponsePath } from './instrument-display';
+import { useAnimation } from '../hooks/useAnimation';
+import { refreshVisual } from './visual-refresh';
 
 /** Response is a parameter view, not a scope of the incoming sound. Only a live
  * MOD input needs animation; ordinary knob edits update even with audio stopped.
@@ -21,6 +23,7 @@ export function FilterDisplay({
   modulation?: Endpoint;
   resonanceModulation?: Endpoint;
 }) {
+  const { reduced, systemReduced } = useAnimation();
   const path = useRef<SVGPathElement>(null);
   const cutoff = Number(parameters.cutoff),
     resonance = Number(parameters.resonance),
@@ -31,21 +34,15 @@ export function FilterDisplay({
     [mode, cutoff, resonance, sampleRate],
   );
   useEffect(() => {
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    let frame = 0,
-      previous = -Infinity;
-    const draw = (now: number) => {
-      if (active && (modulation || resonanceModulation) && !reduced.matches)
-        frame = requestAnimationFrame(draw);
-      if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
-      previous = now;
+    if (!path.current) return;
+    const draw = () => {
       const input =
-        active && modulation && !reduced.matches
+        active && modulation && !systemReduced
           ? engine.readControl(modulation.moduleId, modulation.portId)
           : 0;
       const qControl = MODULES.filter.controls.find((control) => control.id === 'resonance');
       const q =
-        active && resonanceModulation && !reduced.matches && qControl
+        active && resonanceModulation && !systemReduced && qControl
           ? qControl.min +
             Math.max(
               0,
@@ -57,19 +54,15 @@ export function FilterDisplay({
             ) *
               (qControl.max - qControl.min)
           : resonance;
-      path.current?.setAttribute('d', filterResponsePath(mode, cutoff + input, q, sampleRate));
+      const next = filterResponsePath(mode, cutoff + input, q, sampleRate);
+      if (path.current?.getAttribute('d') !== next) path.current?.setAttribute('d', next);
     };
-    const motionChanged = () => {
-      cancelAnimationFrame(frame);
-      previous = -Infinity;
-      draw(0);
-    };
-    reduced.addEventListener('change', motionChanged);
-    draw(0);
-    return () => {
-      cancelAnimationFrame(frame);
-      reduced.removeEventListener('change', motionChanged);
-    };
+    return refreshVisual(
+      path.current,
+      draw,
+      active && Boolean(modulation || resonanceModulation) && !systemReduced,
+      reduced ? CONFIG.audio.reducedVisualizationIntervalMs : CONFIG.audio.visualizationIntervalMs,
+    );
   }, [
     engine,
     active,
@@ -81,6 +74,8 @@ export function FilterDisplay({
     cutoff,
     resonance,
     sampleRate,
+    reduced,
+    systemReduced,
   ]);
   return (
     <div className="trace-display filter-trace filter-response">

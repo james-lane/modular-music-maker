@@ -23,6 +23,7 @@ import {
   saveCableOpacity,
   saveCableStyle,
   saveTheme,
+  saveAnimationMode,
   type CableStyle,
 } from './domain/preferences';
 import { createModule, createProject } from './domain/project';
@@ -35,6 +36,7 @@ import { useMicrophoneSampler } from './hooks/useMicrophoneSampler';
 import { useStudio } from './hooks/useStudio';
 import { useOffline } from './hooks/useOffline';
 import { useTheme } from './hooks/useTheme';
+import { AnimationContext, useAnimationPreference } from './hooks/useAnimation';
 import { useStudioTouch } from './hooks/useStudioTouch';
 
 export default function App() {
@@ -44,6 +46,7 @@ export default function App() {
   const offline = useOffline();
   const { theme, setTheme } = useTheme();
   const { project, commit } = studio;
+  const animation = useAnimationPreference(project.modules.length);
   const [toast, setToast] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const notify = useCallback((message: string) => {
@@ -287,25 +290,27 @@ export default function App() {
           onClose={closeLibrary}
         />
         <MidiContext.Provider value={midi}>
-          <Workspace
-            {...studio}
-            notify={notify}
-            microphone={microphone}
-            engine={audio.engine}
-            playing={audio.playing}
-            playbackPosition={audio.position}
-            live={audio.live}
-            audioActive={playback.active}
-            cableStyle={cableStyle}
-            cableOpacity={cableOpacity}
-            libraryDrag={libraryDrag}
-            onLibraryDragFinish={finishLibraryDrag}
-            onViewCentreChange={viewCentreChanged}
-            libraryOpen={libraryOpen}
-            onLibraryToggle={() => setLibraryOpen((open) => !open)}
-            focused={focused}
-            onFocusToggle={() => setFocused((value) => !value)}
-          />
+          <AnimationContext.Provider value={animation.policy}>
+            <Workspace
+              {...studio}
+              notify={notify}
+              microphone={microphone}
+              engine={audio.engine}
+              playing={audio.playing}
+              playbackPosition={audio.position}
+              live={audio.live}
+              audioActive={playback.active}
+              cableStyle={cableStyle}
+              cableOpacity={cableOpacity}
+              libraryDrag={libraryDrag}
+              onLibraryDragFinish={finishLibraryDrag}
+              onViewCentreChange={viewCentreChanged}
+              libraryOpen={libraryOpen}
+              onLibraryToggle={() => setLibraryOpen((open) => !open)}
+              focused={focused}
+              onFocusToggle={() => setFocused((value) => !value)}
+            />
+          </AnimationContext.Provider>
         </MidiContext.Provider>
       </div>
       <footer className="status-bar" inert={offline.applying}>
@@ -385,6 +390,12 @@ export default function App() {
       )}
       {dialog === 'settings' && (
         <SettingsDialog
+          animationMode={animation.mode}
+          onAnimationModeChange={(mode) => {
+            animation.setMode(mode);
+            if (!saveAnimationMode(mode))
+              notify('Animation changed for this visit. Browser storage is unavailable.');
+          }}
           project={project}
           theme={theme}
           onThemeChange={(next) => {

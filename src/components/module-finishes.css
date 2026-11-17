@@ -1889,3 +1889,25 @@
   margin: 0;
   color: #ffe4ad;
 }
+
+/* A small live LED communicates timing without repainting the whole keycap.
+   Keep the hardware materials and the same audio-clock-driven active classes. */
+.studio-app .module-sequencer .step-button.active {
+  background: linear-gradient(#fff7e8, #e7dac3);
+  border-color: #c9b794;
+  border-bottom-color: #ad9876;
+}
+.studio-app .step-button.active i,
+.studio-app .drum-step.current i {
+  box-shadow: none;
+}
+.studio-app .drum-step.current {
+  outline: none;
+}
+/* Reduced mode suppresses movement, not pressed/selected/recording state. */
+:root[data-animation='reduced'] .studio-app *,
+:root[data-animation='reduced'] .studio-app *::before,
+:root[data-animation='reduced'] .studio-app *::after {
+  transition: none !important;
+  animation: none !important;
+}

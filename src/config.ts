@@ -16,6 +16,9 @@ export const CONFIG = {
   appearance: {
     themeKey: 'patchwork.theme.v1',
     defaultTheme: 'system',
+    animationKey: 'patchwork.animation.v1',
+    defaultAnimation: 'auto',
+    reducedAnimationModuleCount: 20,
     cableStyleKey: 'patchwork.cable-style.v1',
     defaultCableStyle: 'classic',
     cableOpacityKey: 'patchwork.cable-opacity.v1',
@@ -85,6 +88,8 @@ export const CONFIG = {
       filterMaxDb: 18,
     },
     visualizationIntervalMs: 32,
+    reducedVisualizationIntervalMs: 250,
+    reducedMeterIntervalMs: 100,
     schedulerIntervalMs: 25,
     scheduleAheadSeconds: 0.12,
     parameterRampSeconds: 0.025,

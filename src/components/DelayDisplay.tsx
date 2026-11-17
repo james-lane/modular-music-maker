@@ -4,6 +4,8 @@ import { MODULES } from '../domain/modules';
 import { CONFIG } from '../config';
 import type { Endpoint, Parameters } from '../domain/types';
 import { delayPreviewPath } from './instrument-display';
+import { useAnimation } from '../hooks/useAnimation';
+import { refreshVisual } from './visual-refresh';
 
 export function DelayDisplay({
   parameters,
@@ -16,21 +18,16 @@ export function DelayDisplay({
   active: boolean;
   modulation?: Partial<Record<'time' | 'feedback' | 'mix', Endpoint>>;
 }) {
+  const { reduced, systemReduced } = useAnimation();
   const path = useRef<SVGPathElement>(null),
     readout = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    let frame = 0,
-      previous = -Infinity;
-    const draw = (now: number) => {
-      if (active && Object.keys(modulation).length && !reduced.matches)
-        frame = requestAnimationFrame(draw);
-      if (now - previous < CONFIG.audio.visualizationIntervalMs) return;
-      previous = now;
+    if (!path.current) return;
+    const draw = () => {
       const value = (id: 'time' | 'feedback' | 'mix') => {
         const source = modulation[id],
           control = MODULES.delay.controls.find((control) => control.id === id);
-        if (!active || reduced.matches || !source || !control) return Number(parameters[id]);
+        if (!active || systemReduced || !source || !control) return Number(parameters[id]);
         const unit = Math.max(
           0,
           Math.min(
@@ -41,22 +38,22 @@ export function DelayDisplay({
         return control.min + unit * (control.max - control.min);
       };
       const time = value('time');
-      path.current?.setAttribute('d', delayPreviewPath(time, value('feedback'), value('mix')));
-      if (readout.current) readout.current.textContent = String(Math.round(time * 1000));
+      const next = delayPreviewPath(time, value('feedback'), value('mix'));
+      if (path.current?.getAttribute('d') !== next) path.current?.setAttribute('d', next);
+      const text = String(Math.round(time * 1000));
+      if (readout.current && readout.current.textContent !== text)
+        readout.current.textContent = text;
     };
-    const changed = () => {
-      cancelAnimationFrame(frame);
-      previous = -Infinity;
-      draw(0);
-    };
-    reduced.addEventListener('change', changed);
-    draw(0);
-    return () => {
-      cancelAnimationFrame(frame);
-      reduced.removeEventListener('change', changed);
-    };
+    return refreshVisual(
+      path.current,
+      draw,
+      active && Object.keys(modulation).length > 0 && !systemReduced,
+      reduced ? CONFIG.audio.reducedVisualizationIntervalMs : CONFIG.audio.visualizationIntervalMs,
+    );
   }, [
     parameters,
+    reduced,
+    systemReduced,
     engine,
     active,
     modulation.time?.moduleId,

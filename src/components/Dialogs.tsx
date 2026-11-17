@@ -4,7 +4,14 @@ import { CONFIG, ROOT_NOTES } from '../config';
 import { deleteRecording, loadRecordings, type Recording } from '../audio/recordings';
 import { downloadFile, fileSlug } from '../domain/storage';
 import type { Project } from '../domain/types';
-import { isCableStyle, isTheme, type CableStyle, type Theme } from '../domain/preferences';
+import {
+  isAnimationMode,
+  isCableStyle,
+  isTheme,
+  type AnimationMode,
+  type CableStyle,
+  type Theme,
+} from '../domain/preferences';
 import { PortGuide } from './PortGuide';
 import { TempoSymbol } from './TempoIndicator';
 import { RecordingItem } from './RecordingItem';
@@ -12,6 +19,8 @@ import { useRecordingExport } from '../hooks/useRecordingExport';
 
 /** Also exposes composition controls that move out of the compact phone toolbar. */
 export function SettingsDialog({
+  animationMode,
+  onAnimationModeChange,
   project,
   theme,
   onThemeChange,
@@ -22,6 +31,8 @@ export function SettingsDialog({
   onCableOpacityChange,
   onClose,
 }: {
+  animationMode: AnimationMode;
+  onAnimationModeChange: (mode: AnimationMode) => void;
   project: Project;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
@@ -89,6 +100,28 @@ export function SettingsDialog({
         The eight-step pattern repeats independently of the time signature.
       </p>
       <div className="appearance-settings composition-form">
+        <label>
+          Animation
+          <select
+            value={animationMode}
+            aria-label="Animation"
+            aria-describedby="animation-description"
+            onChange={(event) => {
+              if (isAnimationMode(event.target.value)) onAnimationModeChange(event.target.value);
+            }}
+          >
+            <option value="auto">Automatic</option>
+            <option value="full">Full</option>
+            <option value="reduced">Reduced</option>
+          </select>
+        </label>
+        <p id="animation-description">
+          Automatic reduces moving displays in patches with{' '}
+          {CONFIG.appearance.reducedAnimationModuleCount} or more modules. Reduced keeps step
+          lights, keys, pads, section changes and recording feedback, with simpler highlights and
+          slower display updates. Sound stays the same. Remembered on this device; your device’s
+          Reduce Motion preference is always respected.
+        </p>
         <label>
           Theme
           <select

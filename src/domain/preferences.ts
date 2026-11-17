@@ -1,5 +1,44 @@
 import { CONFIG } from '../config';
 
+/** Device preferences never enter exported patches or their Undo history. */
+export type AnimationMode = 'auto' | 'full' | 'reduced';
+
+export function isAnimationMode(value: unknown): value is AnimationMode {
+  return value === 'auto' || value === 'full' || value === 'reduced';
+}
+
+export function loadAnimationMode(): AnimationMode {
+  try {
+    const saved = localStorage.getItem(CONFIG.appearance.animationKey);
+    if (isAnimationMode(saved)) return saved;
+  } catch {
+    // Restricted storage still permits changing the current visit's visuals.
+  }
+  return CONFIG.appearance.defaultAnimation;
+}
+
+export function saveAnimationMode(mode: AnimationMode): boolean {
+  if (!isAnimationMode(mode)) return false;
+  try {
+    localStorage.setItem(CONFIG.appearance.animationKey, mode);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function usesReducedAnimation(
+  mode: AnimationMode,
+  moduleCount: number,
+  systemReduced: boolean,
+): boolean {
+  return (
+    systemReduced ||
+    mode === 'reduced' ||
+    (mode === 'auto' && moduleCount >= CONFIG.appearance.reducedAnimationModuleCount)
+  );
+}
+
 export type Theme = 'system' | 'light' | 'dark';
 
 export function isTheme(value: unknown): value is Theme {
